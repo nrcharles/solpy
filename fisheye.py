@@ -140,6 +140,7 @@ def magnitudeToTheta(array,radius):
         theta.append((a,t))
     return theta
 
+#Drawing 
 def addVector(point,vector):
     """Warning!: pixel based system
     given a vector returns point wise cordinates
@@ -208,6 +209,7 @@ def renderSkyArray(image,skyArray,sky):
     displayImage = drawHorizonLine(displayImage,sky)
     return displayImage
 
+#misc
 def saveArray(array,filename):
     f = open(filename,'w')
     f.write('00 Cordinates to come later\n')
