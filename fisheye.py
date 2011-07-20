@@ -19,6 +19,7 @@ import cv
 from math import sin
 from math import cos
 from math import radians
+import os.path
 
 def usage():
     """Prints usage options when called with no arguments or with invalid arguments
@@ -29,43 +30,75 @@ def usage():
     """
  
 # some definitions
-global radius 
 global outputArray 
-global cardinalOffset
-cardinalOffset = 0
-global threshold 
-global center
-global res
 gImage = None
 
-#UI Control
-def onThresholdChange(pos):
-    global threshold
-    threshold = pos
-    draw()
- 
-def onRadiusChange(rad):
-    global radius
-    global res
-    radius = max(res)/2 - rad
-    draw()
+#class world
+#physical data
+#token to pass env data through GUI
+#
+class nugget():
+    def __init__(self):
+        self.center = 0
+        self.res = None
+        self.radius = 0
+        self.cardinalOffset = 0 
 
-def onNorthChange(offset):
-    global cardinalOffset
-    cardinalOffset = offset
-    draw()
+class GUI():
+    def __init__(self,cImage):
+        self.cImage = cImage
+        self.threshold = 0
+        res = cv.GetSize(cImage) 
+        self.res = res
+        self.radius = max(self.res)/2 
+        x,y = res
+        self.center = (x/2,y/2)
+        self.threshold = 0
+        self.cardinalOffset = 0
+        windowName = "Edge"
+        # create the window
+        cv.NamedWindow(windowName,cv.CV_WINDOW_NORMAL)
+        cv.NamedWindow('Image')
+        cv.MoveWindow('Image',1,220)
+     
+        # create the trackbar
+        cv.CreateTrackbar ("Threshold", windowName, 1, 100, self.onThresholdChange)
+        cv.CreateTrackbar ("Horizon", windowName, 10, max(res)/2, self.onRadiusChange)
+        cv.CreateTrackbar ("North", windowName, 1, 360, self.onNorthChange)
+        cv.CreateTrackbar ('x', windowName, x/2, x, self.on_Xchange)
+        cv.CreateTrackbar ('y', windowName, y/2, y, self.on_Ychange)
+        #cv.CreateButton('save', self.onSave)
+        cv.ResizeWindow(windowName, 1200,200)
+        self.onThresholdChange (0)
+        
+    def onThresholdChange(self, pos):
+        self.threshold = pos
+        draw(self)
+     
+    def onRadiusChange(self, rad):
+        self.radius = max(self.res)/2 - rad
+        draw(self)
 
-def on_Xchange(newx):
-    global center
-    x,y = center
-    center = (newx,y)
-    draw()
+    def onNorthChange(self, offset):
+        self.cardinalOffset = offset
+        draw(self)
 
-def on_Ychange(newy):
-    global center
-    x,y = center
-    center = (x,newy)
-    draw()
+    def on_Xchange(self, newx):
+        x,y = self.center
+        self.center = (newx,y)
+        draw(self)
+
+    def on_Ychange(self, newy):
+        x,y = self.center
+        self.center = (x,newy)
+        draw(self)
+
+    def onSave(self):
+        pass
+
+    def save(self,filename):
+        cv.SaveImage(filename +'-vectors.png',self.displayImage)
+        saveArray(self.outputArray,filename + '.csv')
 
 #Measurement 
 def addVectorR(point,vector):
@@ -86,7 +119,7 @@ def pixelCompare(image, p1,p2):
     else:
         return False
 
-def distanceToEdge(image, point, radius):
+def distanceToEdge(image, point, radius, cardinalOffset = 0 ):
     rx,ry = cv.GetSize(image) 
     x,y = point
     #point is in pixel cordinates, but comparision is right hand cordinates
@@ -100,7 +133,10 @@ def distanceToEdge(image, point, radius):
     image[y,x+4] = (255,0,255)
     cv.Circle(image, point, 1, (0,255,0))
     cv.Circle(image, (x/2,y/2), 1, (255,255,255))
-    cv.ShowImage('temp', image)
+    #debugging window
+    #cv.NamedWindow('temp')
+    #cv.MoveWindow('temp',800,220)
+    #cv.ShowImage('temp', image)
     return vectors
 
 def addVector(point,vector):
@@ -113,7 +149,7 @@ def addVector(point,vector):
     dy = int(magnitude * sin(radians(angle)))
     return (x + dx, y - dy)
 
-def drawVectors(image,point,array):
+def drawVectors(image,point,array,cardinalOffset = 0):
     """"given a start point and an array of magnitudes and degree angles
     draws on gImage"""
     for vector in array:
@@ -121,7 +157,7 @@ def drawVectors(image,point,array):
         cv.Line(image, point, addVector(point,(a+cardinalOffset, m)) ,(255,0,0))
     return image
 
-def magnitudeToTheta(array):
+def magnitudeToTheta(array,radius):
     theta = []
     for vector in array:
         a,m = vector
@@ -129,8 +165,8 @@ def magnitudeToTheta(array):
         theta.append((a,t))
     return theta
 
-def writeArray(array,filename):
-    print array
+def saveArray(array,filename):
+    #print array
     f = open(filename,'w')
     #for value in outputArray:
     #    f.write('%s,%s\n' % value)
@@ -142,7 +178,7 @@ def writeArray(array,filename):
     f.flush()
     f.close()
 
-def getCannyMask(image):
+def getCannyMask(image,threshold):
     """convert image to gray scale run the edge dector 
     returns mask
     """
@@ -156,13 +192,13 @@ def getCannyMask(image):
     cv.Canny(gray, mask, threshold, threshold * 3, 3)
     return mask
 
-def saveVectorImage(filename,vectorArray,res):
+def saveVectorImage(filename,center,vectorArray,res,cardinalOffset = 0):
     vectorImage = cv.CreateImage(res, 8, 3)
     cv.Zero(vectorImage)
-    drawVectors(vectorImage,center,vectorArray)
+    drawVectors(vectorImage,center,vectorArray,cardinalOffset)
     cv.SaveImage(filename,vectorImage)
 
-def drawHorizonMask(image,radius):
+def drawHorizonMask(image, center, radius):
     res = cv.GetSize(image) 
     mask = cv.CreateImage(res, 8, 1)
     cv.Zero(mask)
@@ -178,76 +214,32 @@ def drawHorizonLine(image, center, radius):
     cv.Circle(image, center, radius, (255,255,255))
     return image
 
-def drawNorth(image, point, offset):
-    global radius
+def drawNorth(image, point, radius, offset):
     cv.Line(image, point, addVector(point,(offset,radius)), (0,0,255))
     cv.Line(image, point, addVector(point,((offset+180) % 360,radius)), (255,255,255))
     return image
 
-def draw():
-    global gImage
-    global outputArray
-    global cardinalOffset
-    global center
-    res = cv.GetSize(gImage) 
+def draw(env):
+    res = cv.GetSize(env.cImage) 
     col_edge = cv.CreateImage(res, 8, 3)
     cv.SetZero(col_edge)
-
-    edge = getCannyMask(gImage)
-    cv.Copy(gImage, col_edge, edge)
-    final = drawHorizonLine(col_edge,center,radius)
-    skyArray = distanceToEdge(final,center,radius)
+    edge = getCannyMask(env.cImage,env.threshold)
+    cv.Copy(env.cImage, col_edge, edge)
+    final = drawHorizonLine(col_edge,env.center,env.radius)
+    skyArray = distanceToEdge(final,env.center,env.radius,env.cardinalOffset)
 
     displayImage = cv.CreateImage(res, 8, 3)
     cv.SetZero(displayImage)
-    cv.Copy(gImage, displayImage)
-    displayImage = drawVectors(displayImage, center, skyArray)
-    displayImage = drawNorth(displayImage,center,cardinalOffset)
-    displayImage = drawHorizonLine(displayImage,center, radius)
+    cv.Copy(env.cImage, displayImage)
+    displayImage = drawVectors(displayImage, env.center, skyArray, env.cardinalOffset)
+    displayImage = drawNorth(displayImage,env.center,env.radius, env.cardinalOffset)
+    displayImage = drawHorizonLine(displayImage,env.center, env.radius)
 
-    saveVectorImage('vectorImage.png',skyArray,res)
-    outputArray = magnitudeToTheta(skyArray)
+    env.outputArray = magnitudeToTheta(skyArray,env.radius)
+    env.displayImage = displayImage
 
     cv.ShowImage('Image', displayImage)
-    cv.SaveImage('final.png',displayImage)
 
-def bootstrap(filename):
-    global radius
-    global gImage
-    global center
-    global res
-    windowName = "Edge"
-
-    gImage = cv.LoadImage (filename)
-    res = cv.GetSize(gImage) 
- 
-    if not gImage:
-        print "Error loading image '%s'" % filename
-        sys.exit(-1) 
-
-    # create the window
-    cv.NamedWindow(windowName,cv.CV_WINDOW_NORMAL)
-    cv.NamedWindow('Image')
-    cv.MoveWindow('Image',1,220)
-    cv.NamedWindow('temp')
-    cv.MoveWindow('temp',800,220)
- 
-    # create the trackbar
-    x,y = res
-    center = (x/2,y/2)
-    cv.CreateTrackbar ("Threshold", windowName, 1, 100, onThresholdChange)
-    cv.CreateTrackbar ("Horizon", windowName, 10, max(res)/2, onRadiusChange)
-    cv.CreateTrackbar ("North", windowName, 1, 360, onNorthChange)
-    cv.CreateTrackbar ('x', windowName, x/2, x, on_Xchange)
-    cv.CreateTrackbar ('y', windowName, y/2, y, on_Ychange)
-    cv.ResizeWindow(windowName, 1200,200)
-    radius = max(res)/2 - 10 
- 
-    onThresholdChange (0)
- 
-    cv.WaitKey (0)
-
-    writeArray(outputArray,'output.csv')
 
 if __name__ == "__main__":
     import getopt
@@ -267,8 +259,14 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        #start program  
-        bootstrap(filename)
+        gImage = cv.LoadImage(filename)
+        if not gImage:
+            print "Error loading image '%s'" % filename
+            sys.exit(-1) 
+
+        ui = GUI(gImage)
+        cv.WaitKey (0)
+        ui.save(os.path.basename(filename).split('.')[0])
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
