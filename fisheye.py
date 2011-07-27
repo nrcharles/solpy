@@ -21,12 +21,15 @@ from math import cos
 from math import radians
 import os.path
 
+NORTH = 0
+
 def usage():
     """Prints usage options when called with no arguments or with invalid arguments
     """
     print """usage: [options]
    -h    help
    -f    filename of fisheye panorama 
+   -n    North = 180 [default is North = 0]
     """
 
 class sky():
@@ -129,7 +132,7 @@ def skyToPolar(image,sky,threshold):
         j = 0
         while pixelCompare(final,addVectorR(rPoint,(i,j)),rPoint) and j < sky.radius:
             j += 1
-        vectors.append(((720 + 90 - i - sky.cardinalOffset) % 360 ,j))
+        vectors.append(((1080 + 90 - i - sky.cardinalOffset - NORTH) % 360 ,j))
     return vectors
 
 def magnitudeToTheta(array,radius):
@@ -156,7 +159,7 @@ def drawVectors(image,array,sky):
     draws on gImage"""
     for vector in array:
         a,m = vector
-        cv.Line(image, sky.center, addVector(sky.center,(a+sky.cardinalOffset, m)) ,(255,0,0))
+        cv.Line(image, sky.center, addVector(sky.center,(a+sky.cardinalOffset+NORTH, m)) ,(255,0,0))
     return image
 
 
@@ -229,7 +232,7 @@ def saveVectorImage(filename,vectorArray,res,sky):
 if __name__ == "__main__":
     import getopt
     import sys
-    opts, args = getopt.getopt(sys.argv[1:], 'f:h')
+    opts, args = getopt.getopt(sys.argv[1:], 'f:hn')
     filename = None
  
     if opts:
@@ -239,6 +242,8 @@ if __name__ == "__main__":
                 sys.exit(1)
             if o == '-f':
                 filename = a
+            if o == '-n':
+            	NORTH = 180
     else:
         usage()
         sys.exit(1)
