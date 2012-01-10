@@ -28,6 +28,7 @@ def usage():
     """
     print """usage: [options]
    -h    help
+   -c    output cropped image
    -f    filename of fisheye panorama 
    -n    North = 180 [default is North = 0]
     """
@@ -36,7 +37,7 @@ class sky():
     def __init__(self):
         self.center = 0
         self.radius = 0
-        self.cardinalOffset = 0 
+        self.cardinalOffset = 0
 
 class controller():
     def __init__(self,cImage):
@@ -44,18 +45,20 @@ class controller():
         self.cImage = cImage
         self.res = cv.GetSize(cImage) 
         x,y = self.res
-        self.sky.radius = max(self.res)/2 
+        self.sky.radius = min(self.res)/2
         self.sky.center = (x/2,y/2)
-        self.sky.cardinalOffset = 0
+        self.sky.cardinalOffset = 90
         self.threshold = 0
         windowName = "Fisheye"
         cv.NamedWindow(windowName,cv.CV_WINDOW_NORMAL)
         cv.NamedWindow('Image')
         cv.MoveWindow('Image',1,220)
+        #temp window for debugging
+        cv.NamedWindow('Temp')
      
         cv.CreateTrackbar ("Threshold", windowName, 1, 100, self.onThresholdChange)
-        cv.CreateTrackbar ("Horizon", windowName, 10, max(self.res)/2, self.onRadiusChange)
-        cv.CreateTrackbar ("North", windowName, 1, 360, self.onNorthChange)
+        cv.CreateTrackbar ("Horizon", windowName, 10, min(self.res)/2, self.onRadiusChange)
+        cv.CreateTrackbar ("North", windowName, 90, 360, self.onNorthChange)
         cv.CreateTrackbar ('x', windowName, x/2, x, self.on_Xchange)
         cv.CreateTrackbar ('y', windowName, y/2, y, self.on_Ychange)
         cv.ResizeWindow(windowName, 1200,200)
@@ -66,7 +69,7 @@ class controller():
         self.draw()
      
     def onRadiusChange(self, rad):
-        self.sky.radius = max(self.res)/2 - rad
+        self.sky.radius = min(self.res)/2 - rad
         self.draw()
 
     def onNorthChange(self, offset):
@@ -88,12 +91,19 @@ class controller():
         self.displayImage = renderSkyArray(self.cImage,self.skyArray,self.sky)
         self.outputArray = magnitudeToTheta(self.skyArray,self.sky.radius)
         cv.ShowImage('Image', self.displayImage)
+        self.croppedImage = crop(drawHorizonMask(self.displayImage,self.sky), self.sky)
+        #cv.ShowImage('Temp', rotate(self.displayImage, self.sky.center, self.sky.cardinalOffset))
+        #cv.ShowImage('Temp', self.croppedImage)
 
     def onSave(self):
         pass
 
-    def save(self,filename):
+    def saveV(self,filename):
         cv.SaveImage(filename +'-vectors.png',self.displayImage)
+        saveArray(self.outputArray,filename + '.csv')
+
+    def saveC(self,filename):
+        cv.SaveImage(filename +'-cropped.png',self.croppedImage)
         saveArray(self.outputArray,filename + '.csv')
 
 #Measurement 
@@ -107,7 +117,7 @@ def addVectorR(point,vector):
     dy = int(magnitude * sin(radians(angle)))
     return (x - dx,y + dy)
 
-def pixelCompare(image, p1,p2):
+def pixelCompare(image, p1, p2):
     x1,y1 = p1
     x2,y2 = p2
     if (image[x1,y1] == image[x2,y2]):
@@ -115,7 +125,7 @@ def pixelCompare(image, p1,p2):
     else:
         return False
 
-def skyToPolar(image,sky,threshold):
+def skyToPolar(image, sky, threshold):
     """takes:  image, sky, threshold
     returns: rendered image, outputArray"""
     res = cv.GetSize(image) 
@@ -229,21 +239,52 @@ def saveVectorImage(filename,vectorArray,res,sky):
     drawVectors(vectorImage,vectorArray,sky)
     cv.SaveImage(filename,vectorImage)
 
+def crop(src_image, sky):
+    x,y  = sky.center
+    radius = sky.radius
+    left= x - radius
+    top= y - radius
+    new_width = 2 * radius
+    new_height = 2 * radius
+    cropped = cv.CreateImage( (new_width, new_height), 8, 3)
+    src_region = cv.GetSubRect(src_image, (left, top, new_width, new_height) )
+    cv.Copy(src_region, cropped)
+    return cropped
+
+def rotate(src_image, center, angle):
+    rot_mat = cv.CreateMat(2,3,16)
+    cv.GetRotationMatrix2D(center, angle ,1.0,rot_mat)
+    res = cv.GetSize(src_image) 
+    tmp = cv.CreateImage(res, 8, 3)
+    print cv.GetImage(src_image)
+    print cv.GetElemType(src_image)
+    print cv.GetElemType(rot_mat)
+    cv.SetZero(tmp)
+    cv.Copy(src_image, tmp)
+
+    out = cv.CloneImage(tmp)
+    cv.WarpAffine(tmp, out, rot_mat)
+    return out
+
+
 if __name__ == "__main__":
     import getopt
     import sys
-    opts, args = getopt.getopt(sys.argv[1:], 'f:hn')
+    opts, args = getopt.getopt(sys.argv[1:], 'cf:hn')
     filename = None
+    saveCropped = False
  
     if opts:
         for o,a in opts:
+            if o == '-c':
+                saveCropped = True
             if o == '-h':
                 usage()
                 sys.exit(1)
             if o == '-f':
                 filename = a
             if o == '-n':
-            	NORTH = 180
+                NORTH = 180
     else:
         usage()
         sys.exit(1)
@@ -256,9 +297,13 @@ if __name__ == "__main__":
 
         ui = controller(gImage)
         cv.WaitKey (0)
-        ui.save(os.path.basename(filename).split('.')[0])
+        if saveCropped is True:
+            ui.saveC(os.path.basename(filename).split('.')[0])
+        else:
+            ui.saveV(os.path.basename(filename).split('.')[0])
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
     except:
         raise
+
