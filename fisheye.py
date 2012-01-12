@@ -97,7 +97,7 @@ class model():
         masked = cv.CloneImage(tmp)
         cv.Zero(masked)
         cv.Copy(tmp, masked, mask)
-        cv.SaveImage(filename +'-cropped.png',crop(tmp2, self))
+        cv.SaveImage(filename +'-cropped.png',crop(masked, self))
 
     def saveA(self, filename):
         outputArray = magnitudeToTheta(self.polarArray,self.radius)
