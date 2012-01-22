@@ -24,7 +24,8 @@ import os.path
 NORTH = 0
 
 def usage():
-    """Prints usage options when called with no arguments or with invalid arguments
+    """Prints usage options when called with no arguments or with invalid 
+    arguments
     """
     print """usage: [options]
    -h    help
@@ -51,19 +52,22 @@ class model():
         #vectors
         for vector in self.polarArray:
             a,m = vector
-            cv.Line(displayImage, self.center, addVector(self.center,(a+self.cardinalOffset+NORTH, m)) ,(255,0,0))
+            cv.Line(displayImage, self.center, addVector(self.center,
+                (a+self.cardinalOffset+NORTH, m)) ,(255,0,0))
 
         #north
         point = self.center
         offset = self.cardinalOffset
-        cv.Line(displayImage, point, addVector(point,(offset,self.radius)), (0,0,255))
-        cv.Line(displayImage, point, addVector(point,((offset+180) % 360,self.radius)), (255,255,255))
+        cv.Line(displayImage, point, addVector(point,(offset,self.radius)),
+                (0,0,255))
+        cv.Line(displayImage, point, addVector(point,((offset+180) % 360,
+            self.radius)), (255,255,255))
 
         #horizon
         cv.Circle(displayImage, self.center, self.radius, (255,255,255))
         return displayImage
 
-    def calculate(self):
+    def calculate(self, north = NORTH):
         res = cv.GetSize(self.cImage)
         col_edge = cv.CreateImage(res, 8, 3)
         cv.SetZero(col_edge)
@@ -76,9 +80,11 @@ class model():
         vectors = []
         for i in range(360):
             j = 0
-            while pixelCompare(col_edge,addVectorR(rPoint,(i,j)),rPoint) and j < self.radius:
+            while pixelCompare(col_edge,addVectorR(rPoint,(i,j)),rPoint) \
+                    and j < self.radius:
                 j += 1
-            vectors.append(((1080 + 90 - i - self.cardinalOffset - NORTH) % 360 ,j))
+            vectors.append(((1080 + 90 - i - self.cardinalOffset - north) \
+                    % 360 ,j))
         #return vectors
         self.polarArray = vectors
 
@@ -93,7 +99,8 @@ class model():
         cv.Zero(mask)
         cv.Circle(mask, self.center, self.radius, (255,255,255))
         cv.FloodFill(mask,(1,1),(0,0,0))
-        cv.FloodFill(mask, self.center, (255,255,255),lo_diff=cv.RealScalar(5))
+        cv.FloodFill(mask, self.center,
+                (255,255,255),lo_diff=cv.RealScalar(5))
         masked = cv.CloneImage(tmp)
         cv.Zero(masked)
         cv.Copy(tmp, masked, mask)
@@ -113,8 +120,9 @@ def crop(src, sky):
     return cropped
 
 def rotate(src, center, angle):
+    print angle
     mapMatrix = cv.CreateMat(2,3,cv.CV_64F)
-    cv.GetRotationMatrix2D( center, angle, 1.0, mapMatrix)
+    cv.GetRotationMatrix2D( center, 450 - angle, 1.0, mapMatrix)
     dst = cv.CreateImage( cv.GetSize(src), src.depth, src.nChannels)
     cv.SetZero(dst)
     cv.WarpAffine(src, dst, mapMatrix)
@@ -129,8 +137,10 @@ class controller():
         cv.MoveWindow('Image',1,220)
         x,y = self.model.res
 
-        cv.CreateTrackbar ("Threshold", windowName, 1, 100, self.onThresholdChange)
-        cv.CreateTrackbar ("Horizon", windowName, 10, min(self.model.res)/2, self.onRadiusChange)
+        cv.CreateTrackbar ("Threshold", windowName, 1, 100,
+                self.onThresholdChange)
+        cv.CreateTrackbar ("Horizon", windowName, 10,
+                min(self.model.res)/2, self.onRadiusChange)
         cv.CreateTrackbar ("North", windowName, 90, 360, self.onNorthChange)
         cv.CreateTrackbar ('x', windowName, x/2, x, self.on_Xchange)
         cv.CreateTrackbar ('y', windowName, y/2, y, self.on_Ychange)
@@ -164,11 +174,14 @@ class controller():
         self.displayImage = self.model.render()
         cv.ShowImage('Image', self.displayImage)
 
+    def test(self,img):
+        cv.ShowImage('Image',img)
+
     def onSave(self):
         pass
 
-#Measurement 
-def addVectorR(point,vector):
+#Measurement
+def addVectorR(point, vector):
     """Warning!: righthanded cordinate system
     given a vector returns gImage array cordinates
     """
@@ -186,7 +199,7 @@ def pixelCompare(image, p1, p2):
     else:
         return False
 
-def magnitudeToTheta(array,radius):
+def magnitudeToTheta(array, radius):
     theta = []
     for vector in array:
         a,m = vector
@@ -195,7 +208,7 @@ def magnitudeToTheta(array,radius):
     return theta
 
 #Drawing
-def addVector(point,vector):
+def addVector(point, vector):
     """Warning!: pixel based system
     given a vector returns point wise cordinates
     """
@@ -205,9 +218,8 @@ def addVector(point,vector):
     dy = int(magnitude * sin(radians(angle)))
     return (x + dx, y - dy)
 
-def getCannyMask(image,threshold):
-    """convert image to gray scale run the edge dector 
-    returns mask
+def getCannyMask(image, threshold):
+    """convert image to gray scale run the edge dector returns mask
     """
     res = cv.GetSize(image) 
     gray = cv.CreateImage (res, 8, 1)
@@ -218,7 +230,7 @@ def getCannyMask(image,threshold):
     cv.Canny(gray, mask, threshold, threshold * 3, 3)
     return mask
 
-def saveArray(array,filename):
+def saveArray(array, filename):
     f = open(filename,'w')
     f.write('00\n')
     f.write(','.join([str(v[0]) for v in array]))
@@ -254,7 +266,7 @@ if __name__ == "__main__":
         gImage = cv.LoadImage(filename)
         if not gImage:
             print "Error loading image '%s'" % filename
-            sys.exit(-1) 
+            sys.exit(1)
 
         m = model(gImage)
         ui = controller(m)
@@ -267,9 +279,16 @@ if __name__ == "__main__":
         m.saveA(ofilename)
 
         #import site_analysis as sa
-        #L,gamma,alpha = sa.loadArray(magnitudeToTheta(m.polarArray,m.radius))
-        #fig1 = sa.calc_solarpath(L,gamma,alpha)
+        #import numpy as np
+        #H = sa.load_horizon_array(magnitudeToTheta(m.polarArray,m.radius))
+        #fig1 = sa.calc_solarpath(H.L,H.gamma,H.alpha)
         #fig1.savefig(ofilename+'-path.png')
+
+        #fig1.canvas.draw()
+        #data = np.fromstring(fig1.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+        #data = data.reshape(fig1.canvas.get_width_height()[::-1] + (3,))
+        #ui.test(cv.fromarray(data))
+        #cv.WaitKey (0)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
