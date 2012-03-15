@@ -72,8 +72,7 @@ al = {"18":12.8,
         "1250":0.0169,
         "1500":0.0141,
         "1750":0.0121,
-        "2000":0.0106
-        }
+        "2000":0.0106}
 
 PVC_X = {"14" : 0.058,
     "12" : 0.054,
@@ -95,6 +94,8 @@ PVC_X = {"14" : 0.058,
     "500" : 0.039,
     "600" : 0.039,
     "750" : 0.038}
+
+AL_X = PVC_X
 
 STEEL_X = {"14" : 0.073,
     "12" : 0.068,
@@ -178,7 +179,7 @@ STEEL_CU = {"14" : 3.100,
     "400" : 0.035,
     "500" : 0.029,
     "600" : 0.025,
-    "750" : 0.021},
+    "750" : 0.021}
 
 PVC_AL = {"14" : 5.100,
     "12" : 3.200,
@@ -243,7 +244,7 @@ STEEL_AL = {"14" : 5.100,
     "600" : 0.038,
     "750" : 0.031}
 
-CU_DC = {"14" : 3.140,
+_CU = {"14" : 3.140,
     "12" : 1.980,
     "10" : 1.240,
     "8" : 0.778,
@@ -264,7 +265,7 @@ CU_DC = {"14" : 3.140,
     "600" : .0214,
     "750" : .0171}
 
-AL_DC = {"14" : 5.170,
+_AL = {"14" : 5.170,
     "12" : 3.250,
     "10" : 2.040,
     "8" : 1.280,
@@ -327,7 +328,6 @@ class branch():
         if self.phase is 1:
             return self.vd()/240.9 * 100.0
 
-
     def a(self):
         return self.child.a()
 
@@ -373,35 +373,71 @@ class wire():
             r2 = r1* (1 + a * (self.t - 75))
             x = PVC_X[self.size]
             z = math.sqrt(r2*r2+x*x)
-            print "rectance %s " % z
-            print "resistance %s " % r2 
             return z
+
+class circuit():
+    def __init__(self):
+        pass
+    def r(self):
+        pass
+
+class conductor():
+    def __init__(self, size, material):
+        self.type = material
+        self.size = size
+
+    def r(self, conduit = ""):
+        print "%s_%s" % (conduit, self.type)
+        return globals()["%s_%s" % (conduit,self.type)][self.size]
+
+    def x(self, conduit):
+        #lt = "%s_%s" % (conduit,"X")
+        #return globals()[lt][self.size]
+        return globals()["%s_%s" % (conduit,"X")][self.size]
+
+    def a(self):
+        a = {"CU":0.00323,
+                "AL":0.00330}
+        return a[self.type]
+
+#class conduit():
+#    def __init__(self,type):
+#        self.type = type
+
+def resistance(conductor, conduit, phase, temperature = 75):
+    if phase == 1:
+        r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
+        x = conductor.x(conduit)
+        return math.sqrt(r*r+x*x)
+    if phase == "DC":
+        r = conductor.r() * (1 + conductor.a() * ( temperature -75))
+        return r
 
 def voltagedrop(*args, **kwargs):
     a = 0
     vdrop = 0
     phase = 1
     for i in reversed(args):
-        print i
         if hasattr(i, 'a'):
             a += i.a()
         if hasattr(i, 'd'):
             t = 2*a*i.r()*i.d /1000.0
-            print t
             vdrop += t 
         if hasattr(i, 'vd'):
-            print i.vd()
             vdrop += i.vd()
     return vdrop
 
 class source():
-    def __init__(self):
-        self.a = .9
+    def __init__(self,c = .9):
+        self.c = c
         self.v = 240
         self.phase = 1
 
     def a(self):
-        return self.a
+        return self.c
+
+    def vd(self):
+        return 0
 
 class engage():
     def __init__(self, inverters, phase = 1, landscape = True, endfed = False):
@@ -438,7 +474,7 @@ if __name__ == "__main__":
     #house.append(junction())
     #a = engage(17, 1, True, True)
     b = engage(17)
-    print b.vd()
+    #print b.vd()
     #j1 = junction()
     #j1.append(a)
     #j1.append(b)
@@ -448,14 +484,22 @@ if __name__ == "__main__":
     b4 = branch(cb(20),wire(57,"8"),engage(24,phase = 3 ))
     b5 = branch(cb(20),wire(181,"8"),engage(12,phase = 3 ))
     j1 = junction(b1,b2)
-    print "Voltage Drop"
-    print voltagedrop(j1)
-    print j1.vd()
-    print "t"
+    #print "Voltage Drop"
+    #print voltagedrop(j1)
+    #print j1.vd()
+    #print "t"
 
     #print a.vd()
-    print b.vd()
-    w1 = wire( 200, "2/0")
+    #print b.vd()
+    #w1 = wire( 200, "2/0")
     #print a.a
-    print "Voltage Drop"
-    print voltagedrop(w1, w1, b)
+    #print "Voltage Drop"
+    #print voltagedrop(w1, w1, b)
+    print "resistance"
+    print resistance(conductor("400","CU"),"PVC",1)
+    print resistance(conductor("400","CU"),"AL",1)
+    print resistance(conductor("400","AL"),"PVC",1)
+    print resistance(conductor("400","AL"),"AL",1)
+    print resistance(conductor("400","CU"),"STEEL",1)
+    print resistance(conductor("400","AL"),"STEEL",1)
+    print resistance(conductor("400","AL"),"STEEL","DC")
