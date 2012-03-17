@@ -1,39 +1,57 @@
 import csv
 import datetime
 import os
+import math
+import tilt
 
 #path to tmy3 data
 #default = ~/tmp3/
 path = os.environ['HOME'] + "/tmy3/"
 
 def strptime(string):
-    Y = int(string[6:8])
+    #necessary because of 24:00 end of day labeling
+    Y = int(string[6:10])
     M = int(string[0:2])
     D = int(string[3:5])
     h = int(string[11:13])
     m = int(string[14:16])
     return datetime.datetime(Y, M, D) + datetime.timedelta(hours=h, minutes=m)
 
-class get_data():
-    def __init__(self, USAF):
+class data():
+    def __init__(self, USAF, tilt = 0):
         filename = path + USAF + 'TY.csv'
         self.csvfile = open(filename)
-        print self.csvfile.readline()
+        header =  self.csvfile.readline().split(',')
         self.tmy_data = csv.DictReader(self.csvfile)
+        self.latitude = header[4]
+        self.longitude = header[5]
+        print self.latitude, self.longitude
     def __iter__(self):
         return self
     def next(self):
         i = self.tmy_data.next()
         #['Date (MM/DD/YYYY)', 'Time (HH:MM)'
         sd = i['Date (MM/DD/YYYY)'] +' '+ i['Time (HH:MM)']
-        dni = i['DNI (W/m^2)']
+        ghi = int(i['GHI (W/m^2)'])
+        dhi = int(i['DHI (W/m^2)'])
+        dni = int(i['DNI (W/m^2)'])
+        #etrn = i['ETR (W/m^2)']
+
         d = strptime(sd)
-        return d, dni
+
+        if tilt > 0:
+            #ghi, dni, dhi = radiation
+            #calculate total radiation
+            gth = tilt.adjust(self.latitude, self.longitude, d, (ghi, dni, dhi), tilt = 39.9)
+            gth = ghi
+            return d, gth
+        else:
+            return d, ghi
+
     def __del__(self):
         self.csvfile.close()
 
-def find_close(latitude,longitude):
-    import math
+def closestUSAF(latitude,longitude):
     index = open(path + 'TMY3_StationsMeta.csv')
     index_data = csv.DictReader(index)
     d1 = 9999
@@ -45,9 +63,25 @@ def find_close(latitude,longitude):
             d1 = d2
             name = i['Site Name']
             usaf = i['USAF']
+    index.close()
     return name, usaf
 
 if __name__ == "__main__":
-    name, usaf = find_close(40,-76)
-    for d,dni in get_data(usaf):
-        print dni
+    x = 40.22
+    y = -76.85
+    #name, usaf = closestUSAF(40,-76.2) #Lancaster
+    name, usaf = closestUSAF(39.867,-75.233)#Philadelphia
+    #name, usaf = closestUSAF(40.22,-76.85) #Harrisburg
+    #name, usaf = closestUSAF(39.88,-75.25)
+    #name, usaf = closestUSAF(42.1649,-72.779)
+    t = 0
+    l = 0
+    #derate = dc_ac_derate()
+    for d,ins in data(usaf):
+        #print d, dni, int(dni) * .770
+        #t += (ins + l)/2.0
+        t += ins #tiltAdjust(x,y,d,ins) #* derate
+        l = ins
+    print t/1000
+    print t/(1000*365.0)
+    print "print should be ~ 4.57 at 39.9 degree tilt"
