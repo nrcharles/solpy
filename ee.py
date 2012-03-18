@@ -486,7 +486,7 @@ if __name__ == "__main__":
     j1 = junction(b1,b2)
     #print "Voltage Drop"
     #print voltagedrop(j1)
-    #print j1.vd()
+    print j1.vd()
     #print "t"
 
     #print a.vd()

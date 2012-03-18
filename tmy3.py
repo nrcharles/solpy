@@ -84,4 +84,4 @@ if __name__ == "__main__":
         l = ins
     print t/1000
     print t/(1000*365.0)
-    print "print should be ~ 4.57 at 39.9 degree tilt"
+    print "PV Watts using TMY2 is ~ 4.57 at 39.9 degree tilt"
