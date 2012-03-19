@@ -2,7 +2,7 @@ import csv
 import datetime
 import os
 import math
-import radiation
+import irradiation
 
 #path to tmy3 data
 #default = ~/tmp3/
@@ -42,7 +42,7 @@ class data():
         if self.tilt > 0:
             #ghi, dni, dhi = radiation
             #calculate total radiation
-            gth = radiation.tilt(self.latitude, self.longitude, d, (ghi, dni, dhi), self.tilt)
+            gth = irradiation.tilt(self.latitude, self.longitude, d, (ghi, dni, dhi), self.tilt)
             return d, gth
         else:
             return d, ghi
