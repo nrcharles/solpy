@@ -83,15 +83,15 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     p = 0.2
 
     #Badescu 2002
-    #rd1 = 3+cos(2*S)/4
+    #rd = 3+cos(2*S)/4
     #Tian et al. 2001
     #rd = 1 -S/(2 *pi)
     #Liu and Jordan
     rd = (1+cos(S))/2
 
     #NREL Manual
-    Bth = Bh * cos(theta)
-    #Bth = (Bh * cos(I))
+    #Bth = Bh * cos(theta)
+    Bth = max(0,Bh * cos(I))
 
     #sky-diffuse
     Dth = rd*Dh # ?
@@ -102,12 +102,36 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     Gth = Bth + Dth +Rth
     return Gth
 
+def perez(diffuse,hdi,etr,beta,zenith,airmass):
+    Z = zenith
+    Dh = hdi
+    m = airmass
+    I = etr
+    IRR = [[-0.008, 0.588,-0.062,-0.060, 0.072,-0.022],
+            [0.130, 0.683,-0.151,-0.019, 0.066,-0.029],
+            [0.330, 0.487,-0.221, 0.055,-0.064,-0.026],
+            [0.568, 0.187,-0.295, 0.109,-0.152,-0.014],
+            [0.873,-0.392,-0.362, 0.226,-0.462, 0.001],
+            [1.132,-1.237,-0.412, 0.288,-0.823, 0.056],
+            [1.060,-1.600,-0.359, 0.264,-1.127, 0.131],
+            [0.678,-0.327,-0.250, 0.156,-1.377, 0.251]]
 
-def perez(diffuse,beta,zenith):
+    ILL = [ [0.011, 0.570,-0.081,-0.095, 0.158,-0.018],
+            [0.429, 0.363,-0.307, 0.050, 0.008,-0.065],
+            [0.809,-0.054,-0.442, 0.181,-0.169,-0.092],
+            [1.014,-0.252,-0.531, 0.275,-0.350,-0.096],
+            [1.282,-0.420,-0.689, 0.380,-0.559,-0.114],
+            [1.426,-0.653,-0.779, 0.425,-0.785,-0.097],
+            [1.485,-1.214,-0.784, 0.411,-0.629,-0.082],
+            [1.170,-0.300,-0.615, 0.518,-1.892,-0.055]]
+
+    delta = Dh*m/I
+    #eBin
+    e = 1
     a = max(0,cos(beta))
     b = max(0.087,cos(zenith))
 
-    F1= 0
-    F2= 0
+    F1= IRR[e][0] * IRR[e][1]*delta + IRR[e][2]*Z
+    F2= IRR[e][3] + IRR[e][4]*delta + IRR[e][5]*Z
 
     return diffuse*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
