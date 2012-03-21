@@ -25,6 +25,7 @@ class data():
         self.tmy_data = csv.DictReader(self.csvfile)
         self.latitude = float(header[4])
         self.longitude = float(header[5])
+        print self.latitude, self.longitude
         self.tilt = tilt 
     def __iter__(self):
         return self
@@ -66,8 +67,6 @@ def closestUSAF(latitude,longitude):
     return name, usaf
 
 if __name__ == "__main__":
-    x = 40.22
-    y = -76.85
     tilt = 39.0
     #name, usaf = closestUSAF(40,-76.2) #Lancaster
     name, usaf = closestUSAF(39.867,-75.233)#Philadelphia
@@ -81,7 +80,6 @@ if __name__ == "__main__":
         #print d, dni, int(dni) * .770
         #t += (ins + l)/2.0
         t += ins #tiltAdjust(x,y,d,ins) #* derate
-        l = ins
+
     print t/1000
     print t/(1000*365.0)
-    print "PV Watts using TMY2 is ~ 4.57 at 39.9 degree tilt"

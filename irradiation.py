@@ -20,10 +20,19 @@
 
 """
 from math import radians,degrees
-from numpy import sin, cos, tan, arcsin, arccos, arctan, pi
+from numpy import sin, cos, tan, arcsin, arccos, arctan, pi, arctan2
 import solar_fun
+import ephem
+import datetime
 
 def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
+    sun = ephem.Sun()
+    observer = ephem.Observer()
+    observer.lat,observer.lon = latitude,longitude
+    observer.date = d #+ datetime.timedelta(hours=5)
+
+    sun.compute(observer)
+
     #Gth = Btd + Dth + Rth
     ghi, dni, dhi = radiation
 
@@ -32,10 +41,11 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     Gh = ghi
 
     #day of year
-    n = d.timetuple().tm_yday #good
+    n = d.timetuple().tm_yday
+    S = radians(tilt) #
 
     #delta = declination of the sun
-    delta = radians(-23.44) * cos((2*pi/365)*(n+10)) # good
+    delta = radians(-23.44) * cos((2*pi/365)*(n+10)) 
 
     # phi = latitude
     phi = radians(latitude)
@@ -43,22 +53,31 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #omega = hour angle
     #crude hack
     offset = 12
-    omega   = (d.hour+offset)*15*(pi/180)               # Hour angle (15' per hour, a.m. -ve)
+    omega   = (d.hour+offset)*15*(pi/180) 
 
     #thetaZ = solar zenith
-    thetaZ = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(omega)) #probably good
-
-    #Z = solar zenith angle
+    thetaZ = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(omega)) 
     Z = thetaZ
 
-    #solar azimuth
     solar_azimuth = solar_fun.solar_azimuth(phi,delta,omega)
-
-    S = radians(tilt) #
 
     #theta = incident angle
     theta = arccos(sin(S)*sin(Z)*cos(solar_azimuth-plane_azimuth) + \
             cos(S)*cos(Z))
+
+    #begin testing theta
+    #ha1 = sun.az - pi
+    ha = observer.sidereal_time() - sun.ra
+    #print d, ha
+    delta = sun.dec
+    #topocentric astronmers azimuth angle
+    azi = arctan2(sin(ha),cos(ha)*sin(phi)-tan(delta)*cos(phi))
+
+    #topocentric zenith
+    L = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(ha))
+
+    #incidence angle
+    I = arccos(cos(L)*cos(S)+sin(S)*sin(L)*cos(azi))
 
     # p = ground reflectivity
     p = 0.2
@@ -66,10 +85,13 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #Badescu 2002
     #rd1 = 3+cos(2*S)/4
     #Tian et al. 2001
-    rd = 1 -S/(2 *pi)
+    #rd = 1 -S/(2 *pi)
+    #Liu and Jordan
+    rd = (1+cos(S))/2
 
     #NREL Manual
     Bth = Bh * cos(theta)
+    #Bth = (Bh * cos(I))
 
     #sky-diffuse
     Dth = rd*Dh # ?
@@ -77,6 +99,15 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #ground diffuse
     Rth = Gh*p*(1-cos(S))/2 #?
 
-
     Gth = Bth + Dth +Rth
     return Gth
+
+
+def perez(diffuse,beta,zenith):
+    a = max(0,cos(beta))
+    b = max(0.087,cos(zenith))
+
+    F1= 0
+    F2= 0
+
+    return diffuse*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
