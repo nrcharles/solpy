@@ -2,7 +2,7 @@ import csv
 import datetime
 import os
 import math
-import tilt
+import radiation
 
 #path to tmy3 data
 #default = ~/tmp3/
@@ -18,14 +18,14 @@ def strptime(string):
     return datetime.datetime(Y, M, D) + datetime.timedelta(hours=h, minutes=m)
 
 class data():
-    def __init__(self, USAF, tilt = 0):
+    def __init__(self, USAF, tilt = 0.0):
         filename = path + USAF + 'TY.csv'
         self.csvfile = open(filename)
         header =  self.csvfile.readline().split(',')
         self.tmy_data = csv.DictReader(self.csvfile)
-        self.latitude = header[4]
-        self.longitude = header[5]
-        print self.latitude, self.longitude
+        self.latitude = float(header[4])
+        self.longitude = float(header[5])
+        self.tilt = tilt 
     def __iter__(self):
         return self
     def next(self):
@@ -39,11 +39,10 @@ class data():
 
         d = strptime(sd)
 
-        if tilt > 0:
+        if self.tilt > 0:
             #ghi, dni, dhi = radiation
             #calculate total radiation
-            gth = tilt.adjust(self.latitude, self.longitude, d, (ghi, dni, dhi), tilt = 39.9)
-            gth = ghi
+            gth = radiation.tilt(self.latitude, self.longitude, d, (ghi, dni, dhi), self.tilt)
             return d, gth
         else:
             return d, ghi
@@ -69,6 +68,7 @@ def closestUSAF(latitude,longitude):
 if __name__ == "__main__":
     x = 40.22
     y = -76.85
+    tilt = 39.0
     #name, usaf = closestUSAF(40,-76.2) #Lancaster
     name, usaf = closestUSAF(39.867,-75.233)#Philadelphia
     #name, usaf = closestUSAF(40.22,-76.85) #Harrisburg
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     t = 0
     l = 0
     #derate = dc_ac_derate()
-    for d,ins in data(usaf):
+    for d,ins in data(usaf, tilt):
         #print d, dni, int(dni) * .770
         #t += (ins + l)/2.0
         t += ins #tiltAdjust(x,y,d,ins) #* derate

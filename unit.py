@@ -5,19 +5,18 @@ if not gImage:
     print "Error loading image '%s'" % filename
     sys.exit(1)
 
-m = model(gImage)
+m = model(gImage, 0)
 m.center = (337, 347)
 m.threshold = 20
 #m.cardinalOffset = 20
 m.cardinalOffset = 40
 m.radius = 302
 
-m.calculate(180)
+m.calculate()
 
 cv.WaitKey (0)
 ofilename = os.path.basename(filename).split('.')[0]
-m.saveC(ofilename)
-m.saveA(ofilename)
+m.save(ofilename, True)
 
 import site_analysis as sa
 import numpy as np

@@ -21,8 +21,6 @@ from math import cos
 from math import radians
 import os.path
 
-NORTH = 0
-
 def usage():
     """Prints usage options when called with no arguments or with invalid 
     arguments
@@ -35,7 +33,7 @@ def usage():
     """
 
 class model():
-    def __init__(self, initialImage):
+    def __init__(self, initialImage, NORTH = 180):
         #model
         self.cImage = initialImage
         self.res = cv.GetSize(self.cImage)
@@ -45,6 +43,7 @@ class model():
         self.cardinalOffset = 90
         self.threshold = 0
         self.polarArray = []
+        self.north = NORTH
 
     def render(self):
         """draw Vectors, North, then Horizon"""
@@ -53,7 +52,7 @@ class model():
         for vector in self.polarArray:
             a,m = vector
             cv.Line(displayImage, self.center, addVector(self.center,
-                (a+self.cardinalOffset+NORTH, m)) ,(255,0,0))
+                (a+self.cardinalOffset + self.north, m)) ,(255,0,0))
 
         #north
         point = self.center
@@ -67,7 +66,7 @@ class model():
         cv.Circle(displayImage, self.center, self.radius, (255,255,255))
         return displayImage
 
-    def calculate(self, north = NORTH):
+    def calculate(self):
         res = cv.GetSize(self.cImage)
         col_edge = cv.CreateImage(res, 8, 3)
         cv.SetZero(col_edge)
@@ -83,32 +82,40 @@ class model():
             while pixelCompare(col_edge,addVectorR(rPoint,(i,j)),rPoint) \
                     and j < self.radius:
                 j += 1
-            vectors.append(((1080 + 90 - i - self.cardinalOffset - north) \
+            vectors.append(((1080 + 90 -i -self.cardinalOffset -self.north) \
                     % 360 ,j))
         #return vectors
         self.polarArray = vectors
 
-    def saveV(self,filename):
-        cv.SaveImage(filename +'-vectors.png',self.render())
-
-    def saveC(self,filename):
+    def save(self, filename, cropFlag = False):
         """save cropped and rotated image"""
-        tmp =  rotate(self.cImage, self.center, self.cardinalOffset)
-        #mask horizon
-        mask = cv.CreateImage(self.res, 8, 1)
-        cv.Zero(mask)
-        cv.Circle(mask, self.center, self.radius, (255,255,255))
-        cv.FloodFill(mask,(1,1),(0,0,0))
-        cv.FloodFill(mask, self.center,
-                (255,255,255),lo_diff=cv.RealScalar(5))
-        masked = cv.CloneImage(tmp)
-        cv.Zero(masked)
-        cv.Copy(tmp, masked, mask)
-        cv.SaveImage(filename +'-cropped.png',crop(masked, self))
+        if not cropFlag:
+            cv.SaveImage(filename +'-vectors.png',self.render())
+        else:
+            tmp = rotate(self.cImage, self.center, self.cardinalOffset +\
+                    self.north)
+            #mask horizon
+            mask = cv.CreateImage(self.res, 8, 1)
+            cv.Zero(mask)
+            cv.Circle(mask, self.center, self.radius, (255,255,255))
+            cv.FloodFill(mask,(1,1),(0,0,0))
+            cv.FloodFill(mask, self.center,
+                    (255,255,255),lo_diff=cv.RealScalar(5))
+            masked = cv.CloneImage(tmp)
+            cv.Zero(masked)
+            cv.Copy(tmp, masked, mask)
+            cv.SaveImage(filename +'-cropped.png',crop(masked, self))
+        #CSV output
+        array = magnitudeToTheta(self.polarArray,self.radius)
+        f = open(filename + '.csv', 'w')
+        f.write('00\n')
+        f.write(','.join([str(v[0]) for v in array]))
+        f.write('\n')
+        f.write(','.join([str(v[1]) for v in array]))
+        f.write('\n')
+        f.flush()
+        f.close()
 
-    def saveA(self, filename):
-        outputArray = magnitudeToTheta(self.polarArray,self.radius)
-        saveArray(outputArray,filename + '.csv')
 
 def crop(src, sky):
     x,y  = sky.center
@@ -120,9 +127,9 @@ def crop(src, sky):
     return cropped
 
 def rotate(src, center, angle):
-    print angle
     mapMatrix = cv.CreateMat(2,3,cv.CV_64F)
-    cv.GetRotationMatrix2D( center, 450 - angle, 1.0, mapMatrix)
+    #cv.GetRotationMatrix2D( center, 450 - angle, 1.0, mapMatrix)
+    cv.GetRotationMatrix2D( center, 270 - angle, 1.0, mapMatrix)
     dst = cv.CreateImage( cv.GetSize(src), src.depth, src.nChannels)
     cv.SetZero(dst)
     cv.WarpAffine(src, dst, mapMatrix)
@@ -230,22 +237,13 @@ def getCannyMask(image, threshold):
     cv.Canny(gray, mask, threshold, threshold * 3, 3)
     return mask
 
-def saveArray(array, filename):
-    f = open(filename,'w')
-    f.write('00\n')
-    f.write(','.join([str(v[0]) for v in array]))
-    f.write('\n')
-    f.write(','.join([str(v[1]) for v in array]))
-    f.write('\n')
-    f.flush()
-    f.close()
-
 if __name__ == "__main__":
     import getopt
     import sys
     opts, args = getopt.getopt(sys.argv[1:], 'cf:hn')
     filename = None
     saveCropped = False
+    NORTH = 0
 
     if opts:
         for o,a in opts:
@@ -268,15 +266,11 @@ if __name__ == "__main__":
             print "Error loading image '%s'" % filename
             sys.exit(1)
 
-        m = model(gImage)
+        m = model(gImage, NORTH)
         ui = controller(m)
         cv.WaitKey (0)
         ofilename = os.path.basename(filename).split('.')[0]
-        if saveCropped is True:
-            m.saveC(ofilename)
-        else:
-            m.saveV(ofilename)
-        m.saveA(ofilename)
+        m.save(ofilename, saveCropped)
 
         #import site_analysis as sa
         #import numpy as np

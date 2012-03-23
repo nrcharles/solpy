@@ -1,15 +1,14 @@
 #!/usr/bin/python
 
-#    Copyright 2008-2010 Brandon Stafford
+#    Copyright 2012 Nathan Charles
 #
-#    This file is part of Pysolar.
 #
-#    Pysolar is free software; you can redistribute it and/or modify
+#    This is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    Pysolar is distributed in the hope that it will be useful,
+#    This software is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
@@ -20,13 +19,12 @@
 """Calculate different kinds of radiation components via default values
 
 """
-from math import radians
+from math import radians,degrees
 from numpy import sin, cos, tan, arcsin, arccos, arctan, pi
 import solar_fun
 
-def adjust(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
+def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #Gth = Btd + Dth + Rth
-    print latitude, longitude, d
     ghi, dni, dhi = radiation
 
     Bh = dni #hourly direct solar radiation
@@ -43,7 +41,8 @@ def adjust(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     phi = radians(latitude)
 
     #omega = hour angle
-    offset = 0
+    #crude hack
+    offset = 12
     omega   = (d.hour+offset)*15*(pi/180)               # Hour angle (15' per hour, a.m. -ve)
 
     #thetaZ = solar zenith
@@ -51,7 +50,7 @@ def adjust(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
 
     #Z = solar zenith angle
     Z = thetaZ
-    
+
     #solar azimuth
     solar_azimuth = solar_fun.solar_azimuth(phi,delta,omega)
 
@@ -78,7 +77,6 @@ def adjust(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #ground diffuse
     Rth = Gh*p*(1-cos(S))/2 #?
 
-    #print Bh, Bth, Z,theta
 
     Gth = Bth + Dth +Rth
     return Gth
