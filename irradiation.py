@@ -23,7 +23,6 @@ from math import radians,degrees
 from numpy import sin, cos, tan, arcsin, arccos, arctan, pi, arctan2
 import solar_fun
 import ephem
-import datetime
 
 def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     sun = ephem.Sun()
@@ -34,7 +33,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     sun.compute(observer)
 
     #Gth = Btd + Dth + Rth
-    ghi, dni, dhi = radiation
+    etr, ghi, dni, dhi = radiation
 
     Bh = dni #hourly direct solar radiation
     Dh = dhi
@@ -79,37 +78,58 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #incidence angle
     I = arccos(cos(L)*cos(S)+sin(S)*sin(L)*cos(azi))
 
-    # p = ground reflectivity
-    p = 0.2
+    #NREL Manual
+    theta = I
+    Bth = max(0,Bh * cos(theta))
+    #Bth = max(0,Bh * cos(I))
 
+    #sky-diffuse
     #Badescu 2002
     #rd = 3+cos(2*S)/4
     #Tian et al. 2001
     #rd = 1 -S/(2 *pi)
     #Liu and Jordan
-    rd = (1+cos(S))/2
+    #rd = (1+cos(S))/2
+    #Dth = rd*Dh # ?
 
-    #NREL Manual
-    #Bth = Bh * cos(theta)
-    Bth = max(0,Bh * cos(I))
-
-    #sky-diffuse
-    Dth = rd*Dh # ?
+    # perez(diffuse,hdi,etr,S,theta,zenith):
+    Dth = perez(Dh,dni,dhi,etr,S,theta,Z, pi/2 - observer.lon + sun.dec)
 
     #ground diffuse
+    # p = ground reflectivity
+    p = 0.2
     Rth = Gh*p*(1-cos(S))/2 #?
 
     Gth = Bth + Dth +Rth
     return Gth
 
-def perez(diffuse,hdi,etr,beta,zenith,e,airmass):
+def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
     """Perez et al. 1990
     Diffuse irradiance and illuminance on tilted surfaces
     """
+    #theta is incident angle of the sun
+    #Xh = horizontal diffuse
     Z = zenith
     Dh = hdi
-    m = airmass
+
+    #m = airmass
+    #Pickering 2002 footnote 39
+    m = 1/(sin(radians(h+244/(165+47*h**1.1))))
+
     I = etr
+    k = 1.041  #for Z in radians
+
+    #(1)
+    e = 0
+    if Dh > 0:
+        #print I,Dh,Z
+        e = round(((((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)))/3.14)
+        e = int(e)
+
+    #(2)
+    delta = Dh*m/I
+
+    #Table 6
     #Irradiance model
     IRR = [[-0.008, 0.588,-0.062,-0.060, 0.072,-0.022],
             [0.130, 0.683,-0.151,-0.019, 0.066,-0.029],
@@ -129,15 +149,19 @@ def perez(diffuse,hdi,etr,beta,zenith,e,airmass):
             [1.485,-1.214,-0.784, 0.411,-0.629,-0.082],
             [1.170,-0.300,-0.615, 0.518,-1.892,-0.055]]
 
-    delta = Dh*m/I
-    #eBin
 
-    a = max(0,cos(beta))
-    b = max(0.087,cos(zenith))
+    #3.2
+    a = max(0,cos(theta))
+    b = max(0.087,cos(Z))
 
+    
     F1= IRR[e][0] * IRR[e][1]*delta + IRR[e][2]*Z
     F2= IRR[e][3] + IRR[e][4]*delta + IRR[e][5]*Z
 
     #3.2.2 Illumanince Model
-
-    return diffuse*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
+    #(9)
+    Xc = Xh*((1-F1)*(1+cos(S))/2 + F1*a/b+F2*sin(S))
+    Xc = max(0,Xc)
+    #Xc = Xh*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
+    
+    return Xc

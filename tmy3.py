@@ -36,14 +36,14 @@ class data():
         ghi = int(i['GHI (W/m^2)'])
         dhi = int(i['DHI (W/m^2)'])
         dni = int(i['DNI (W/m^2)'])
-        #etrn = i['ETR (W/m^2)']
+        etr = int(i['ETR (W/m^2)'])
 
         d = strptime(sd)
 
         if self.tilt > 0:
             #ghi, dni, dhi = radiation
             #calculate total radiation
-            gth = irradiation.tilt(self.latitude, self.longitude, d, (ghi, dni, dhi), self.tilt)
+            gth = irradiation.tilt(self.latitude, self.longitude, d, (etr, ghi, dni, dhi), self.tilt)
             return d, gth
         else:
             return d, ghi
