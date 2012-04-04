@@ -2,4 +2,5 @@ TODO
 ----
 * convert to pyephem
 * solar hour angle (omega) function
-* Perez Diffusion model
+* Unit tests
+* Sandia Inverter Model http://prod.sandia.gov/techlib/access-control.cgi/2007/075036.pdf

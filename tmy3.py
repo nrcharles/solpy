@@ -17,6 +17,18 @@ def strptime(string):
     m = int(string[14:16])
     return datetime.datetime(Y, M, D) + datetime.timedelta(hours=h, minutes=m)
 
+def normalizeDate(tmyDate, year):
+    """change TMY3 date to an arbitrary year"""
+    Y = year
+    M = tmyDate.month
+    D = tmyDate.day -1
+    h = tmyDate.hour
+    m = 0
+    #hack to get around 24:00 notation
+    if M is 1 and D is 0 and h is 0:
+        Y = Y + 1
+    return datetime.datetime(Y, M, 1) + datetime.timedelta(days=D, hours=h, minutes=m)
+
 class data():
     def __init__(self, USAF, tilt = 0.0):
         filename = path + USAF + 'TY.csv'
@@ -67,19 +79,23 @@ def closestUSAF(latitude,longitude):
     return name, usaf
 
 if __name__ == "__main__":
-    tilt = 39.0
-    #name, usaf = closestUSAF(40,-76.2) #Lancaster
-    name, usaf = closestUSAF(39.867,-75.233)#Philadelphia
-    #name, usaf = closestUSAF(40.22,-76.85) #Harrisburg
-    #name, usaf = closestUSAF(39.88,-75.25)
-    #name, usaf = closestUSAF(42.1649,-72.779)
+    tilt = 50.0
+    #import matplotlib.pyplot as plt
+    from inverters import m215
+    from modules import mage250
+
+    p = mage250()
+    e = m215(p)
+    #s = ee.junction([(ee.wire(3,"8"),e)])
+    #s1 = ee.junction(s,[(ee.wire(3,"8"),e)])
+    #print "s1"
+    #print s1.a()
+
+    name, usaf = closestUSAF(40,-76.2) #Lancaster
     t = 0
-    l = 0
-    #derate = dc_ac_derate()
     for d,ins in data(usaf, tilt):
-        #print d, dni, int(dni) * .770
-        #t += (ins + l)/2.0
-        t += ins #tiltAdjust(x,y,d,ins) #* derate
+        output = ins
+        t += output
 
     print t/1000
     print t/(1000*365.0)

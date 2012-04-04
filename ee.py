@@ -286,7 +286,7 @@ _AL = {"14" : 5.170,
     "600" : .0353,
     "750" : .0282}
 
-class junction():
+class junction(object):
     """Takes tuples of wire and next junction"""
     def __init__(self, *args, **kwargs):
         self.children = []
@@ -306,6 +306,11 @@ class junction():
             t += child.a()
         return t
 
+    def i(self,Insolation):
+        t = 0
+        for child in self.children:
+            t += child.i(Insolation)
+        return t
 
 class cb():
     def __init__(self, rating, phase =1):
@@ -331,6 +336,8 @@ class branch():
     def a(self):
         return self.child.a()
 
+    def i(self, Insolation):
+        return self.child.i(Insolation)
 
 class m215():
     def __init__(self, number, landscape = True, phase =1):

@@ -79,7 +79,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     I = arccos(cos(L)*cos(S)+sin(S)*sin(L)*cos(azi))
 
     #NREL Manual
-    theta = I
+    #theta = I
     Bth = max(0,Bh * cos(theta))
     #Bth = max(0,Bh * cos(I))
 
@@ -123,7 +123,10 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
     e = 0
     if Dh > 0:
         #print I,Dh,Z
-        e = round(((((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)))/3.14)
+        #this factor is a mystery i don't currently understand what 
+        #it should be set at
+        factor = 3.45
+        e = round(((((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)))/factor)
         e = int(e)
 
     #(2)
