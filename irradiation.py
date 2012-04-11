@@ -24,7 +24,7 @@ from numpy import sin, cos, tan, arcsin, arccos, arctan, pi, arctan2
 import solar_fun
 import ephem
 
-def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
+def position(latitude, longitude, d, S, plane_azimuth):
     sun = ephem.Sun()
     observer = ephem.Observer()
     observer.lat,observer.lon = latitude,longitude
@@ -32,16 +32,8 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
 
     sun.compute(observer)
 
-    #Gth = Btd + Dth + Rth
-    etr, ghi, dni, dhi = radiation
-
-    Bh = dni #hourly direct solar radiation
-    Dh = dhi
-    Gh = ghi
-
     #day of year
     n = d.timetuple().tm_yday
-    S = radians(tilt) #
 
     #delta = declination of the sun
     delta = radians(-23.44) * cos((2*pi/365)*(n+10)) 
@@ -78,6 +70,20 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #incidence angle
     I = arccos(cos(L)*cos(S)+sin(S)*sin(L)*cos(azi))
 
+    zenith = pi/2 - observer.lon + sun.dec
+
+    return theta, Z, zenith
+
+def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
+    S = radians(tilt) #
+    theta, Z, zenith = position(latitude, longitude, d, S, plane_azimuth)
+    #Gth = Btd + Dth + Rth
+    etr, ghi, dni, dhi = radiation
+
+    Bh = dni #hourly direct solar radiation
+    Dh = dhi
+    Gh = ghi
+
     #NREL Manual
     #theta = I
     Bth = max(0,Bh * cos(theta))
@@ -93,7 +99,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     #Dth = rd*Dh # ?
 
     # perez(diffuse,hdi,etr,S,theta,zenith):
-    Dth = perez(Dh,dni,dhi,etr,S,theta,Z, pi/2 - observer.lon + sun.dec)
+    Dth = perez(Dh,dni,dhi,etr,S,theta,Z,zenith)
 
     #ground diffuse
     # p = ground reflectivity
