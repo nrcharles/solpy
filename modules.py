@@ -10,6 +10,9 @@ class module(object):
     def Vmax(self,ashraeMin):
         m = self.__class__
         return m.Voc + (ashraeMin-m.STC)*m.TkVoc
+    def Vdc(self):
+        m = self.__class__
+        return m.Vmpp
 
     def Vmin(self,ashrae2p,Tadd = 30):
         #Tadd 
@@ -24,10 +27,14 @@ class pvArray(module):
         self.panel = pname
         self.series = series
         self.parallel = parallel
+    def Vdc(self):
+        return self.panel.Vdc() * self.series
     def Vmax(self,ashraeMin):
-        return self.panel.Vmax(ashraeMin) * series
-    #def Vmin(self,ashrae2p, Tadd
-    #    return  self.panel.Vmin(ashrae2p)* series
+        return self.panel.Vmax(ashraeMin) * self.series
+    def Vmin(self,ashrae2p, Tadd = 30):
+        return  self.panel.Vmin(ashrae2p, Tadd)* self.series
+    def output(self, Insolation):
+        return self.panel.output(Insolation)*self.series*self.parallel
 
 class mage250(module):
     Pmax = 250
@@ -125,8 +132,12 @@ if __name__=="__main__":
     #p = sinodeu120()
     #print p.Eff
     p = motech245()
-    print p.Vmax(-13) * series
-    print p.Vmin(33) * series
+    print p.Vmax(-13)
+    print p.Vmin(33) 
     print p.output(950)
+    a = pvArray(motech245(), 14,2)
+    print a.Vmax(-13)
+    print a.Vmin(33)
+    print a.output(950)
     suite = unittest.TestLoader().loadTestsFromTestCase(testModules)
     unittest.TextTestRunner(verbosity=2).run(suite)

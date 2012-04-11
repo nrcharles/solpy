@@ -63,7 +63,8 @@ class data():
     def __del__(self):
         self.csvfile.close()
 
-def closestUSAF(latitude,longitude):
+def closestUSAF(place):
+    latitude,longitude = place
     index = open(path + 'TMY3_StationsMeta.csv')
     index_data = csv.DictReader(index)
     d1 = 9999
@@ -78,6 +79,17 @@ def closestUSAF(latitude,longitude):
     index.close()
     return name, usaf
 
+def zipToCoordinates(zip):
+    index = open('zipcode.csv')
+    #read over license
+    headerLen = 31
+    for i in range(headerLen):
+        index.readline()
+    index_data = csv.DictReader(index)
+    for i in index_data:
+        if int(i['zip']) == zip:
+            return float(i['latitude']),float( i['longitude'])
+
 if __name__ == "__main__":
     tilt = 50.0
     #import matplotlib.pyplot as plt
@@ -91,7 +103,8 @@ if __name__ == "__main__":
     #print "s1"
     #print s1.a()
 
-    name, usaf = closestUSAF(40,-76.2) #Lancaster
+    #name, usaf = closestUSAF((40,-76.2)) #Lancaster
+    name, usaf = closestUSAF(zipToCoordinates(17601)) #Lancaster
     t = 0
     for d,ins in data(usaf, tilt):
         output = ins
