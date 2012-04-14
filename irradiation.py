@@ -19,64 +19,13 @@
 """Calculate different kinds of radiation components via default values
 
 """
-from math import radians,degrees
-from numpy import sin, cos, tan, arcsin, arccos, arctan, pi, arctan2
-import solar_fun
-import ephem
+from math import radians
+from numpy import sin, cos
+from solar import position
 
-def position(latitude, longitude, d, S, plane_azimuth):
-    sun = ephem.Sun()
-    observer = ephem.Observer()
-    observer.lat,observer.lon = latitude,longitude
-    observer.date = d #+ datetime.timedelta(hours=5)
-
-    sun.compute(observer)
-
-    #day of year
-    n = d.timetuple().tm_yday
-
-    #delta = declination of the sun
-    delta = radians(-23.44) * cos((2*pi/365)*(n+10)) 
-
-    # phi = latitude
-    phi = radians(latitude)
-
-    #omega = hour angle
-    #crude hack
-    offset = 12
-    omega   = (d.hour+offset)*15*(pi/180) 
-
-    #thetaZ = solar zenith
-    thetaZ = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(omega)) 
-    Z = thetaZ
-
-    solar_azimuth = solar_fun.solar_azimuth(phi,delta,omega)
-
-    #theta = incident angle
-    theta = arccos(sin(S)*sin(Z)*cos(solar_azimuth-plane_azimuth) + \
-            cos(S)*cos(Z))
-
-    #begin testing theta
-    #ha1 = sun.az - pi
-    ha = observer.sidereal_time() - sun.ra
-    #print d, ha
-    delta = sun.dec
-    #topocentric astronmers azimuth angle
-    azi = arctan2(sin(ha),cos(ha)*sin(phi)-tan(delta)*cos(phi))
-
-    #topocentric zenith
-    L = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(ha))
-
-    #incidence angle
-    I = arccos(cos(L)*cos(S)+sin(S)*sin(L)*cos(azi))
-
-    zenith = pi/2 - observer.lon + sun.dec
-
-    return theta, Z, zenith
-
-def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
+def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
     S = radians(tilt) #
-    theta, Z, zenith = position(latitude, longitude, d, S, plane_azimuth)
+    theta, Z, zenith = position(latitude, longitude, d, S, radians(plane_azimuth))
     #Gth = Btd + Dth + Rth
     etr, ghi, dni, dhi = radiation
 
@@ -85,9 +34,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = pi):
     Gh = ghi
 
     #NREL Manual
-    #theta = I
     Bth = max(0,Bh * cos(theta))
-    #Bth = max(0,Bh * cos(I))
 
     #sky-diffuse
     #Badescu 2002
@@ -131,7 +78,7 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
         #print I,Dh,Z
         #this factor is a mystery i don't currently understand what 
         #it should be set at
-        factor = 3.45
+        factor = 5.0
         e = round(((((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)))/factor)
         e = int(e)
 
@@ -163,7 +110,6 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
     a = max(0,cos(theta))
     b = max(0.087,cos(Z))
 
-    
     F1= IRR[e][0] * IRR[e][1]*delta + IRR[e][2]*Z
     F2= IRR[e][3] + IRR[e][4]*delta + IRR[e][5]*Z
 
@@ -172,5 +118,4 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
     Xc = Xh*((1-F1)*(1+cos(S))/2 + F1*a/b+F2*sin(S))
     Xc = max(0,Xc)
     #Xc = Xh*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
-    
     return Xc

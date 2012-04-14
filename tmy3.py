@@ -30,7 +30,7 @@ def normalizeDate(tmyDate, year):
     return datetime.datetime(Y, M, 1) + datetime.timedelta(days=D, hours=h, minutes=m)
 
 class data():
-    def __init__(self, USAF, tilt = 0.0):
+    def __init__(self, USAF, tilt = 0.0, azimuth = 180.0):
         filename = path + USAF + 'TY.csv'
         self.csvfile = open(filename)
         header =  self.csvfile.readline().split(',')
@@ -39,6 +39,7 @@ class data():
         self.longitude = float(header[5])
         print self.latitude, self.longitude
         self.tilt = tilt 
+        self.azimuth = azimuth
     def __iter__(self):
         return self
     def next(self):
@@ -55,7 +56,7 @@ class data():
         if self.tilt > 0:
             #ghi, dni, dhi = radiation
             #calculate total radiation
-            gth = irradiation.tilt(self.latitude, self.longitude, d, (etr, ghi, dni, dhi), self.tilt)
+            gth = irradiation.tilt(self.latitude, self.longitude, d, (etr, ghi, dni, dhi), self.tilt, self.azimuth)
             return d, gth
         else:
             return d, ghi
