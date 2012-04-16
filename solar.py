@@ -59,6 +59,7 @@ def position(latitude, longitude, d, S, plane_azimuth):
     #begin testing theta
     #ha1 = sun.az - pi
     ha = observer.sidereal_time() - sun.ra
+    #print degrees(omega), degrees(ha)
     #print d, ha
     delta = sun.dec
     #topocentric astronmers azimuth angle
