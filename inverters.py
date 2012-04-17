@@ -1,5 +1,7 @@
 class inverter(object):
     """Sandia Model"""
+    #Inverter Output = Array STC power * Irradiance * Negative Module Power Tolerance * Soiling * Temperature factor * Wiring efficiency * Inverter efficiency
+
     def __init__(self, array):
         self.array = array
     def Pac(self, Insolation):

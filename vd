@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+# Copyright (C) 2012 Nathan Charles
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+def usage():
+    """Prints usage options when called with no arguments or with invalid arguments
+    """
+    print """usage: [options]
+   -a    current
+   -l    length
+   -p    phase [default 1]
+   -v    voltage [default 240]
+   -s    size
+   -h    help
+    """
+
+import ee
+
+#def solve()
+def solve(args, **kwargs):
+    a =  args['current']
+    l = args['length']
+    v = args['voltage']
+    percent = args['drop']
+    material = 'AL'
+    if args['copper']:
+        material = 'CU'
+    c = args['conduit']
+    vd = args['voltage'] * percent/100
+    size = args['size']
+    r = 0
+    if size:
+        r = ee.resistance(ee.conductor(size, material),c,1)
+        vd = 2.0* a * r * l/1000.0
+        print vd
+        print vd * 100/v
+
+    else:
+        print vd
+        #vd = 2*a*l*r/1000
+        r = 1000/(2.0 * a*l)
+        print r
+
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
+    parser.add_argument('-a', '--current',type=float)
+    parser.add_argument('-c', '--copper',action='store_true')
+    parser.add_argument('-d', '--drop',type=float,default=1,help="Voltage drop percent")
+    parser.add_argument('-v', '--voltage',type=float,default=240)
+    parser.add_argument('-l', '--length',type=float)
+    parser.add_argument('-p', '--conduit',type=str,default='PVC')
+    parser.add_argument('-s', '--size',type=str)
+    args = vars(parser.parse_args())
+    #solve(args['current'],args['length'],args['voltage'],args['drop'])
+    #print args
+
+    try:
+        #start program
+        solve(args)
+
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit(1)
+    except:
+        raise

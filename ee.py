@@ -419,6 +419,8 @@ def resistance(conductor, conduit, phase, temperature = 75):
     if phase == "DC":
         r = conductor.r() * (1 + conductor.a() * ( temperature -75))
         return r
+    if phase ==3:
+        print "Fix me!"
 
 def voltagedrop(*args, **kwargs):
     a = 0
