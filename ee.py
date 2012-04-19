@@ -10,6 +10,9 @@ Voltage drop
 """
 import math
 
+CONDUCTOR_STANDARD_SIZES = ["14","12","10","8","6","4","2","1","1/0","2/0",\
+        "3/0","4/0","250","300","350","400","500","600","750"]
+
 #dc
 cu = {"18":8.08,
     "16":5.08,
@@ -244,6 +247,8 @@ STEEL_AL = {"14" : 5.100,
     "600" : 0.038,
     "750" : 0.031}
 
+
+
 _CU = {"14" : 3.140,
     "12" : 1.980,
     "10" : 1.240,
@@ -394,7 +399,7 @@ class conductor():
         self.size = size
 
     def r(self, conduit = ""):
-        print "%s_%s" % (conduit, self.type)
+        #print "%s_%s" % (conduit, self.type)
         return globals()["%s_%s" % (conduit,self.type)][self.size]
 
     def x(self, conduit):
@@ -476,12 +481,20 @@ class engage():
             return a
         else:
             return (len(self.s1)+len(self.s2)) /1.732
+def findConductor(r, material = "CU",conduit = "PVC"):
+    for s in CONDUCTOR_STANDARD_SIZES:
+        tr = resistance(conductor(s,material),conduit,1)
+        if tr < r:
+            return s
+    raise "ReistanceToSmall"
 
 if __name__ == "__main__":
     #house = netlist()
     #house.append(meter())
     #house.append(junction())
     #a = engage(17, 1, True, True)
+    print "Find CU"
+    print findConductor(1.2)
     b = engage(17)
     #print b.vd()
     #j1 = junction()

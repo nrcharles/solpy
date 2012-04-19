@@ -131,7 +131,9 @@ if __name__=="__main__":
     series = 1
     #p = sinodeu120()
     #print p.Eff
-    p = motech245()
+    #p = motech245()
+    p = mage250()
+
     print p.Vmax(-13)
     print p.Vmin(33) 
     print p.output(950)

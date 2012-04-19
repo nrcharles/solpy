@@ -13,9 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from tmy3 import *
-#import numpy as np
-from numpy import *
+import tmy3
+import numpy as np
+#from numpy import *
 from inverters import *
 from modules import *
 
@@ -39,13 +39,13 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
 
-    ts = array([])
-    hins = array([])
-    dts = array([])
-    dins = array([])
+    ts = np.array([])
+    hins = np.array([])
+    dts = np.array([])
+    dins = np.array([])
 
     #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-    name, usaf = closestUSAF(zipToCoordinates(17601)) #Lancaster
+    name, usaf = tmy3.closestUSAF(tmy3.zipToCoordinates(17601)) #Lancaster
     t = 0
     l = 0
     #derate = dc_ac_derate()
@@ -68,18 +68,18 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
     #print si.Pac(800)
     "Print modeling array and inverter: currently hardcoded to Enphase m215 and Mage 250"
 
-    for d,ins in data(usaf, tilt):
-        dt = normalizeDate(d,year)
-        ts = append(ts,dt)
-        hins = append(hins,ins)
+    for d,ins in tmy3.data(usaf, tilt):
+        dt = tmy3.normalizeDate(d,year)
+        ts = np.append(ts,dt)
+        hins = np.append(hins,ins)
         #output = si.Pac(ins)
         output = e.Pac(ins) * array_shape 
         if d.day is day:
             do += output
         else:
             dmax = max(dmax,do)
-            dts = append(dts,dt)
-            dins = append(dins,do/1000)
+            dts = np.append(dts,dt)
+            dins = np.append(dins,do/1000)
             do = 0
         t += output
         day = d.day
