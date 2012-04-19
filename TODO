@@ -1,6 +1,7 @@
 TODO
 ----
-* convert to pyephem
-* solar hour angle (omega) function
+* convert to pyephem ?
+* fix solar hour angle (omega) function
 * Unit tests
-* Sandia Inverter Model http://prod.sandia.gov/techlib/access-control.cgi/2007/075036.pdf
+* Sandia PV Array Performance Model http://photovoltaics.sandia.gov/docs/PDF/King%20SAND.pdf 
+* Neher-McGrath wire model
