@@ -12,6 +12,54 @@ import math
 
 CONDUCTOR_STANDARD_SIZES = ["14","12","10","8","6","4","2","1","1/0","2/0",\
         "3/0","4/0","250","300","350","400","500","600","750"]
+#NEC 240.6
+OCP_STANDARD_SIZES = [15,20,25,30,35,40,45,50,50,60,70,80,90,100,110,125,150,\
+        175,200,225,250,300,350,400,450,500,600,700,800,1000,1200,1600,2000,\
+        2500,3000,4000,5000,6000]
+#NEC 310.15(B)(16)
+CU_AMPACITY_A30_75 = {"14":20,
+        "12":25,
+        "10":35,
+        "8":50,
+        "6":65,
+        "4":85,
+        "3":100,
+        "2":115,
+        "1":130,
+        "1/0":150,
+        "2/0":175,
+        "3/0":200,
+        "4/0":230,
+        "250":255,
+        "300":285,
+        "350":310,
+        "400":335,
+        "500":380,
+        "600":420,
+        "700":460,
+        "750":475}
+AL_AMPACITY_A30_75 = {"14": None,
+        "12":20,
+        "10":30,
+        "8":40,
+        "6":50,
+        "4":65,
+        "3":75,
+        "2":90,
+        "1":100,
+        "1/0":120,
+        "2/0":135,
+        "3/0":155,
+        "4/0":180,
+        "250":205,
+        "300":230,
+        "350":250,
+        "400":270,
+        "500":310,
+        "600":340,
+        "700":375,
+        "750":385}
+#Ambiant Temperature Correction Factor
 
 #dc
 cu = {"18":8.08,
@@ -247,8 +295,6 @@ STEEL_AL = {"14" : 5.100,
     "600" : 0.038,
     "750" : 0.031}
 
-
-
 _CU = {"14" : 3.140,
     "12" : 1.980,
     "10" : 1.240,
@@ -393,14 +439,14 @@ class circuit():
     def r(self):
         pass
 
-class conductor():
+class conductor(object):
     def __init__(self, size, material):
-        self.type = material
+        self.material = material
         self.size = size
 
     def r(self, conduit = ""):
-        #print "%s_%s" % (conduit, self.type)
-        return globals()["%s_%s" % (conduit,self.type)][self.size]
+        #print "%s_%s" % (conduit, self.material)
+        return globals()["%s_%s" % (conduit,self.material)][self.size]
 
     def x(self, conduit):
         #lt = "%s_%s" % (conduit,"X")
@@ -410,28 +456,36 @@ class conductor():
     def a(self):
         a = {"CU":0.00323,
                 "AL":0.00330}
-        return a[self.type]
+        return a[self.material]
+    def __str__(self):
+        return "%s %s" % (self.size, self.material)
 
 #class conduit():
-#    def __init__(self,type):
-#        self.type = type
+#    def __init__(self,material):
+#        self.material = material
 
-def resistance(conductor, conduit, phase, temperature = 75):
-    if phase == 1:
-        r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
-        x = conductor.x(conduit)
-        return math.sqrt(r*r+x*x)
-    if phase == 0:
+def resistance(conductor, conduit, pf=None, temperature = 75):
+    #Rewrite with PowerFactor
+    if pf:
+        if pf > 1:
+            print "warning:pf > 1"
+        if pf < -1:
+            print "warning:pf < -1"
+        if pf == -1:
+            #worst case
+            r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
+            x = conductor.x(conduit)
+            return math.sqrt(r*r+x*x)
+        else:
+            theta = math.acos(pf)
+            #theta = math.acos(0.7)
+            r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
+            x = conductor.x(conduit)
+            z = r * math.cos(theta) + x * math.sin(theta)
+            return z
+    else:
         r = conductor.r() * (1 + conductor.a() * ( temperature -75))
         return r
-    if phase ==3:
-        theta = math.acos(0.95)
-        #theta = math.acos(0.7)
-        r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
-        x = conductor.x(conduit)
-        z = r * math.cos(theta) + x * math.sin(theta)
-        print "Fix me!"
-        return z
 
 def voltagedrop(*args, **kwargs):
     a = 0
@@ -487,19 +541,36 @@ class engage():
             return a
         else:
             return (len(self.s1)+len(self.s2)) /1.732
-def findConductor(r, material = "CU",conduit = "PVC"):
+def findConductor(r, material = "CU",conduit = "PVC", pf = .778):
     for s in CONDUCTOR_STANDARD_SIZES:
-        tr = resistance(conductor(s,material),conduit,1)
+        tr = resistance(conductor(s,material),conduit,pf)
         if tr < r:
+            print tr
+            return conductor(s,material)
+    raise "ReistanceTooSmall"
+
+def findOCP(oc, material = "CU"):
+    for s in OCP_STANDARD_SIZES:
+        if s > oc:
             return s
-    raise "ReistanceToSmall"
+    raise "CurrentTooGreat"
+
+def checkAmpacity(c, oca):
+    ampacity = globals()["%s_AMPACITY_A30_75" % (c.material)][c.size] 
+    print "Ampacity", ampacity
+    if ampacity < oca:
+        print "Warning: conductor appacity %s is exceeded by OCP rating: %s" % (ampacity,oca)
+        for s in CONDUCTOR_STANDARD_SIZES:
+            conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
+            if conductor_oc > oca:
+                print "Minimum size is %s %s" % (s, c.material)
+                return
 
 if __name__ == "__main__":
     #house = netlist()
     #house.append(meter())
     #house.append(junction())
     #a = engage(17, 1, True, True)
-    print "Find CU"
     print findConductor(1.2)
     b = engage(17)
     #print b.vd()
@@ -524,15 +595,5 @@ if __name__ == "__main__":
     #print "Voltage Drop"
     #print voltagedrop(w1, w1, b)
     print "resistance"
-    print resistance(conductor("400","CU"),"PVC",1)
-    print ".7"
-    print resistance(conductor("400","CU"),"PVC",3)
-    print resistance(conductor("400","CU"),"AL",3)
-    print "dc"
-    print resistance(conductor("400","CU"),"PVC",0)
-    print resistance(conductor("400","CU"),"AL",1)
-    print resistance(conductor("400","AL"),"PVC",1)
-    print resistance(conductor("400","AL"),"AL",1)
-    print resistance(conductor("400","CU"),"STEEL",1)
-    print resistance(conductor("400","AL"),"STEEL",1)
+    print resistance(conductor("400","AL"),"STEEL",.77)
     print resistance(conductor("400","AL"),"STEEL","DC")

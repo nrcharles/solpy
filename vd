@@ -31,9 +31,13 @@ import ee
 #def solve()
 def solve(args, **kwargs):
     a =  eval(args['current'])
+    oc = a * 1.25
     print "Current: %s" % a
+    ocp =ee.findOCP(oc)
+    print "OCP Size: %s" % ocp
     l = args['length']
     v = args['voltage']
+    pf = args['powerfactor']
     percent = args['drop']
     material = 'AL'
     if args['copper']:
@@ -43,18 +47,21 @@ def solve(args, **kwargs):
     size = args['size']
     r = 0
     if size:
-        r = ee.resistance(ee.conductor(size, material),c,1)
+        tconductor = ee.conductor(size, material)
+        r = ee.resistance( tconductor,c,1)
         vd = 2.0* a * r * l/1000.0
         print "Voltage drop: %sV" % vd
         print "Percent drop: %s%%" % (vd * 100/v)
+        ee.checkAmpacity(tconductor, ocp)
 
     else:
         print vd
         #vd = 2*a*l*r/1000
         r = (vd*1000)/(2.0 * a*l)
         print r
-        print "Conductor", ee.findConductor(r,material), material
-
+        conductor = ee.findConductor(r,material,c,pf)
+        print "Conductor %s" % conductor
+        ee.checkAmpacity(conductor, ocp)
 
 if __name__ == "__main__":
     import argparse
@@ -64,6 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--copper',action='store_true')
     parser.add_argument('-d', '--drop',type=float,default=1,help="Voltage drop percent")
     parser.add_argument('-v', '--voltage',type=float,default=240)
+    parser.add_argument('-f', '--powerfactor',type=float,default=-1)
     parser.add_argument('-l', '--length',type=float)
     parser.add_argument('-p', '--conduit',type=str,default='PVC')
     parser.add_argument('-s', '--size',type=str)
