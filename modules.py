@@ -128,14 +128,14 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 1
+    series = 12
     #p = sinodeu120()
     #print p.Eff
     #p = motech245()
     p = mage250()
 
-    print p.Vmax(-13)
-    print p.Vmin(33) 
+    print p.Vmax(-13) * series
+    print p.Vmin(33) * series
     print p.output(950)
     a = pvArray(motech245(), 14,2)
     print a.Vmax(-13)

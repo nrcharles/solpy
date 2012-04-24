@@ -45,8 +45,8 @@ def solve(args, **kwargs):
     if size:
         r = ee.resistance(ee.conductor(size, material),c,1)
         vd = 2.0* a * r * l/1000.0
-        print vd
-        print vd * 100/v
+        print "Voltage drop: %sV" % vd
+        print "Percent drop: %s%%" % (vd * 100/v)
 
     else:
         print vd

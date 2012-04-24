@@ -421,11 +421,17 @@ def resistance(conductor, conduit, phase, temperature = 75):
         r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
         x = conductor.x(conduit)
         return math.sqrt(r*r+x*x)
-    if phase == "DC":
+    if phase == 0:
         r = conductor.r() * (1 + conductor.a() * ( temperature -75))
         return r
     if phase ==3:
+        theta = math.acos(0.95)
+        #theta = math.acos(0.7)
+        r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
+        x = conductor.x(conduit)
+        z = r * math.cos(theta) + x * math.sin(theta)
         print "Fix me!"
+        return z
 
 def voltagedrop(*args, **kwargs):
     a = 0
@@ -519,6 +525,11 @@ if __name__ == "__main__":
     #print voltagedrop(w1, w1, b)
     print "resistance"
     print resistance(conductor("400","CU"),"PVC",1)
+    print ".7"
+    print resistance(conductor("400","CU"),"PVC",3)
+    print resistance(conductor("400","CU"),"AL",3)
+    print "dc"
+    print resistance(conductor("400","CU"),"PVC",0)
     print resistance(conductor("400","CU"),"AL",1)
     print resistance(conductor("400","AL"),"PVC",1)
     print resistance(conductor("400","AL"),"AL",1)
