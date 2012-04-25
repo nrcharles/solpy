@@ -20,12 +20,13 @@
 
 """
 from math import radians
+from math import degrees
 from numpy import sin, cos
 from solar import position
 
 def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
     S = radians(tilt) #
-    theta, Z, zenith = position(latitude, longitude, d, S, radians(plane_azimuth))
+    theta, Z = position(latitude, longitude, d, S, radians(plane_azimuth))
     #Gth = Btd + Dth + Rth
     etr, ghi, dni, dhi = radiation
 
@@ -46,7 +47,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
     #Dth = rd*Dh # ?
 
     # perez(diffuse,hdi,etr,S,theta,zenith):
-    Dth = perez(Dh,dni,dhi,etr,S,theta,Z,zenith)
+    Dth = perez(Dh,dni,dhi,etr,S,theta,Z)
 
     #ground diffuse
     # p = ground reflectivity
@@ -56,7 +57,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
     Gth = Bth + Dth +Rth
     return Gth
 
-def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
+def perez(Xh,dni,hdi,etr,S,theta,zenith):
     """Perez et al. 1990
     Diffuse irradiance and illuminance on tilted surfaces
     """
@@ -67,7 +68,18 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
 
     #m = airmass
     #Pickering 2002 footnote 39
-    m = 1/(sin(radians(h+244/(165+47*h**1.1))))
+    #h = apparant altitude
+    #print h, 90 - degrees(zenith)
+    h =  90 - degrees(zenith)
+    m = 0
+    m1 = 0
+    #print degrees(zenith)
+    #if dni > 10:
+    if h > 0:
+        m = 1/(sin(radians(h+244/(165+47*h**1.1))))
+    if degrees(zenith) < 96:
+        m1 = 1/(cos(zenith) + 0.50572*(6.07995+90-degrees(zenith))**-1.6364)
+    #print dni, m, m1
 
     I = etr
     k = 1.041  #for Z in radians
@@ -78,12 +90,15 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith,h):
         #print I,Dh,Z
         #this factor is a mystery i don't currently understand what 
         #it should be set at
-        factor = 5.0
+        #factor = 5.0
+        factor = 4.0
         e = round(((((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)))/factor)
         e = int(e)
 
     #(2)
-    delta = Dh*m/I
+    delta = 0
+    if I is not 0:
+        delta = Dh*m/I
 
     #Table 6
     #Irradiance model

@@ -23,6 +23,7 @@ import re
 from   numpy import sin, cos, tan, arcsin, arccos, arctan, pi
 from   datetime import *
 import scipy.interpolate
+import solar
 
 class weather_data():
     def __init__(self, placename):
@@ -181,7 +182,7 @@ class solar_day():
         else:
             self.time_s  = (np.arange(1440)+4*(self.L.lon_s-self.L.lon)+solar_time(self.n))/1440.0 
         self.omega   = (self.time_s-0.5)*24*15*(pi/180)               # Hour angle (15' per hour, a.m. -ve)
-        self.gamma_s = np.array([solar_azimuth(self.L.phi,self.delta,m) for m in self.omega]) # Solar azimuth
+        self.gamma_s = np.array([solar.azimuth(self.L.phi,self.delta,m) for m in self.omega]) # Solar azimuth
         self.theta_z = arccos( cos(self.L.phi)*cos(self.delta)*cos(self.omega) +
                        sin(self.L.phi)*sin(self.delta) )              # Zenith angle (1.6.5)
         self.theta   = arccos( cos(self.theta_z)*cos(self.C.beta) +   # Angle of incidence on collector (1.6.3)
@@ -200,25 +201,6 @@ class solar_day():
         
 
 
-def solar_azimuth(phi,delta,omega):
-    '''solar_azimuth: Solar azimuth angle (from D&B eq. 1.6.6)
-       (Angle from South of the projection of beam radiation on the horizontal plane, W = +ve)
-    Arguments: 
-    omega - Hour angle (radians)
-    phi   - Latitude (radians)
-    '''
-    omega_ew = arccos(tan(delta)/tan(phi))  # E-W hour angle (1.6.6g)
-    if (abs(omega) < omega_ew): C_1 =  1
-    else:                       C_1 = -1
-    if (phi*(phi-delta) >= 0):  C_2 =  1
-    else:                       C_2 = -1
-    if (omega >= 0):            C_3 =  1
-    else:                       C_3 = -1
-    #gamma_sp = arctan( sin(omega) / (sin(phi)*cos(omega)-cos(phi)*tan(delta)) ) # Gives error!
-    theta_z  = arccos( cos(phi)*cos(delta)*cos(omega) + sin(phi)*sin(delta) )
-    gamma_sp = arcsin( sin(omega)*cos(delta)/sin(theta_z) )
-    gamma_s  = C_1*C_2*gamma_sp + C_3*((1.0-C_1*C_2)/2.0)*np.pi
-    return gamma_s
 
 def solar_time(n):
     '''solar_time: returns E, for solar/local time offset.'''

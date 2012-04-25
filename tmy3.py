@@ -92,7 +92,7 @@ def zipToCoordinates(zip):
             return float(i['latitude']),float( i['longitude'])
 
 if __name__ == "__main__":
-    tilt = 50.0
+    tilt = 32.0
     #import matplotlib.pyplot as plt
     from inverters import m215
     from modules import mage250

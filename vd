@@ -39,9 +39,9 @@ def solve(args, **kwargs):
     v = args['voltage']
     pf = args['powerfactor']
     percent = args['drop']
-    material = 'AL'
-    if args['copper']:
-        material = 'CU'
+    material = 'CU'
+    if args['aluminum']:
+        material = 'AL'
     c = args['conduit']
     vd = args['voltage'] * percent/100
     size = args['size']
@@ -66,15 +66,16 @@ def solve(args, **kwargs):
 if __name__ == "__main__":
     import argparse
     import sys
-    parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
-    parser.add_argument('-a', '--current')
-    parser.add_argument('-c', '--copper',action='store_true')
-    parser.add_argument('-d', '--drop',type=float,default=1,help="Voltage drop percent")
+    parser = argparse.ArgumentParser(description='Voltage Drop/Rise Calculator')
+    parser.add_argument('-a', '--aluminum',action='store_true')
+    parser.add_argument('-c', '--current',required=True,help="accepts basic math") #evaluated to allow command line math
+    parser.add_argument('-d', '--drop',type=float,default=1,help="Voltage Drop/Rise in percent")
     parser.add_argument('-v', '--voltage',type=float,default=240)
     parser.add_argument('-f', '--powerfactor',type=float,default=-1)
-    parser.add_argument('-l', '--length',type=float)
+    parser.add_argument('-l', '--length',required=True,type=float)
     parser.add_argument('-p', '--conduit',type=str,default='PVC')
-    parser.add_argument('-s', '--size',type=str)
+    parser.add_argument('-s', '--size',type=str,help="wire size")
+    #parser.print_help()
     args = vars(parser.parse_args())
     #solve(args['current'],args['length'],args['voltage'],args['drop'])
     #print args

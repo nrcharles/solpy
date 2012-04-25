@@ -19,24 +19,34 @@
 """Calculate different kinds of radiation components via default values
 
 """
-from math import radians,degrees
-from numpy import sin, cos, tan, arccos, pi, arctan2
-import solar_fun
-import ephem
+from math import radians #,degrees
+from numpy import sin, cos, tan, arccos, arcsin, pi #, arctan2
+
+def azimuth(phi,delta,omega):
+    '''solar_azimuth: Solar azimuth angle (from D&B eq. 1.6.6)
+       (Angle from South of the projection of beam radiation on the horizontal plane, W = +ve)
+    Arguments: 
+    omega - Hour angle (radians)
+    phi   - Latitude (radians)
+    '''
+    omega_ew = arccos(tan(delta)/tan(phi))  # E-W hour angle (1.6.6g)
+    if (abs(omega) < omega_ew): C_1 =  1
+    else:                       C_1 = -1
+    if (phi*(phi-delta) >= 0):  C_2 =  1
+    else:                       C_2 = -1
+    if (omega >= 0):            C_3 =  1
+    else:                       C_3 = -1
+    #gamma_sp = arctan( sin(omega) / (sin(phi)*cos(omega)-cos(phi)*tan(delta)) ) # Gives error!
+    theta_z  = arccos( cos(phi)*cos(delta)*cos(omega) + sin(phi)*sin(delta) )
+    gamma_sp = arcsin( sin(omega)*cos(delta)/sin(theta_z) )
+    gamma_s  = C_1*C_2*gamma_sp + C_3*((1.0-C_1*C_2)/2.0)*pi
+    return gamma_s
 
 def position(latitude, longitude, d, S, plane_azimuth):
-    sun = ephem.Sun()
-    observer = ephem.Observer()
-    observer.lat,observer.lon = latitude,longitude
-    observer.date = d #+ datetime.timedelta(hours=5)
-
-    sun.compute(observer)
-
-    #day of year
     n = d.timetuple().tm_yday
 
     #delta = declination of the sun
-    delta = radians(-23.44) * cos((2*pi/365)*(n+10)) 
+    delta = radians(-23.44) * cos((2*pi/365)*(n+10))
 
     # phi = latitude
     phi = radians(latitude)
@@ -44,36 +54,16 @@ def position(latitude, longitude, d, S, plane_azimuth):
     #omega = hour angle
     #crude hack
     offset = 12
-    omega   = (d.hour+offset)*15*(pi/180) 
+    omega   = (d.hour+offset)*15*(pi/180)
 
     #thetaZ = solar zenith
-    thetaZ = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(omega)) 
+    thetaZ = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(omega))
     Z = thetaZ
 
-    solar_azimuth = solar_fun.solar_azimuth(phi,delta,omega)
+    solar_azimuth = azimuth(phi,delta,omega)
 
     #theta = incident angle
     theta = arccos(sin(S)*sin(Z)*cos(solar_azimuth-plane_azimuth) + \
             cos(S)*cos(Z))
 
-    #begin testing theta
-    #ha1 = sun.az - pi
-    ha = observer.sidereal_time() - sun.ra
-    #print degrees(omega), degrees(ha)
-    #print d, ha
-    delta = sun.dec
-    #topocentric astronmers azimuth angle
-    azi = arctan2(sin(ha),cos(ha)*sin(phi)-tan(delta)*cos(phi))
-
-    #topocentric zenith
-    L = arccos(sin(phi)*sin(delta)+cos(phi)*cos(delta)*cos(ha))
-
-    #incidence angle
-    I = arccos(cos(L)*cos(S)+sin(S)*sin(L)*cos(azi))
-    #theta = I
-
-    zenith = pi/2 - observer.lon + sun.dec
-    #print theta, I
-
-    return theta, Z, zenith
-
+    return theta, Z #, zenith
