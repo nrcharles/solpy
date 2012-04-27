@@ -3,6 +3,7 @@ import datetime
 import os
 import math
 import irradiation
+import solar
 
 #path to tmy3 data
 #default = ~/tmp3/
@@ -56,7 +57,8 @@ class data():
         if self.tilt > 0:
             #ghi, dni, dhi = radiation
             #calculate total radiation
-            gth = irradiation.tilt(self.latitude, self.longitude, d, (etr, ghi, dni, dhi), self.tilt, self.azimuth)
+            theta, Z = solar.position(self.latitude, self.longitude, d, self.tilt, self.azimuth)
+            gth = irradiation.tilt( (etr, ghi, dni, dhi), theta, Z, self.tilt, self.azimuth)
             return d, gth
         else:
             return d, ghi
@@ -94,17 +96,6 @@ def zipToCoordinates(zip):
 if __name__ == "__main__":
     tilt = 32.0
     #import matplotlib.pyplot as plt
-    from inverters import m215
-    from modules import mage250
-
-    p = mage250()
-    e = m215(p)
-    #s = ee.junction([(ee.wire(3,"8"),e)])
-    #s1 = ee.junction(s,[(ee.wire(3,"8"),e)])
-    #print "s1"
-    #print s1.a()
-
-    #name, usaf = closestUSAF((40,-76.2)) #Lancaster
     name, usaf = closestUSAF(zipToCoordinates(17601)) #Lancaster
     t = 0
     for d,ins in data(usaf, tilt):

@@ -481,9 +481,7 @@ def findConductor(r, material = "CU",conduit = "PVC", pf = .778):
     for s in CONDUCTOR_STANDARD_SIZES:
         tr = resistance(conductor(s,material),conduit,pf)
         if tr < r:
-            print tr
             return conductor(s,material)
-    raise "ReistanceTooSmall"
 
 def findOCP(oc, material = "CU"):
     for s in OCP_STANDARD_SIZES:

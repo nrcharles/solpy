@@ -43,6 +43,9 @@ def azimuth(phi,delta,omega):
     return gamma_s
 
 def position(latitude, longitude, d, S, plane_azimuth):
+    S = radians(S)
+    plane_azimuth=radians(plane_azimuth)
+
     n = d.timetuple().tm_yday
 
     #delta = declination of the sun

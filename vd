@@ -32,7 +32,7 @@ import ee
 def solve(args, **kwargs):
     a =  eval(args['current'])
     oc = a * 1.25
-    print "Current: %s" % a
+    print "Continous Current: %s" % a
     ocp =ee.findOCP(oc)
     print "OCP Size: %s" % ocp
     l = args['length']
@@ -43,25 +43,33 @@ def solve(args, **kwargs):
     if args['aluminum']:
         material = 'AL'
     c = args['conduit']
-    vd = args['voltage'] * percent/100
+    vd = args['voltage'] * percent/100.0
     size = args['size']
     r = 0
     if size:
         tconductor = ee.conductor(size, material)
-        r = ee.resistance( tconductor,c,1)
+        r = ee.resistance( tconductor,c,pf)
         vd = 2.0* a * r * l/1000.0
         print "Voltage drop: %sV" % vd
         print "Percent drop: %s%%" % (vd * 100/v)
         ee.checkAmpacity(tconductor, ocp)
 
     else:
-        print vd
+        print "Allowed Voltage drop: %sV" % vd
         #vd = 2*a*l*r/1000
         r = (vd*1000)/(2.0 * a*l)
-        print r
-        conductor = ee.findConductor(r,material,c,pf)
+        print "Resistance: %s" % r
+        sets = 1
+        while 1:
+            conductor = ee.findConductor((r*sets),material,c,pf)
+            if conductor:
+                break
+            sets +=1
+
+        if sets > 1:
+            print "WARNING: %s sets of conductors" % sets
         print "Conductor %s" % conductor
-        ee.checkAmpacity(conductor, ocp)
+        ee.checkAmpacity(conductor, ocp/sets)
 
 if __name__ == "__main__":
     import argparse

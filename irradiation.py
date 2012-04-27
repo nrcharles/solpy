@@ -22,11 +22,10 @@
 from math import radians
 from math import degrees
 from numpy import sin, cos
-from solar import position
 
-def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
+def tilt(radiation, theta, Z, tilt= 0, plane_azimuth = 180):
     S = radians(tilt) #
-    theta, Z = position(latitude, longitude, d, S, radians(plane_azimuth))
+    #theta, Z = position(latitude, longitude, d, S, radians(plane_azimuth))
     #Gth = Btd + Dth + Rth
     etr, ghi, dni, dhi = radiation
 
@@ -48,6 +47,7 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
 
     # perez(diffuse,hdi,etr,S,theta,zenith):
     Dth = perez(Dh,dni,dhi,etr,S,theta,Z)
+    #print dhi, Dth, Dth1
 
     #ground diffuse
     # p = ground reflectivity
@@ -56,6 +56,39 @@ def tilt(latitude, longitude, d, radiation, tilt = 0, plane_azimuth = 180):
 
     Gth = Bth + Dth +Rth
     return Gth
+
+def airmass(zenith):
+    """returns airmass for zenith in radians"""
+    #Pickering 2002 footnote 39
+    #h = apparant altitude
+    h =  90 - degrees(zenith)
+    m = 0
+    #print degrees(zenith)
+    #if dni > 10:
+    if h > 0:
+        m = 1/(sin(radians(h+244/(165+47*h**1.1))))
+    #Young
+    #if degrees(zenith) < 96:
+    #    m1 = 1/(cos(zenith) + 0.50572*(6.07995+90-degrees(zenith))**-1.6364)
+    return m
+
+def eBin(clearness):
+    #Perez et al. 1990 Table 1
+    if clearness > 6.2:
+        return 7
+    if clearness > 4.5:
+        return 6
+    if clearness > 2.8:
+        return 5
+    if clearness > 1.95:
+        return 4
+    if clearness > 1.5:
+        return 3
+    if clearness > 1.23:
+        return 2
+    if clearness > 1.065:
+        return 1
+    return 0
 
 def perez(Xh,dni,hdi,etr,S,theta,zenith):
     """Perez et al. 1990
@@ -66,20 +99,7 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     Z = zenith
     Dh = hdi
 
-    #m = airmass
-    #Pickering 2002 footnote 39
-    #h = apparant altitude
-    #print h, 90 - degrees(zenith)
-    h =  90 - degrees(zenith)
-    m = 0
-    m1 = 0
-    #print degrees(zenith)
-    #if dni > 10:
-    if h > 0:
-        m = 1/(sin(radians(h+244/(165+47*h**1.1))))
-    if degrees(zenith) < 96:
-        m1 = 1/(cos(zenith) + 0.50572*(6.07995+90-degrees(zenith))**-1.6364)
-    #print dni, m, m1
+    m = airmass(zenith)
 
     I = etr
     k = 1.041  #for Z in radians
@@ -87,13 +107,8 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     #(1)
     e = 0
     if Dh > 0:
-        #print I,Dh,Z
-        #this factor is a mystery i don't currently understand what 
-        #it should be set at
-        #factor = 5.0
-        factor = 4.0
-        e = round(((((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)))/factor)
-        e = int(e)
+        clearness = ((Dh+dni)/Dh+k*Z**3)/(1.0+k*Z**3)
+        e = eBin(clearness)
 
     #(2)
     delta = 0
@@ -120,7 +135,6 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
             [1.485,-1.214,-0.784, 0.411,-0.629,-0.082],
             [1.170,-0.300,-0.615, 0.518,-1.892,-0.055]]
 
-
     #3.2
     a = max(0,cos(theta))
     b = max(0.087,cos(Z))
@@ -134,3 +148,9 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     Xc = max(0,Xc)
     #Xc = Xh*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
     return Xc
+
+
+if __name__ == "__main__":
+    for i in range(0,90):
+        airmass(radians(i))
+
