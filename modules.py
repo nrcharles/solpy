@@ -133,9 +133,9 @@ if __name__=="__main__":
     #p = generic180()
     series = 1
     #p = sinodeu120()
-    #print p.Eff
     #p = motech245()
     p = mage250()
+    print p.Eff
 
     print p.Vmax(-13) * series
     print p.Vmin(33) * series
