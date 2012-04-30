@@ -45,7 +45,7 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
     dins = np.array([])
 
     #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-    name, usaf = tmy3.closestUSAF(tmy3.zipToCoordinates(17601)) #Lancaster
+    name, usaf = tmy3.closestUSAF(tmy3.zipToCoordinates(zipcode)) #Lancaster
     t = 0
     l = 0
     #derate = dc_ac_derate()

@@ -2,11 +2,13 @@ import unittest
 
 class module(object):
     STC = 25
+    #PV module nameplate DC rating     0.80 - 1.05
+    nameplate = .95
     def __init__(self):
         pass
     def output(self,Insolation):
         m = self.__class__
-        return Insolation*m.A*m.Eff
+        return Insolation*m.A*m.Eff*m.nameplate
     def Vmax(self,ashraeMin):
         m = self.__class__
         return m.Voc + (ashraeMin-m.STC)*m.TkVoc
@@ -50,6 +52,7 @@ class mage250(module):
     TkVmp = gamma * Vmpp/100
     A = 1.630 * .982
     Eff = .1562
+    nameplate = 1
 
 class mage240(module):
     Pmax = 240
@@ -128,7 +131,7 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 12
+    series = 1
     #p = sinodeu120()
     #print p.Eff
     #p = motech245()

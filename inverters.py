@@ -1,6 +1,21 @@
 class inverter(object):
     """Sandia Model"""
     #Inverter Output = Array STC power * Irradiance * Negative Module Power Tolerance * Soiling * Temperature factor * Wiring efficiency * Inverter efficiency
+    #PVWATTS Default
+    #Mismatch      0.97 - 0.995
+    mismatch = .98
+    #Diodes and connections      0.99 - 0.997
+    connections = .995
+    #DC wiring     0.97 - 0.99
+    dc_wiring = .98
+    #AC wiring0.98 - 0.993
+    ac_wiring = .99
+    #Soiling       0.30 - 0.995
+    soiling = .95
+    #System availability     0.00 - 0.995
+    availability = 0.98
+    NMPT = .97
+    Tfactor = .98
 
     def __init__(self, array):
         self.array = array
@@ -12,7 +27,9 @@ class inverter(object):
         B = m.Pso * (1 + m.C2 * (Vdc - m.Vdco))
         C = m.C0 * (1 + m.C3 * (Vdc - m.Vdco))
         Pac = ((m.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
-        return Pac
+        derated = Pac * m.mismatch * m.NMPT * m.soiling * m.Tfactor * \
+                m.dc_wiring * m.connections * m.availability
+        return derated
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
 
@@ -27,6 +44,7 @@ class m215(inverter):
     Paco = 215
     Pso = 0.749507
     Vdco = 28.8966
+    Mismatch = 1.0
 
 class sunny6000us(inverter):
     C0 = -0.00000585799

@@ -42,11 +42,11 @@ def tilt(radiation, theta, Z, tilt= 0, plane_azimuth = 180):
     #Tian et al. 2001
     #rd = 1 -S/(2 *pi)
     #Liu and Jordan
-    #rd = (1+cos(S))/2
-    #Dth = rd*Dh # ?
+    rd = (1+cos(S))/2
+    Dth = rd*Dh # ?
 
     # perez(diffuse,hdi,etr,S,theta,zenith):
-    Dth = perez(Dh,dni,dhi,etr,S,theta,Z)
+    #Dth = perez(Dh,dni,dhi,etr,S,theta,Z)
     #print dhi, Dth, Dth1
 
     #ground diffuse
