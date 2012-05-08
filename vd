@@ -35,9 +35,10 @@ def solve(args, **kwargs):
     print "Continous Current: %s" % a
     ocp =ee.findOCP(oc)
     print "OCP Size: %s" % ocp
-    l = args['length']
+    l = eval(args['length'])
     v = args['voltage']
     pf = args['powerfactor']
+    t = args['temp']
     percent = args['drop']
     material = 'CU'
     if args['aluminum']:
@@ -48,7 +49,7 @@ def solve(args, **kwargs):
     r = 0
     if size:
         tconductor = ee.conductor(size, material)
-        r = ee.resistance( tconductor,c,pf)
+        r = ee.resistance( tconductor,c,pf, t)
         vd = 2.0* a * r * l/1000.0
         print "Voltage drop: %sV" % vd
         print "Percent drop: %s%%" % (vd * 100/v)
@@ -61,7 +62,7 @@ def solve(args, **kwargs):
         print "Resistance: %s" % r
         sets = 1
         while 1:
-            conductor = ee.findConductor((r*sets),material,c,pf)
+            conductor = ee.findConductor((r*sets),material,c,pf,t)
             if conductor:
                 break
             sets +=1
@@ -80,9 +81,10 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--drop',type=float,default=1,help="Voltage Drop/Rise in percent")
     parser.add_argument('-v', '--voltage',type=float,default=240)
     parser.add_argument('-f', '--powerfactor',type=float,default=-1)
-    parser.add_argument('-l', '--length',required=True,type=float)
+    parser.add_argument('-l', '--length',required=True,help="accepts basic math")#evaluated to allow command line math
     parser.add_argument('-p', '--conduit',type=str,default='PVC')
     parser.add_argument('-s', '--size',type=str,help="wire size")
+    parser.add_argument('-t', '--temp',type=float,help="actual conductor temp",default=75)
     #parser.print_help()
     args = vars(parser.parse_args())
     #solve(args['current'],args['length'],args['voltage'],args['drop'])

@@ -409,13 +409,13 @@ def resistance(conductor, conduit, pf=None, temperature = 75):
             print "warning:pf < -1"
         if pf == -1:
             #worst case
-            r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
+            r = conductor.r(conduit) * (1 + conductor.a() * (temperature -75))
             x = conductor.x(conduit)
             return math.sqrt(r*r+x*x)
         else:
             theta = math.acos(pf)
             #theta = math.acos(0.7)
-            r = conductor.r(conduit) * (1 + conductor.a() * ( temperature -75))
+            r = conductor.r(conduit) * (1 + conductor.a() * (temperature -75))
             x = conductor.x(conduit)
             z = r * math.cos(theta) + x * math.sin(theta)
             return z
@@ -477,9 +477,9 @@ class engage():
             return a
         else:
             return (len(self.s1)+len(self.s2)) /1.732
-def findConductor(r, material = "CU",conduit = "PVC", pf = .778):
+def findConductor(r, material = "CU",conduit = "PVC", pf = .778, temperature = 75):
     for s in CONDUCTOR_STANDARD_SIZES:
-        tr = resistance(conductor(s,material),conduit,pf)
+        tr = resistance(conductor(s,material),conduit,pf,temperature)
         if tr < r:
             return conductor(s,material)
 

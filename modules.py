@@ -1,4 +1,3 @@
-import unittest
 
 class module(object):
     STC = 25
@@ -130,14 +129,15 @@ class testModules(unittest.TestCase):
         self.assertAlmostEqual(237.522, self.mage250o,3)
 
 if __name__=="__main__":
+    import unittest
     #p = generic180()
-    series = 1
+    series = 23
     #p = sinodeu120()
     #p = motech245()
     p = mage250()
     print p.Eff
 
-    print p.Vmax(-13) * series
+    print p.Vmax(-15) * series
     print p.Vmin(33) * series
     print p.output(950)
     a = pvArray(motech245(), 14,2)
