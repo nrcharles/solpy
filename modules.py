@@ -1,3 +1,4 @@
+import unittest
 
 class module(object):
     STC = 25
@@ -129,7 +130,6 @@ class testModules(unittest.TestCase):
         self.assertAlmostEqual(237.522, self.mage250o,3)
 
 if __name__=="__main__":
-    import unittest
     #p = generic180()
     series = 23
     #p = sinodeu120()
