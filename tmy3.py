@@ -31,7 +31,7 @@ def normalizeDate(tmyDate, year):
     return datetime.datetime(Y, M, 1) + datetime.timedelta(days=D, hours=h, minutes=m)
 
 class data():
-    def __init__(self, USAF, tilt = 0.0, azimuth = 180.0):
+    def __init__(self, USAF):
         filename = path + USAF + 'TY.csv'
         self.csvfile = open(filename)
         header =  self.csvfile.readline().split(',')
@@ -40,29 +40,16 @@ class data():
         self.longitude = float(header[5])
         print header[1]
         print self.latitude, self.longitude
-        self.tilt = tilt
-        self.azimuth = azimuth
     def __iter__(self):
         return self
+
     def next(self):
-        i = self.tmy_data.next()
-        #['Date (MM/DD/YYYY)', 'Time (HH:MM)'
-        sd = i['Date (MM/DD/YYYY)'] +' '+ i['Time (HH:MM)']
-        ghi = int(i['GHI (W/m^2)'])
-        dhi = int(i['DHI (W/m^2)'])
-        dni = int(i['DNI (W/m^2)'])
-        etr = int(i['ETR (W/m^2)'])
-
+        t = self.tmy_data.next()
+        sd = t['Date (MM/DD/YYYY)'] +' '+ t['Time (HH:MM)']
         d = strptime(sd)
-
-        if self.tilt > 0:
-            #ghi, dni, dhi = radiation
-            #calculate total radiation
-            theta, Z = solar.position(self.latitude, self.longitude, d, self.tilt, self.azimuth)
-            gth = irradiation.tilt( (etr, ghi, dni, dhi), theta, Z, self.tilt, self.azimuth)
-            return d, gth
-        else:
-            return d, ghi
+	t['pydate'] = d
+	return t
+	
 
     def __del__(self):
         self.csvfile.close()
@@ -97,10 +84,11 @@ def zipToCoordinates(zip):
 if __name__ == "__main__":
     tilt = 32.0
     #import matplotlib.pyplot as plt
-    name, usaf = closestUSAF(zipToCoordinates(17601)) #Lancaster
+    place = zipToCoordinates(17601) #Lancaster
+    name, usaf = closestUSAF(place)
     t = 0
-    for d,ins in data(usaf, tilt):
-        output = ins
+    for r in data(usaf):
+        output = irradiation.irradiation(r,place,tilt)
         t += output
 
     print t/1000
