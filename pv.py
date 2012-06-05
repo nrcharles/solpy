@@ -18,6 +18,7 @@ import numpy as np
 #from numpy import *
 from inverters import *
 from modules import *
+import irradiation
 
 def usage():
     """Prints usage options when called with no arguments or with invalid arguments
@@ -45,7 +46,8 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
     dins = np.array([])
 
     #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-    name, usaf = tmy3.closestUSAF(tmy3.zipToCoordinates(zipcode)) #Lancaster
+    place= tmy3.zipToCoordinates(zipcode)
+    name, usaf = tmy3.closestUSAF(place)
     t = 0
     l = 0
     #derate = dc_ac_derate()
@@ -68,7 +70,9 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
     #print si.Pac(800)
     "Print modeling array and inverter: currently hardcoded to Enphase m215 and Mage 250"
 
-    for d,ins in tmy3.data(usaf, tilt):
+    for record in tmy3.data(usaf):
+        d = record['pydate']
+	ins = irradiation.irradiation(record,place,tilt,azimuth)
         dt = tmy3.normalizeDate(d,year)
         ts = np.append(ts,dt)
         hins = np.append(hins,ins)
