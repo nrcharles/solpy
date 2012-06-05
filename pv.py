@@ -72,7 +72,7 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
 
     for record in tmy3.data(usaf):
         d = record['pydate']
-	ins = irradiation.irradiation(record,place,tilt,azimuth)
+        ins = irradiation.irradiation(record,place,tilt,azimuth)
         dt = tmy3.normalizeDate(d,year)
         ts = np.append(ts,dt)
         hins = np.append(hins,ins)

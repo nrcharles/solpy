@@ -47,9 +47,8 @@ class data():
         t = self.tmy_data.next()
         sd = t['Date (MM/DD/YYYY)'] +' '+ t['Time (HH:MM)']
         d = strptime(sd)
-	t['pydate'] = d
-	return t
-	
+        t['pydate'] = d
+        return t
 
     def __del__(self):
         self.csvfile.close()
