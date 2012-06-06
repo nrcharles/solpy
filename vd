@@ -30,6 +30,7 @@ import ee
 
 #def solve()
 def solve(args, **kwargs):
+    DC = "DC"
     a =  eval(args['current'])
     oc = a * 1.25
     print "Continous Current: %s" % a
@@ -37,7 +38,7 @@ def solve(args, **kwargs):
     print "OCP Size: %s" % ocp
     l = eval(args['length'])
     v = args['voltage']
-    pf = args['powerfactor']
+    pf = eval(args['powerfactor'])
     t = args['temp']
     percent = args['drop']
     material = 'CU'
@@ -50,6 +51,7 @@ def solve(args, **kwargs):
     if size:
         tconductor = ee.conductor(size, material)
         r = ee.resistance( tconductor,c,pf, t)
+        print r
         vd = 2.0* a * r * l/1000.0
         print "Voltage drop: %sV" % vd
         print "Percent drop: %s%%" % (vd * 100/v)
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--current',required=True,help="accepts basic math") #evaluated to allow command line math
     parser.add_argument('-d', '--drop',type=float,default=1,help="Voltage Drop/Rise in percent")
     parser.add_argument('-v', '--voltage',type=float,default=240)
-    parser.add_argument('-f', '--powerfactor',type=float,default=-1)
+    parser.add_argument('-f', '--powerfactor',default="-1")
     parser.add_argument('-l', '--length',required=True,help="accepts basic math")#evaluated to allow command line math
     parser.add_argument('-p', '--conduit',type=str,default='PVC')
     parser.add_argument('-s', '--size',type=str,help="wire size")

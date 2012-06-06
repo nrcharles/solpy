@@ -21,12 +21,14 @@
 """
 from math import radians
 from math import degrees
-from numpy import sin, cos
+from numpy import sin, cos, arccos
 import solar
+import pysolar
 
 def tilt(radiation, theta, Z, tilt= 0, plane_azimuth = 180):
+    #theta = incidence angle of the sun
+    #Z = solar Zenith angle
     S = radians(tilt) #
-    #theta, Z = position(latitude, longitude, d, S, radians(plane_azimuth))
     #Gth = Btd + Dth + Rth
     etr, ghi, dni, dhi = radiation
 
@@ -95,7 +97,7 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     """Perez et al. 1990
     Diffuse irradiance and illuminance on tilted surfaces
     """
-    #theta is incident angle of the sun
+    #theta is the incidence angle of the sun
     #Xh = horizontal diffuse
     Z = zenith
     Dh = hdi
@@ -150,27 +152,25 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     #Xc = Xh*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
     return Xc
 
+
 def irradiation(record, place, t = 0.0, azimuth = 180.0):
     latitude, longitude = place
-    #['Date (MM/DD/YYYY)', 'Time (HH:MM)'
-    #sd = record['Date (MM/DD/YYYY)'] +' '+ record['Time (HH:MM)']
-    #d = strptime(sd)
+
     ghi = int(record['GHI (W/m^2)'])
     dhi = int(record['DHI (W/m^2)'])
     dni = int(record['DNI (W/m^2)'])
     etr = int(record['ETR (W/m^2)'])
 
-    d = record['pydate']
 
     if t > 0:
-        #ghi, dni, dhi = radiation
         #calculate total radiation
-        theta, Z = solar.position(latitude, longitude, d, t, azimuth)
+        #theta = incident angle
+        #theta, Z = solar.position(latitude, longitude, record['datetime'], t, azimuth)
+        theta, Z = pysolar.position(latitude, longitude, record['utc_datetime'], t, azimuth)
         gth = tilt((etr, ghi, dni, dhi), theta, Z, t, azimuth)
         return gth
     else:
         return ghi
-
 
 if __name__ == "__main__":
     for i in range(0,90):

@@ -21,6 +21,7 @@
 """
 from math import radians, degrees
 from numpy import sin, cos, tan, arccos, arcsin, pi #, arctan2
+import pysolar as s
 
 def azimuth(phi,delta,omega):
     '''solar_azimuth: Solar azimuth angle (from D&B eq. 1.6.6)
@@ -91,6 +92,9 @@ def position(latitude, longitude, d, S, plane_azimuth):
     #crude hack
     offset = 12
     omega   = (d.hour+offset)*15*(pi/180)
+    H = s.HourAngle(d,longitude)
+    #print "%s,%s,%s" % ( H, degrees(omega), H+degrees(omega))
+    #omega = - s.HourAngle(utc,longitude)
     #H = v - longitude - right_ascention
 
     #thetaZ = solar zenith

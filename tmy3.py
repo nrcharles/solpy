@@ -4,19 +4,20 @@ import os
 import math
 import irradiation
 import solar
+import pysolar as s
 
 #path to tmy3 data
 #default = ~/tmp3/
 path = os.environ['HOME'] + "/tmy3/"
 
-def strptime(string):
+def strptime(string, tz=0):
     #necessary because of 24:00 end of day labeling
     Y = int(string[6:10])
     M = int(string[0:2])
     D = int(string[3:5])
     h = int(string[11:13])
     m = int(string[14:16])
-    return datetime.datetime(Y, M, D) + datetime.timedelta(hours=h, minutes=m)
+    return datetime.datetime(Y, M, D) + datetime.timedelta(hours=h, minutes=m) - datetime.timedelta(hours=tz)
 
 def normalizeDate(tmyDate, year):
     """change TMY3 date to an arbitrary year"""
@@ -46,8 +47,9 @@ class data():
     def next(self):
         t = self.tmy_data.next()
         sd = t['Date (MM/DD/YYYY)'] +' '+ t['Time (HH:MM)']
-        d = strptime(sd)
-        t['pydate'] = d
+        tz = -5
+        t['utc_datetime'] = strptime(sd,tz)
+        t['datetime'] = strptime(sd)
         return t
 
     def __del__(self):
@@ -83,7 +85,8 @@ def zipToCoordinates(zip):
 if __name__ == "__main__":
     tilt = 32.0
     #import matplotlib.pyplot as plt
-    place = zipToCoordinates(17601) #Lancaster
+    #place = zipToCoordinates(17601) #Lancaster
+    place = zipToCoordinates(19113) #Philadelphia
     name, usaf = closestUSAF(place)
     t = 0
     for r in data(usaf):

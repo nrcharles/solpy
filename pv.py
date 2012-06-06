@@ -71,7 +71,7 @@ def model_pv(zipcode, tilt, azimuth, array_shape):
     "Print modeling array and inverter: currently hardcoded to Enphase m215 and Mage 250"
 
     for record in tmy3.data(usaf):
-        d = record['pydate']
+        d = record['datetime']
         ins = irradiation.irradiation(record,place,tilt,azimuth)
         dt = tmy3.normalizeDate(d,year)
         ts = np.append(ts,dt)

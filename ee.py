@@ -412,6 +412,8 @@ def resistance(conductor, conduit, pf=None, temperature = 75):
             r = conductor.r(conduit) * (1 + conductor.a() * (temperature -75))
             x = conductor.x(conduit)
             return math.sqrt(r*r+x*x)
+        elif pf == "DC":
+            return  conductor.r() * (1 + conductor.a() * (temperature -75))
         else:
             theta = math.acos(pf)
             #theta = math.acos(0.7)
@@ -531,3 +533,4 @@ if __name__ == "__main__":
     print "resistance"
     print resistance(conductor("400","AL"),"STEEL",.77)
     print resistance(conductor("400","AL"),"STEEL","DC")
+

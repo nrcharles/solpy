@@ -14,6 +14,7 @@ class inverter(object):
     soiling = .95
     #System availability     0.00 - 0.995
     availability = 0.98
+    #not included in PVWATTS
     NMPT = .97
     Tfactor = .98
 
@@ -27,9 +28,10 @@ class inverter(object):
         B = m.Pso * (1 + m.C2 * (Vdc - m.Vdco))
         C = m.C0 * (1 + m.C3 * (Vdc - m.Vdco))
         Pac = ((m.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
-        derated = Pac * m.mismatch * m.NMPT * m.soiling * m.Tfactor * \
-                m.dc_wiring * m.connections * m.availability
-        return derated
+        derate = m.mismatch * m.soiling * m.dc_wiring * m.connections \
+                * m.availability# * m.Tfactor #* m.NMPT
+        print derate
+        return Pac * derate
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
 
@@ -45,6 +47,7 @@ class m215(inverter):
     Pso = 0.749507
     Vdco = 28.8966
     Mismatch = 1.0
+    availability = 0.99
 
 class sunny6000us(inverter):
     C0 = -0.00000585799
@@ -58,6 +61,9 @@ class sunny6000us(inverter):
     MPPT_low = 260
     MPPT_high = 480
 
+def insolationToA(ins, peakA):
+    """scale current in response to insolation"""
+    pass
 
 if __name__=="__main__":
     from modules import mage250,pvArray

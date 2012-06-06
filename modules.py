@@ -4,6 +4,7 @@ class module(object):
     STC = 25
     #PV module nameplate DC rating     0.80 - 1.05
     nameplate = .95
+    #nameplate = 1
     def __init__(self):
         pass
     def output(self,Insolation):
@@ -122,6 +123,20 @@ class generic180(module):
     Eff = .15
     A = Pmax/Eff/1000
 
+class astroenergy290(module):
+    Pmax = 290
+    Vmpp = 35.68
+    Impp = 8.15
+    Isc =  8.94
+    Voc = 44.90
+    beta = -0.332 #%/K
+    gamma = -0.445 #%/K
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    TkPmp = -0.451 * Vmpp/100
+    Eff = .149
+    A = Pmax/Eff/1000
+
 class testModules(unittest.TestCase):
     def setUp(self):
         self.mage250o = mage250().output(950)
@@ -131,17 +146,19 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 23
+    series = 11
     #p = sinodeu120()
     #p = motech245()
-    p = mage250()
+    p = astroenergy290()
     print p.Eff
 
-    print p.Vmax(-15) * series
-    print p.Vmin(33) * series
+    print "Vmax:",p.Vmax(-13) * series
+    print "Vmin:",p.Vmin(33) * series
+    print "Vmin 10%:",p.Vmin(33) * series*.90
+
     print p.output(950)
     a = pvArray(motech245(), 14,2)
-    print a.Vmax(-13)
+    print a.Vmax(-12)
     print a.Vmin(33)
     print a.output(950)
     suite = unittest.TestLoader().loadTestsFromTestCase(testModules)

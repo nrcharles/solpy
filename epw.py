@@ -33,11 +33,26 @@ def minimum(USAF):
             return float(line[37:-1].split('\xb0')[0])
 
 
-zip = 27713
+if __name__ == "__main__":
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
+    #import sys
+    #opts, args = getopt.getopt(sys.argv[1:], 'f:h')
+    parser.add_argument('-z', '--zipcode',type=int,required=True)
+    args = vars(parser.parse_args())
+    #print args
 
-name, usaf = tmy3.closestUSAF( tmy3.zipToCoordinates(zip))
-print name
-print usaf
-print basename(usaf)
-print minimum(usaf)
-print twopercent(usaf)
+    try:
+        #start program
+        zip = args['zipcode']
+
+        name, usaf = tmy3.closestUSAF( tmy3.zipToCoordinates(zip))
+        print "%s USAF: %s" %  (name, usaf)
+        print "Minimum Temperature: %s C" % minimum(usaf)
+        print "2%% Max: %s C" % twopercent(usaf)
+
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit(1)
+    except:
+        raise
