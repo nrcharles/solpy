@@ -21,11 +21,11 @@
 """
 from math import radians
 from math import degrees
-from numpy import sin, cos, arccos
-import solar
+from numpy import sin, cos
+#import solar
 import pysolar
 
-def tilt(radiation, theta, Z, tilt= 0, plane_azimuth = 180):
+def total(radiation, theta, Z, tilt= 0, plane_azimuth = 180):
     #theta = incidence angle of the sun
     #Z = solar Zenith angle
     S = radians(tilt) #
@@ -153,7 +153,7 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     return Xc
 
 
-def irradiation(record, place, t = 0.0, azimuth = 180.0):
+def irradiation(record, place, t = 0.0, array_azimuth = 180.0):
     latitude, longitude = place
 
     ghi = int(record['GHI (W/m^2)'])
@@ -166,8 +166,8 @@ def irradiation(record, place, t = 0.0, azimuth = 180.0):
         #calculate total radiation
         #theta = incident angle
         #theta, Z = solar.position(latitude, longitude, record['datetime'], t, azimuth)
-        theta, Z = pysolar.position(latitude, longitude, record['utc_datetime'], t, azimuth)
-        gth = tilt((etr, ghi, dni, dhi), theta, Z, t, azimuth)
+        theta, Z = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
+        gth = total((etr, ghi, dni, dhi), theta, Z, t, array_azimuth)
         return gth
     else:
         return ghi
