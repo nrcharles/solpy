@@ -30,7 +30,6 @@ class inverter(object):
         Pac = ((m.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
         derate = m.mismatch * m.soiling * m.dc_wiring * m.connections \
                 * m.availability# * m.Tfactor #* m.NMPT
-        print derate
         return Pac * derate
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac

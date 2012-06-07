@@ -19,6 +19,8 @@ import numpy as np
 from inverters import *
 from modules import *
 import irradiation
+import matplotlib
+
 
 def usage():
     """Prints usage options when called with no arguments or with invalid arguments
@@ -32,69 +34,72 @@ def usage():
    -h    help
     """
 
-def model_pv(zipcode, tilt, azimuth, array_shape):
-    #import matplotlib.pyplot as plt
-    #import numpy as np
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import matplotlib.dates as mdates
+class system(object):
+    def __init__(self,shape):
+        #shape is a list of inverters with attached arrays
+        self.zipcode = None
+        self.place = None
+        self.tilt = 0
+        self.azimuth = 180
+        self.shape = shape 
 
-    ts = np.array([])
-    hins = np.array([])
-    dts = np.array([])
-    dins = np.array([])
+    def setZipcode(self,zipcode):
+        self.zipcode = zipcode
+        #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
+        self.place= tmy3.zipToCoordinates(self.zipcode)
+        self.name, self.usaf = tmy3.closestUSAF(self.place)
 
-    #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-    place= tmy3.zipToCoordinates(zipcode)
-    name, usaf = tmy3.closestUSAF(place)
-    t = 0
-    l = 0
-    #derate = dc_ac_derate()
-    day = 0
-    do = 0
-    dmax = 0
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    year = 2000
-    months   = mdates.MonthLocator()
-    mFormat = mdates.DateFormatter('%b')
-    ax.xaxis.set_major_locator(months)
-    ax.xaxis.set_major_formatter(mFormat)
-    p = mage250()
-    e = m215(p)
-    s = pvArray(p,14,2)
-    si = sunny6000us(s)
-    #print e.Pac(950)
-    #print e.I(960,240)
-    #print si.Pac(800)
-    "Print modeling array and inverter: currently hardcoded to Enphase m215 and Mage 250"
+    def model(self):
+        #import matplotlib.pyplot as plt
+        #import numpy as np
+        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates
+        ts = np.array([])
+        hins = np.array([])
+        dts = np.array([])
+        dins = np.array([])
 
-    for record in tmy3.data(usaf):
-        d = record['datetime']
-        ins = irradiation.irradiation(record,place,tilt,azimuth)
-        dt = tmy3.normalizeDate(d,year)
-        ts = np.append(ts,dt)
-        hins = np.append(hins,ins)
-        #output = si.Pac(ins)
-        output = e.Pac(ins) * array_shape 
-        if d.day is day:
-            do += output
-        else:
-            dmax = max(dmax,do)
-            dts = np.append(dts,dt)
-            dins = np.append(dins,do/1000)
-            do = 0
-        t += output
-        day = d.day
-    ax.plot(dts,dins)
-    plt.savefig('pv_output_%s.png' % zipcode)
+        t = 0
+        l = 0
+        #derate = dc_ac_derate()
+        day = 0
+        do = 0
+        dmax = 0
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        year = 2000
+        months   = mdates.MonthLocator()
+        mFormat = mdates.DateFormatter('%b')
+        ax.xaxis.set_major_locator(months)
+        ax.xaxis.set_major_formatter(mFormat)
 
-    print t/1000
-    print t/(1000*365.0)
+        for record in tmy3.data(self.usaf):
+            d = record['datetime']
+            ins = irradiation.irradiation(record,self.place,self.tilt,self.azimuth)
+            dt = tmy3.normalizeDate(d,year)
+            ts = np.append(ts,dt)
+            hins = np.append(hins,ins)
+            #output = si.Pac(ins)
+            output = 0 
+            for i in self.shape:
+                output += i.Pac(ins)
+            if d.day is day:
+                do += output
+            else:
+                dmax = max(dmax,do)
+                dts = np.append(dts,dt)
+                dins = np.append(dins,do/1000)
+                do = 0
+            t += output
+            day = d.day
+        ax.plot(dts,dins)
 
+        print t/1000
+        print t/(1000*365.0)
+        return plt
 if __name__ == "__main__":
     import argparse
+    matplotlib.use('Agg')
     parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
     #import sys
     #opts, args = getopt.getopt(sys.argv[1:], 'f:h')
@@ -108,7 +113,21 @@ if __name__ == "__main__":
 
     try:
         #start program
-        model_pv(args['zipcode'], args['tilt'], args['azimuth'], args['shape'])
+        p = mage250()
+        e = m215(p)
+        s = pvArray(p,14,2)
+        si = sunny6000us(s)
+        array = [e] * args['shape']
+        #print e.Pac(950)
+        #print e.I(960,240)
+        #print si.Pac(800)
+        "Print modeling array and inverter: currently hardcoded to Enphase m215 and Mage 250"
+        a = system(array)
+        a.setZipcode(args['zipcode'])
+        a.tilt = args['tilt']
+        a.azimuth =  args['azimuth']
+        graph = a.model()
+        graph.savefig('pv_output_%s.png' % args['zipcode'])
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
