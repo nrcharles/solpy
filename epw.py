@@ -1,5 +1,7 @@
+# coding=utf-8
 import os
 import tmy3
+import re
 #path to epw data
 #default = ~/epw/
 path = os.environ['HOME'] + "/epw/"
@@ -12,6 +14,17 @@ def basename(USAF):
 
 
 def twopercent(USAF):
+    #(DB=>MWB) 2%, MaxDB=
+    try:
+        fin = open('%s/%s.ddy' % (path,basename(USAF)))
+        for line in fin:
+            m = re.search('2%, MaxDB=(\d+\.\d*)',line)
+            if m:
+                return float(m.groups()[0])
+    except:
+        pass
+def ftwopercent(USAF):
+    #(DB=>MWB) 2%, MaxDB=
     try:
         fin = open('%s/%s.stat' % (path,basename(USAF)))
         flag = 0
@@ -26,11 +39,21 @@ def twopercent(USAF):
     except:
         pass
 
-def minimum(USAF):
+def fminimum(USAF):
     fin = open('%s/%s.stat' % (path,basename(USAF)))
     for line in fin:
         if line.find('Minimum Dry Bulb') is not -1:
             return float(line[37:-1].split('\xb0')[0])
+def minimum(USAF):
+    #(DB=>MWB) 2%, MaxDB=
+    try:
+        fin = open('%s/%s.ddy' % (path,basename(USAF)))
+        for line in fin:
+            m = re.search('Max Drybulb=(-?\d+\.\d*)',line)
+            if m:
+                return float(m.groups()[0])
+    except:
+        pass
 
 
 if __name__ == "__main__":

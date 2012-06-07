@@ -21,6 +21,7 @@ from modules import *
 import irradiation
 import matplotlib
 
+default = [m215(mage250())]
 
 def usage():
     """Prints usage options when called with no arguments or with invalid arguments
