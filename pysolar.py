@@ -359,10 +359,11 @@ def PrecalculateAberrations(p, jce):
     return x
 
 def position(latitude_deg, longitude_deg, utc_datetime, S, plane_azimuth, elevation = 0, temperature_celsius = 25, pressure_millibars = 1013.25):
-    #slope_orientation = plane_azimuth
-    #slope = S
-    S = math.radians(S)
-    plane_azimuth=math.radians(plane_azimuth)
+    #south is 180
+    slope_orientation = plane_azimuth + 180
+    slope = S
+    #S = math.radians(S)
+    #plane_azimuth=math.radians(plane_azimuth)
     jd = julian.JulianDay(utc_datetime)
     jde = julian.JulianEphemerisDay(jd, 65)
     jce = julian.JulianEphemerisCentury(jde)
@@ -386,15 +387,8 @@ def position(latitude_deg, longitude_deg, utc_datetime, S, plane_azimuth, elevat
     projected_axial_distance = ProjectedAxialDistance(elevation, latitude_deg)
     topocentric_sun_declination = TopocentricSunDeclination(geocentric_sun_declination, projected_axial_distance, equatorial_horizontal_parallax, parallax_sun_right_ascension, local_hour_angle)
     topocentric_azimuth_angle = TopocentricAzimuthAngle(topocentric_local_hour_angle, latitude_deg, topocentric_sun_declination)
-    a = math.radians(topocentric_azimuth_angle)
     topocentric_zenith_angle =  TopocentricZenithAngle(latitude_deg, topocentric_sun_declination, topocentric_local_hour_angle, pressure_millibars, temperature_celsius)
     Z = math.radians(topocentric_zenith_angle)
     
-    #incident angle, solar zenith
-    #theta = incident angle
-    theta = math.acos(math.sin(S)*math.sin(Z)*math.cos(a - plane_azimuth) + \
-                math.cos(S)*math.cos(Z))
-    #verify theta
-    #theta1 = math.radians(IncidenceAngle(topocentric_zenith_angle, slope, slope_orientation, topocentric_azimuth_angle)) 
-    #print math.degrees(theta - theta1)
+    theta = math.radians(IncidenceAngle(topocentric_zenith_angle, slope, slope_orientation, topocentric_azimuth_angle)) 
     return theta, Z #, zenith

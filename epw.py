@@ -73,7 +73,9 @@ if __name__ == "__main__":
         name, usaf = tmy3.closestUSAF( tmy3.zipToCoordinates(zip))
         print "%s USAF: %s" %  (name, usaf)
         print "Minimum Temperature: %s C" % minimum(usaf)
+        print "Minimum Temperature: %s C" % fminimum(usaf)
         print "2%% Max: %s C" % twopercent(usaf)
+        print "2%% Max: %s C" % ftwopercent(usaf)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)

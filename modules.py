@@ -146,13 +146,14 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 11
+    series = 12
     #p = sinodeu120()
     #p = motech245()
-    p = astroenergy290()
+    #p = astroenergy290()
+    p = mage250()
     print p.Eff
 
-    print "Vmax:",p.Vmax(-13) * series
+    print "Vmax:",p.Vmax(-29.5) * series
     print "Vmin:",p.Vmin(33) * series
     print "Vmin 10%:",p.Vmin(33) * series*.90
 

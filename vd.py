@@ -29,24 +29,22 @@ def usage():
 import ee
 
 #def solve()
-def solve(args, **kwargs):
-    DC = "DC"
-    a =  eval(args['current'])
+#def vd(args, **kwargs):
+def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
+    #a =  eval(args['current'])
+    #l = eval(args['length'])
+    #size = args['size']
+    #v = args['voltage']
+    #pf = eval(args['powerfactor'])
+    #t = args['temp']
+    #c = args['conduit']
+    #percent = args['drop']
+    #material = 'CU'
     oc = a * 1.25
     print "Continous Current: %s" % a
     ocp =ee.findOCP(oc)
     print "OCP Size: %s" % ocp
-    l = eval(args['length'])
-    v = args['voltage']
-    pf = eval(args['powerfactor'])
-    t = args['temp']
-    percent = args['drop']
-    material = 'CU'
-    if args['aluminum']:
-        material = 'AL'
-    c = args['conduit']
-    vd = args['voltage'] * percent/100.0
-    size = args['size']
+    vd = v * percent/100.0
     r = 0
     if size:
         tconductor = ee.conductor(size, material)
@@ -89,12 +87,19 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--temp',type=float,help="actual conductor temp",default=75)
     #parser.print_help()
     args = vars(parser.parse_args())
+    material = 'CU'
+    if args['aluminum']:
+        material = 'AL'
     #solve(args['current'],args['length'],args['voltage'],args['drop'])
     #print args
 
     try:
         #start program
-        solve(args)
+        #vd(args)
+        #vd(current,length,size= None,v = 240, pf="-1",temp = 75,percent = 1,material = 'CU', c = 'PVC')
+        vd(eval(args['current']),eval(args['length']),args['size'],
+                args['voltage'],eval(args['powerfactor']),args['temp'],
+                args['drop'],material,args['conduit'])
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)

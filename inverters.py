@@ -60,6 +60,20 @@ class sunny6000us(inverter):
     MPPT_low = 260
     MPPT_high = 480
 
+
+
+class sma500heus(inverter):
+    Paco=500000
+    Pdco=511509.576101489
+    Vdco=370.783516666667
+    Pso=1879.21196407648
+    C0=-4.02893540862159E-08
+    C1=3.1055697368418E-05
+    C2=5.65754481955764E-03
+    C3=7.39241352563372E-04
+    MPPT_low=330
+    MPPT_high=600
+
 def insolationToA(ins, peakA):
     """scale current in response to insolation"""
     pass
@@ -70,7 +84,10 @@ if __name__=="__main__":
     p = mage250()
     e = m215(p)
     s = pvArray(p,14,2)
-    si = sunny6000us(s)
+    s = pvArray(p,14,20*8)
+    #si = sunny6000us(s)
+    si = sma500heus(s)
+
     print e.Pac(950)
     print e.I(960,240)
     print si.Pac(800)
