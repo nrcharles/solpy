@@ -50,7 +50,7 @@ class system(object):
         self.place= tmy3.zipToCoordinates(self.zipcode)
         self.name, self.usaf = tmy3.closestUSAF(self.place)
 
-    def model(self):
+    def model(self,mname = 'lj'):
         #import matplotlib.pyplot as plt
         #import numpy as np
         import matplotlib.pyplot as plt
@@ -76,7 +76,7 @@ class system(object):
 
         for record in tmy3.data(self.usaf):
             d = record['datetime']
-            ins = irradiation.irradiation(record,self.place,self.tilt,self.azimuth)
+            ins = irradiation.irradiation(record,self.place,self.tilt,self.azimuth,mname)
             dt = tmy3.normalizeDate(d,year)
             ts = np.append(ts,dt)
             hins = np.append(hins,ins)
