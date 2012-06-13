@@ -15,45 +15,53 @@ def basename(USAF):
 
 def twopercent(USAF):
     #(DB=>MWB) 2%, MaxDB=
+    temp = None
     try:
         fin = open('%s/%s.ddy' % (path,basename(USAF)))
         for line in fin:
             m = re.search('2%, MaxDB=(\d+\.\d*)',line)
             if m:
-                return float(m.groups()[0])
+                temp = float(m.groups()[0])
     except:
         pass
-def ftwopercent(USAF):
-    #(DB=>MWB) 2%, MaxDB=
-    try:
-        fin = open('%s/%s.stat' % (path,basename(USAF)))
-        flag = 0
-        data = []
-        for line in fin:
-            if line.find('2%') is not -1:
-                flag = 3
-            if flag > 0:
-                data.append(line.split('\t'))
-                flag -= 1
-        return float(data[2][5].strip())
-    except:
-        pass
+    if not temp:
+        #(DB=>MWB) 2%, MaxDB=
+        try:
+            fin = open('%s/%s.stat' % (path,basename(USAF)))
+            flag = 0
+            data = []
+            for line in fin:
+                if line.find('2%') is not -1:
+                    flag = 3
+                if flag > 0:
+                    data.append(line.split('\t'))
+                    flag -= 1
+            temp = float(data[2][5].strip())
+        except:
+            pass
+    return temp
 
-def fminimum(USAF):
-    fin = open('%s/%s.stat' % (path,basename(USAF)))
-    for line in fin:
-        if line.find('Minimum Dry Bulb') is not -1:
-            return float(line[37:-1].split('\xb0')[0])
 def minimum(USAF):
     #(DB=>MWB) 2%, MaxDB=
+    temp = None
     try:
         fin = open('%s/%s.ddy' % (path,basename(USAF)))
         for line in fin:
             m = re.search('Max Drybulb=(-?\d+\.\d*)',line)
             if m:
-                return float(m.groups()[0])
+                temp = float(m.groups()[0])
     except:
         pass
+    if not temp:
+        try:
+            fin = open('%s/%s.stat' % (path,basename(USAF)))
+            for line in fin:
+                if line.find('Minimum Dry Bulb') is not -1:
+                    return float(line[37:-1].split('\xb0')[0])
+        except:
+            pass
+    return temp
+
 
 
 if __name__ == "__main__":
@@ -73,9 +81,7 @@ if __name__ == "__main__":
         name, usaf = tmy3.closestUSAF( tmy3.zipToCoordinates(zip))
         print "%s USAF: %s" %  (name, usaf)
         print "Minimum Temperature: %s C" % minimum(usaf)
-        print "Minimum Temperature: %s C" % fminimum(usaf)
         print "2%% Max: %s C" % twopercent(usaf)
-        print "2%% Max: %s C" % ftwopercent(usaf)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
