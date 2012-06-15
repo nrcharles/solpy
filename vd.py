@@ -97,6 +97,8 @@ if __name__ == "__main__":
         #start program
         #vd(args)
         #vd(current,length,size= None,v = 240, pf="-1",temp = 75,percent = 1,material = 'CU', c = 'PVC')
+        DC = 'DC'
+        dc = 'DC'
         vd(eval(args['current']),eval(args['length']),args['size'],
                 args['voltage'],eval(args['powerfactor']),args['temp'],
                 args['drop'],material,args['conduit'])

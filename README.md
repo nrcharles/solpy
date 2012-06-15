@@ -14,3 +14,12 @@ Usage
 The command to model an array of 30 Enphase M215 and Mage 250 panels would be something like
 
 python pv.py -z 17601 -a 225 -t 32 -s 1
+
+
+Ipython
+-------
+This is the sort of project that lends itself nicely to ipython.  Since discovering that project I've tried to make things flow naturally in that enviroment. I really like the inline graphics of the qtconsole.
+
+$ipython qtconsole --colors=Linux --pylab=inline
+
+![example](https://www.dropbox.com/s/snyahvgtp1adqhw/ipython_example.png)

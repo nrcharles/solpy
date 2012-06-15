@@ -14,7 +14,7 @@ class inverter(object):
     soiling = .95
     #System availability     0.00 - 0.995
     availability = 0.98
-    #not included in PVWATTS
+    #not included in PVWATTS/SAM
     NMPT = .97
     Tfactor = .98
 

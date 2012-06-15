@@ -3,6 +3,8 @@ import unittest
 class module(object):
     STC = 25
     #PV module nameplate DC rating     0.80 - 1.05
+    #SAM = 1
+    #PVWatts = .95
     nameplate = .95
     #nameplate = 1
     def __init__(self):
@@ -53,7 +55,7 @@ class mage250(module):
     TkVmp = gamma * Vmpp/100
     A = 1.630 * .982
     Eff = .1562
-    nameplate = 1
+    nameplate = 1.0
 
 class mage240(module):
     Pmax = 240
@@ -146,15 +148,15 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 12
+    series = 14
     #p = sinodeu120()
     #p = motech245()
     #p = astroenergy290()
     p = mage250()
     print p.Eff
 
-    print "Vmax:",p.Vmax(-29.5) * series
-    print "Vmin:",p.Vmin(33) * series
+    print "Vmax:",p.Vmax(-17) * series
+    print "Vmin:",p.Vmin(32.3) * series
     print "Vmin 10%:",p.Vmin(33) * series*.90
 
     print p.output(950)
