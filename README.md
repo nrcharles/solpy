@@ -1,13 +1,23 @@
-solarpy
+solpy
 -------
-This started out as a fairly crude calculator to go from a fisheye panorama to a csv of vectors, however there were several peices that were added to make it a bit more useful.  Daniel Thomas did work adding the Tang evacuated glass tube model.  There is also a simple module for reading in TMY3 data and limited support for calculating irradiance on an inclinded surface.  It's still in an unpolished state, but is slowly becoming more functional.
-This is primarily a research and anlysis tool and there is no garantee on the calculations.
+Solpy is a python library to model solar system power performance similar to PVWatts or NREL's System Advisor Model(SAM).  I initially started writing this while working in Bangladesh as fairly crude calculator to go from a fisheye panorama to a csv of vectors for shading calculations, however there were several pieces that were added to make it a bit more useful.  Daniel Thomas did work adding the Tang evacuated glass tube model.  I cherry picked some pieces of Brandon Stafford's pysolar for solar positioning although made some changes for my purposes.  There is also a simple module for reading TMY3 data. This tool is very rudimentary, but functional. 
+
+This is primarily a research and analysis tool and there is no guarantee on the calculations.
+
+Features
+--------
+Liu & Jordan irradiation model
+Perez irradiation model
+Sandia Inverter model
+Sandia Module model
+NEC voltage drop caculations
 
 Files
 -----
 fisheye.py - fisheye image to shading vectors
 tmy3.py - read tmy3 data
 pv.py - system performance prediction
+vd.py - voltage drop
 
 Usage
 -----
