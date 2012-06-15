@@ -22,4 +22,4 @@ This is the sort of project that lends itself nicely to ipython.  Since discover
 
 $ipython qtconsole --colors=Linux --pylab=inline
 
-![example](https://www.dropbox.com/s/snyahvgtp1adqhw/ipython_example.png)
+![example](https://www.dropbox.com/s/rpow4rddv26p5f0/ipython_example.png)
