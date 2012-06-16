@@ -6,8 +6,8 @@ This is primarily a research and analysis tool and there is no guarantee on the 
 
 Features
 --------
-Liu & Jordan irradiation model
-Perez irradiation model
+Liu & Jordan diffuse irradiance model
+Perez et al. diffuse irradiance model
 Sandia Inverter model
 Sandia Module model
 NEC voltage drop caculations
