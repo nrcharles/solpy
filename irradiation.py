@@ -25,6 +25,9 @@ from math import fabs
 from numpy import sin, cos
 #import solar
 import pysolar
+global tilt
+global azimuth
+global place
 
 def total(radiation, theta, Z, tilt= 0, plane_azimuth = 180, model = "lj"):
     #theta = incidence angle of the sun
