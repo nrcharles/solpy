@@ -100,9 +100,9 @@ class location():
             self.lon   = lon
             self.lon_s = round(lon/15)*15
         self.phi   = self.lat*pi/180.0            # Latitude, in radians
-    def default(self):							  # Default values currently for Bonoful
-        self.lat   = 24.718931   				  # Latitude
-        self.lon   = -90.17393					  # Longitude
+    def default(self):                            # Default values currently for Bonoful
+        self.lat   = 24.718931                    # Latitude
+        self.lon   = -90.17393                    # Longitude
         self.lon_s = -90.0                        # Standard meridian
         self.alt   = 20.0                         # Altitude
     def akb(self):
@@ -111,8 +111,8 @@ class location():
         self.lon_s = -90.0                        # Standard meridian
         self.alt   = 20.0                         # Altitude  - Bogra LPK [m]
     def bonoful(self):
-        self.lat   = 24.718931   				  # Latitude  - Bonoful 24.718931
-        self.lon   = -90.17393					  # Longitude - Bonoful 90.17393
+        self.lat   = 24.718931                    # Latitude  - Bonoful 24.718931
+        self.lon   = -90.17393                    # Longitude - Bonoful 90.17393
         self.lon_s = -90.0                        # Standard meridian
         self.alt   = 20.0                         # Altitude  - Bonoful [m]
     def setlon(self, a):

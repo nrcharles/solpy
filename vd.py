@@ -71,6 +71,7 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
             print "WARNING: %s sets of conductors" % sets
         print "Conductor %s" % conductor
         ee.checkAmpacity(conductor, ocp/sets)
+    return vd
 
 if __name__ == "__main__":
     import argparse
