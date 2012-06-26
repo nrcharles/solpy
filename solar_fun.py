@@ -14,9 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Solar_fun - Functions for solar geometry and data access
-#   * As of 2011-12 this is added to my python path in ~/python/
-#     (updated paths for mac)
+# solar_fun - Functions for solar geometry and weather data access
+# To do:
+#  - integrate weather data code in tmy3
+#  - move collector and location data out to separate files
+#  - check solar position algorithm against alternatives
 
 import numpy as np
 import re
@@ -199,8 +201,6 @@ class solar_day():
         #print t
         return np.searchsorted(self.time_s,self.stime(time))
         
-
-
 
 def solar_time(n):
     '''solar_time: returns E, for solar/local time offset.'''
