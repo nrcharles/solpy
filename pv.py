@@ -13,13 +13,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import tmy3
 import numpy as np
-#from numpy import *
 from inverters import *
 from modules import *
 import irradiation
-import matplotlib
 
 default = [m215(mage250())]
 
@@ -38,7 +37,7 @@ class system(object):
         self.place = None
         self.tilt = 32
         self.azimuth = 180
-        self.shape = shape 
+        self.shape = shape
 
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
@@ -47,11 +46,11 @@ class system(object):
         self.name, self.usaf = tmy3.closestUSAF(self.place)
 
     def model(self,mname = 'p9'):
-        #import matplotlib.pyplot as plt
-        #import numpy as np
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         from multiprocessing import Pool
+        from multiprocessing import cpu_count
+
         ts = np.array([])
         hins = np.array([])
         dts = np.array([])
@@ -59,7 +58,7 @@ class system(object):
 
         t = 0
         l = 0
-        #derate = dc_ac_derate()
+
         day = 0
         do = 0
         dmax = 0
@@ -70,20 +69,21 @@ class system(object):
         mFormat = mdates.DateFormatter('%b')
         ax.xaxis.set_major_locator(months)
         ax.xaxis.set_major_formatter(mFormat)
+
+        #hack for threading
         #probably should be abstracted some other way
         irradiation.place = self.place
         irradiation.tilt = self.tilt
         irradiation.azimuth = self.azimuth
         irradiation.mname = mname
 
-        pool = Pool(processes=4)
-        iOutput = pool.map(_calc,tmy3.data(self.usaf))
+        pool = Pool(processes=cpu_count())
+        insOutput = pool.map(_calc,tmy3.data(self.usaf))
 
-        for dt,ins in iOutput:
+        for dt,ins in insOutput:
             ts = np.append(ts,dt)
             hins = np.append(hins,ins)
-            #output = si.Pac(ins)
-            output = 0 
+            output = 0
             for i in self.shape:
                 output += i.Pac(ins)
             if dt.day is day:
@@ -99,4 +99,4 @@ class system(object):
 
         print "Annual Output: %s kWh" % (round(t/10)/100)
         print "Daily Average: %s kWh" % (round(t/365/10)/100)
-        return fig 
+        return fig

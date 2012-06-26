@@ -20,7 +20,7 @@ class module(object):
         return m.Vmpp
 
     def Vmin(self,ashrae2p,Tadd = 30):
-        #Tadd 
+        #Tadd
         #Roof mount =30
         #Ground mount = 25
         #Pole mount = 20
@@ -140,6 +140,7 @@ class astroenergy290(module):
     A = Pmax/Eff/1000
 
 class testModules(unittest.TestCase):
+    """Unit Tests"""
     def setUp(self):
         self.mage250o = mage250().output(950)
 
