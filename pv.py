@@ -51,14 +51,23 @@ class system(object):
         from multiprocessing import Pool
         from multiprocessing import cpu_count
 
+        #hack for threading
+        #probably should be abstracted some other way
+        irradiation.place = self.place
+        irradiation.tilt = self.tilt
+        irradiation.azimuth = self.azimuth
+        irradiation.mname = mname
+
+        pool = Pool(processes=cpu_count())
+        insOutput = pool.map(_calc,tmy3.data(self.usaf))
+
+        #create graph
         ts = np.array([])
         hins = np.array([])
         dts = np.array([])
         dins = np.array([])
-
         t = 0
         l = 0
-
         day = 0
         do = 0
         dmax = 0
@@ -69,16 +78,6 @@ class system(object):
         mFormat = mdates.DateFormatter('%b')
         ax.xaxis.set_major_locator(months)
         ax.xaxis.set_major_formatter(mFormat)
-
-        #hack for threading
-        #probably should be abstracted some other way
-        irradiation.place = self.place
-        irradiation.tilt = self.tilt
-        irradiation.azimuth = self.azimuth
-        irradiation.mname = mname
-
-        pool = Pool(processes=cpu_count())
-        insOutput = pool.map(_calc,tmy3.data(self.usaf))
 
         for dt,ins in insOutput:
             ts = np.append(ts,dt)

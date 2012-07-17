@@ -6,24 +6,24 @@ This is primarily a research and analysis tool and there is no guarantee on the 
 
 Features
 --------
-Liu & Jordan diffuse irradiance model
-Perez et al. diffuse irradiance model
-Sandia Inverter model
-Sandia Module model
-NEC voltage drop caculations
+-Liu & Jordan diffuse irradiance model
+-Perez et al. diffuse irradiance model
+-Sandia Inverter model
+-Sandia Module model
+-NEC voltage drop caculations
 
 Files
 -----
-fisheye.py - fisheye image to shading vectors
-tmy3.py - read tmy3 data
-pv.py - system performance prediction
-vd.py - voltage drop
+-fisheye.py - fisheye image to shading vectors
+-tmy3.py - read tmy3 data
+-pv.py - system performance prediction
+-vd.py - voltage drop
 
 Usage
 -----
 The command to model an array of 30 Enphase M215 and Mage 250 panels would be something like
 
-python pv.py -z 17601 -a 225 -t 32 -s 1
+pvcli -z 17601 -a 225 -t 32 -s 1
 
 
 Ipython

@@ -273,6 +273,16 @@ _AL = {"14" : 5.170,
     "600" : .0353,
     "750" : .0282}
 
+class transformer(object):
+    def __init__(self, rating, loss, noload):
+        self.rating = rating
+        self.loss = loss # load losses
+        self.noload = noload #noload loss
+    def output(self, pin):
+        percent_load=pin*1.0/self.rating
+        total_loss = self.loss*percent_load**2+self.noload
+        return pin - total_loss
+
 class junction(object):
     """Takes tuples of wire and next junction"""
     def __init__(self, *args, **kwargs):
@@ -533,4 +543,8 @@ if __name__ == "__main__":
     print "resistance"
     print resistance(conductor("400","AL"),"STEEL",.77)
     print resistance(conductor("400","AL"),"STEEL","DC")
+    print "transformer"
+    t1 = transformer(1000000,8404,2143)
+    print t1.output(0)
+    print t1.output(500000)
 
