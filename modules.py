@@ -1,6 +1,7 @@
 import unittest
 
 class module(object):
+    """base module class which specific modules inherit"""
     STC = 25
     #PV module nameplate DC rating     0.80 - 1.05
     #SAM = 1
@@ -28,6 +29,7 @@ class module(object):
         return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVmp
 
 class pvArray(module):
+    """structure to aggregate panels into an array)"""
     def __init__(self,pname, series, parallel = 1):
         self.panel = pname
         self.series = series
