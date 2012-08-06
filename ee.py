@@ -399,6 +399,9 @@ class conductor(object):
         #return globals()[lt][self.size]
         return globals()["%s_%s" % (conduit,"X")][self.size]
 
+    def temperature(self,a):
+        pass
+
     def a(self):
         a = {"CU":0.00323,
                 "AL":0.00330}
@@ -413,10 +416,6 @@ class conductor(object):
 def resistance(conductor, conduit, pf=None, temperature = 75):
     #Rewrite with PowerFactor
     if pf:
-        if pf > 1:
-            print "warning:pf > 1"
-        if pf < -1:
-            print "warning:pf < -1"
         if pf == -1:
             #worst case
             r = conductor.r(conduit) * (1 + conductor.a() * (temperature -75))
@@ -489,6 +488,7 @@ class engage():
             return a
         else:
             return (len(self.s1)+len(self.s2)) /1.732
+
 def findConductor(r, material = "CU",conduit = "PVC", pf = .778, temperature = 75):
     for s in CONDUCTOR_STANDARD_SIZES:
         tr = resistance(conductor(s,material),conduit,pf,temperature)

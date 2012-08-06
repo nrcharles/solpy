@@ -139,6 +139,20 @@ class astroenergy290(module):
     Eff = .149
     A = Pmax/Eff/1000
 
+class asp390(module):
+    Pmax = 390
+    Vmpp = 49.38
+    Impp = 7.92
+    Isc = 8.42
+    Voc = 59.62
+    beta = -0.40 #%/C
+    gamma = -0.49 #%/C
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    TkPmp = -0.49 * Vmpp/100
+    Eff = .152
+    A = Pmax/Eff/1000
+
 class testModules(unittest.TestCase):
     """Unit Tests"""
     def setUp(self):
@@ -153,12 +167,13 @@ if __name__=="__main__":
     #p = sinodeu120()
     #p = motech245()
     #p = astroenergy290()
+    p = asp390()
     p = mage250()
     print p.Eff
 
-    print "Vmax:",p.Vmax(-17) * series
-    print "Vmin:",p.Vmin(32.3) * series
-    print "Vmin 10%:",p.Vmin(33) * series*.90
+    print "Vmax:",p.Vmax(-20) * series
+    print "Vmin:",p.Vmin(32.0,20) * series
+    print "Vmin 10%:",p.Vmin(32,20) * series*.90
 
     print p.output(950)
     a = pvArray(motech245(), 14,2)
