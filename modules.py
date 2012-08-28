@@ -8,6 +8,8 @@ class module(object):
     #PVWatts = .95
     nameplate = .95
     #nameplate = 1
+    #beta Voc %/Tempunit
+    #gamma Pmax %/Tempunit
     def __init__(self):
         pass
     def output(self,Insolation):
@@ -155,6 +157,22 @@ class asp390(module):
     Eff = .152
     A = Pmax/Eff/1000
 
+class asw270p(module):
+    Pmax = 270
+    Vmpp = 35.2
+    Impp = 7.670
+    Isc = 8.44
+    Voc = 44.4
+    #Voc %/C
+    beta = -0.33 #%/K
+    #Pmax %/K
+    gamma = -0.46 #%/K
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    TkPmp = gamma * Vmpp/100
+    A = 1.954*.990
+    Eff = Pmax/A/1000
+
 class testModules(unittest.TestCase):
     """Unit Tests"""
     def setUp(self):
@@ -165,17 +183,17 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 14
+    series = 10
     #p = sinodeu120()
     #p = motech245()
     #p = astroenergy290()
-    p = asp390()
-    p = mage250()
+    #p = asp390()
+    p = asw270p()
     print p.Eff
 
-    print "Vmax:",p.Vmax(-20) * series
-    print "Vmin:",p.Vmin(32.0,20) * series
-    print "Vmin 10%:",p.Vmin(32,20) * series*.90
+    print "Vmax:",p.Vmax(-15) * series
+    print "Vmin:",p.Vmin(33,30) * series
+    print "Vmin 10%:",p.Vmin(33,30) * series*.90
 
     print p.output(950)
     a = pvArray(motech245(), 14,2)

@@ -50,6 +50,10 @@ class system(object):
         import matplotlib.dates as mdates
         from multiprocessing import Pool
         from multiprocessing import cpu_count
+        import epw
+
+        print self.shape[0].array.Vmax(epw.minimum(self.usaf))
+        print self.shape[0].array.Vmin(epw.twopercent(self.usaf))
 
         #hack for threading
         #probably should be abstracted some other way
