@@ -82,6 +82,17 @@ def zipToCoordinates(zip):
         if int(i['zip']) == zip:
             return float(i['latitude']),float( i['longitude'])
 
+def zipToTZ(zip):
+    index = open('zipcode.csv')
+    #read over license
+    headerLen = 31
+    for i in range(headerLen):
+        index.readline()
+    index_data = csv.DictReader(index)
+    for i in index_data:
+        if int(i['zip']) == zip:
+            return int(i['timezone'])
+
 if __name__ == "__main__":
     tilt = 32.0
     #import matplotlib.pyplot as plt

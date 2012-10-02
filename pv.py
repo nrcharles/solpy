@@ -43,6 +43,7 @@ class system(object):
         self.zipcode = zipcode
         #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
         self.place= tmy3.zipToCoordinates(self.zipcode)
+        self.tz = tmy3.zipToTZ(self.zipcode)
         self.name, self.usaf = tmy3.closestUSAF(self.place)
 
     def model(self,mname = 'p9'):
@@ -103,3 +104,17 @@ class system(object):
         print "Annual Output: %s kWh" % (round(t/10)/100)
         print "Daily Average: %s kWh" % (round(t/365/10)/100)
         return fig
+
+    def minRowSpace(self, delta):
+        """Row Space Function"""
+        import datetime
+        import pysolar
+        import math
+        s_alt_rise = pysolar.Altitude(self.place[0],self.place[1],datetime.datetime(2000,12,22,9-self.tz))
+        d_shadow = delta / math.tan(math.radians(s_alt_rise))
+        d_min = d_shadow * math.cos(math.radians(180+self.azimuth))
+        s_alt_set = pysolar.Altitude(self.place[0],self.place[1],datetime.datetime(2000,12,22,15-self.tz))
+        d_shadow = delta / math.tan(math.radians(s_alt_set))
+        d_min1 = d_shadow * math.cos(math.radians(180+self.azimuth))
+        return max(d_min,d_min1)
+
