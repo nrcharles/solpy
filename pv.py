@@ -105,16 +105,23 @@ class system(object):
         print "Daily Average: %s kWh" % (round(t/365/10)/100)
         return fig
 
-    def minRowSpace(self, delta):
+    def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""
         import datetime
         import pysolar
         import math
-        s_alt_rise = pysolar.Altitude(self.place[0],self.place[1],datetime.datetime(2000,12,22,9-self.tz))
-        d_shadow = delta / math.tan(math.radians(s_alt_rise))
-        d_min = d_shadow * math.cos(math.radians(180+self.azimuth))
-        s_alt_set = pysolar.Altitude(self.place[0],self.place[1],datetime.datetime(2000,12,22,15-self.tz))
-        d_shadow = delta / math.tan(math.radians(s_alt_set))
-        d_min1 = d_shadow * math.cos(math.radians(180+self.azimuth))
-        return max(d_min,d_min1)
+
+        riseTime = datetime.datetime(2000,12,22,riseHour-self.tz)
+        altitudeRise = pysolar.Altitude(self.place[0],self.place[1],riseTime)
+        azimuthRize = pysolar.Azimuth(self.place[0],self.place[1],riseTime)
+        shadowLength = delta / math.tan(math.radians(altitudeRise))
+        minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRize))
+
+        setTime = datetime.datetime(2000,12,22,setHour-self.tz)
+        altSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
+        setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
+        shadowLength = delta / math.tan(math.radians(altSet))
+        minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
+
+        return max(minimumSpaceRise,minimumSpaceSet)
 
