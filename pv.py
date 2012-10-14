@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import tmy3
+import geo
 import numpy as np
 from inverters import *
 from modules import *
@@ -42,9 +43,9 @@ class system(object):
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
         #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-        self.place= tmy3.zipToCoordinates(self.zipcode)
-        self.tz = tmy3.zipToTZ(self.zipcode)
-        self.name, self.usaf = tmy3.closestUSAF(self.place)
+        self.place= geo.zipToCoordinates(self.zipcode)
+        self.tz = geo.zipToTZ(self.zipcode)
+        self.name, self.usaf = geo.closestUSAF(self.place)
 
     def model(self,mname = 'p9'):
         import matplotlib.pyplot as plt
