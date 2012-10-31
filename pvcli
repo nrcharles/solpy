@@ -41,7 +41,7 @@ if __name__ == "__main__":
         p = mage250()
         e = m215(p)
         s = pvArray(p,14,2)
-        si = sunny6000us(s)
+        si = sb6000us(s)
         array = [e] * args['shape']
         #print e.Pac(950)
         #print e.I(960,240)

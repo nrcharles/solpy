@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import tmy3
+import geo
 import numpy as np
 from inverters import *
 from modules import *
@@ -42,14 +43,19 @@ class system(object):
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
         #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-        self.place= tmy3.zipToCoordinates(self.zipcode)
-        self.name, self.usaf = tmy3.closestUSAF(self.place)
+        self.place= geo.zipToCoordinates(self.zipcode)
+        self.tz = geo.zipToTZ(self.zipcode)
+        self.name, self.usaf = geo.closestUSAF(self.place)
 
     def model(self,mname = 'p9'):
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         from multiprocessing import Pool
         from multiprocessing import cpu_count
+        import epw
+
+        print self.shape[0].array.Vmax(epw.minimum(self.usaf))
+        print self.shape[0].array.Vmin(epw.twopercent(self.usaf))
 
         #hack for threading
         #probably should be abstracted some other way
@@ -99,3 +105,24 @@ class system(object):
         print "Annual Output: %s kWh" % (round(t/10)/100)
         print "Daily Average: %s kWh" % (round(t/365/10)/100)
         return fig
+
+    def minRowSpace(self, delta, riseHour=9, setHour=15):
+        """Row Space Function"""
+        import datetime
+        import pysolar
+        import math
+
+        riseTime = datetime.datetime(2000,12,22,riseHour-self.tz)
+        altitudeRise = pysolar.Altitude(self.place[0],self.place[1],riseTime)
+        azimuthRize = pysolar.Azimuth(self.place[0],self.place[1],riseTime)
+        shadowLength = delta / math.tan(math.radians(altitudeRise))
+        minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRize))
+
+        setTime = datetime.datetime(2000,12,22,setHour-self.tz)
+        altSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
+        setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
+        shadowLength = delta / math.tan(math.radians(altSet))
+        minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
+
+        return max(minimumSpaceRise,minimumSpaceSet)
+

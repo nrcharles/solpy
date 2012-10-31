@@ -48,7 +48,7 @@ class m215(inverter):
     Mismatch = 1.0
     availability = 0.99
 
-class sunny6000us(inverter):
+class sb6000us(inverter):
     C0 = -0.00000585799
     C1 = 0.0000473779
     C2 = 0.00302826
@@ -57,10 +57,20 @@ class sunny6000us(inverter):
     Paco = 6000
     Pso = 34.0589
     Vdco = 311.5
-    MPPT_low = 260
+    MPPT_low = 250
     MPPT_high = 480
 
-
+class sb7000us_277(inverter):
+    Paco = 7000
+    Pdco=7335.42562702603
+    Vdco=309.356666666667
+    Pso=47.9026450806276
+    C0=-0.00000461857893486423
+    C1=0.0000600783584419095
+    C2=0.00226319921317282
+    C3=-0.00000530729066392536
+    MPPT_low=250
+    MPPT_high=480
 
 class sma500heus(inverter):
     Paco=500000
@@ -85,7 +95,7 @@ if __name__=="__main__":
     e = m215(p)
     s = pvArray(p,14,2)
     s = pvArray(p,14,20*8)
-    #si = sunny6000us(s)
+    #si = sb6000us(s)
     si = sma500heus(s)
 
     print e.Pac(950)

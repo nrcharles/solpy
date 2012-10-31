@@ -55,39 +55,13 @@ class data():
     def __del__(self):
         self.csvfile.close()
 
-def closestUSAF(place):
-    latitude,longitude = place
-    index = open(path + 'TMY3_StationsMeta.csv')
-    index_data = csv.DictReader(index)
-    d1 = 9999
-    name = ''
-    usaf = ''
-    for i in index_data:
-        d2 = math.sqrt(math.pow((float(i['Latitude']) - latitude),2) +math.pow((float(i['Longitude']) - longitude),2))
-        if d2 < d1:
-            d1 = d2
-            name = i['Site Name']
-            usaf = i['USAF']
-    index.close()
-    return name, usaf
-
-def zipToCoordinates(zip):
-    index = open('zipcode.csv')
-    #read over license
-    headerLen = 31
-    for i in range(headerLen):
-        index.readline()
-    index_data = csv.DictReader(index)
-    for i in index_data:
-        if int(i['zip']) == zip:
-            return float(i['latitude']),float( i['longitude'])
-
 if __name__ == "__main__":
+    import geo
     tilt = 32.0
     #import matplotlib.pyplot as plt
     #place = zipToCoordinates(17601) #Lancaster
-    place = zipToCoordinates(19113) #Philadelphia
-    name, usaf = closestUSAF(place)
+    place = geo.zipToCoordinates(19113) #Philadelphia
+    name, usaf = geo.closestUSAF(place)
     t = 0
     for r in data(usaf):
         output = irradiation.irradiation(r,place,tilt)
