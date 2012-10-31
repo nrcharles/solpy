@@ -18,6 +18,7 @@ import numpy as np
 from   numpy import sin, cos, tan, arcsin, arccos, arctan, pi
 import solar
 from   collectors import *
+from   datetime import datetime, timedelta
 
 
 class location():
@@ -33,31 +34,21 @@ class location():
 class solar_day():
     '''solar_day uses Duffie & Beckman solar position algorithm for 1 day's solar angles.
        Day constants are floats, variables are numpy arrays.'''
-    def __init__(self, n, L, C, time=[]):
+    def __init__(self, n, L, C, time=None):
         # Constants:
         self.n     = n        # Day of year
         self.L     = L        # Location object
         self.C     = C        # Collector object
         self.delta = (23.45*pi/180) * sin(2*pi*(284+self.n)/365) # Declination (1.6.1)
-        # Variables: all numpy arrays of length 24*60 = 1440 
-        if len(time) > 1:     # Set up the time array: time_s is normalized (0 - 1)
-            self.time_s = self.stime(time)
-        else:
-            self.time_s  = (np.arange(1440)+4*(self.L.lon_s-self.L.lon)+solar_time(self.n))/1440.0 
-        self.omega   = (self.time_s-0.5)*24*15*(pi/180)               # Hour angle (15' per hour, a.m. -ve)
+        # Variables: all numpy arrays of length 24h * 60min = 1440 
+        if time == None: self.time = np.array([datetime(2000,1,1)+timedelta(days=n-1,minutes=m) for m in range(1440)])
+        else:            self.time = time
+        self.omega   = np.array([(t.hour+(t.minute/60.0)-12)*15*(pi/180) for t in self.time])  # Hour angle (15' per hour, a.m. -ve)
         self.gamma_s = np.array([solar.azimuth(self.L.phi,self.delta,m) for m in self.omega]) # Solar azimuth
         self.theta_z = arccos( cos(self.L.phi)*cos(self.delta)*cos(self.omega) +
                        sin(self.L.phi)*sin(self.delta) )              # Zenith angle (1.6.5)
         self.theta   = arccos( cos(self.theta_z)*cos(self.C.beta) +   # Angle of incidence on collector (1.6.3)
                        sin(self.theta_z)*sin(self.C.beta)*cos(self.gamma_s-self.C.gamma) ) 
-    def stime(self,time):
-        '''Converts Campbell Sci 0-2400 time format to a 0-1 normalized array'''
-        hr  = (time/100)*100
-        mn  = time - (time/100)*100
-        return (hr + (100/60.0)*(mn+(4*(self.L.lon_s-self.L.lon)+solar_time(self.n))))/2400.0 
-    def i(self, time):
-        '''indirect time reference: returns array location for given solar time.'''
-        return np.searchsorted(self.time_s,self.stime(time))
         
 def solar_time(n):
     '''solar_time: returns E, for solar/local time offset.'''
@@ -67,7 +58,7 @@ def solar_time(n):
 
 def clear_sky(n, theta_z, alt):
     '''clear_sky: returns an estimate of the clear sky radiation for a given day, time.
-    output: G_c = [G_ct, G_cb, G_cd] '''
+       output: G_c = [G_ct, G_cb, G_cd] '''
     A   = alt/1000.0                           # Altitude in km
     r_0 = 0.95                                 # r_0 - r_k are correction factors from Table 2.8.1 (p.73)
     r_1 = 0.98                                 # (for tropical climate; 
