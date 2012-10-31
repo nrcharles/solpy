@@ -1,7 +1,7 @@
 import csv
 import math
 
-def closestUSAF(place):
+def closestUSAF(place, stationClass=3):
     latitude,longitude = place
     index = open('StationsMeta.csv')
     index_data = csv.DictReader(index)
@@ -10,7 +10,8 @@ def closestUSAF(place):
     usaf = ''
     for i in index_data:
         d2 = math.sqrt(math.pow((float(i['Latitude']) - latitude),2) +math.pow((float(i['Longitude']) - longitude),2))
-        if d2 < d1:
+        uncertainty = len(i['Class'])
+        if d2 < d1 and uncertainty <= stationClass:
             d1 = d2
             name = i['Site Name']
             usaf = i['USAF']

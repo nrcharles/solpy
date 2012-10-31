@@ -45,6 +45,22 @@ class pvArray(module):
     def output(self, Insolation):
         return self.panel.output(Insolation)*self.series*self.parallel
 
+class mage285(module):
+    Pmax = 285
+    Vmpp = 35.59
+    Impp = 8.01
+    Isc = 8.45
+    Voc = 44.76
+    #Uoc %/K
+    beta = -0.32
+    #Pmax %/K
+    gamma = -0.43
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    A = 1.973 * .989
+    Eff = .146
+    nameplate = 1.0
+
 class mage250(module):
     Pmax = 250
     Vmpp = 30.00
@@ -61,6 +77,8 @@ class mage250(module):
     Eff = .1562
     nameplate = 1.0
 
+
+
 class mage240(module):
     Pmax = 240
     Vmpp = 29.48
@@ -75,6 +93,21 @@ class mage240(module):
     TkVmp = gamma * Vmpp/100
     A = 1.650 * .991
     Eff = .146
+
+class mage235(module):
+    Pmax = 235
+    Vmpp = 29.69
+    Impp = 7.92
+    Isc = 8.55
+    Voc = 37.03
+    #Uoc %/K
+    beta = -0.32
+    #Pmax %/K
+    gamma = -0.43
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    A = 1.655 * .989
+    Eff = .144
 
 class motech245(module):
     Pmax = 245

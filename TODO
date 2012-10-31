@@ -4,3 +4,6 @@ TODO
 * Sandia PV Array Performance Model http://photovoltaics.sandia.gov/docs/PDF/King%20SAND.pdf 
 * Neher-McGrath wire model
 * KiBaM Battery Model
+* Recursive Voltage drop test/parametric wire selection
+* error tests - number of inverters/panels
+* voltage drop in pv Model

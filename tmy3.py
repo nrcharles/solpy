@@ -1,14 +1,27 @@
 import csv
 import datetime
 import os
-import math
 import irradiation
-import solar
-import pysolar as s
 
 #path to tmy3 data
 #default = ~/tmp3/
 path = os.environ['HOME'] + "/tmy3/"
+
+def tmybasename(USAF):
+    f = open('tmy3urls.csv')
+    for line in f.readlines():
+        if line.find(USAF) is not -1:
+            return line.rstrip().partition(',')[0]
+
+
+def downloadTMY(USAF):
+    url = "http://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/data/tmy3/"
+    import urllib2
+    tmyfile = tmybasename(USAF)
+    u = urllib2.urlopen(url + tmyfile)
+    localFile = open(path + tmyfile, 'w')
+    localFile.write(u.read())
+    localFile.close()
 
 def strptime(string, tz=0):
     #necessary because of 24:00 end of day labeling
@@ -34,7 +47,14 @@ def normalizeDate(tmyDate, year):
 class data():
     def __init__(self, USAF):
         filename = path + USAF + 'TY.csv'
-        self.csvfile = open(filename)
+        self.csvfile = None
+        try:
+            self.csvfile = open(filename)
+        except:
+            print "File not found"
+            print "Downloading ..."
+            downloadTMY(USAF)
+            self.csvfile = open(filename)
         header =  self.csvfile.readline().split(',')
         self.tmy_data = csv.DictReader(self.csvfile)
         self.latitude = float(header[4])

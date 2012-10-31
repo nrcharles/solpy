@@ -1,6 +1,5 @@
 # coding=utf-8
 import os
-import tmy3
 import re
 import geo
 #path to epw data
@@ -103,21 +102,24 @@ if __name__ == "__main__":
     #opts, args = getopt.getopt(sys.argv[1:], 'f:h')
     parser.add_argument('-z', '--zipcode',type=int,required=True)
     parser.add_argument('-m', '--mname')
+    parser.add_argument('-v', '--voltage',type=int,default=600)
     args = vars(parser.parse_args())
     #print args
 
     try:
         #start program
         zip = args['zipcode']
-
-        name, usaf = geo.closestUSAF( geo.zipToCoordinates(zip))
+        maxVoltage = args['voltage']
+        stationClass = 1
+        name, usaf = geo.closestUSAF( geo.zipToCoordinates(zip), stationClass)
         print "%s USAF: %s" %  (name, usaf)
         print "Minimum Temperature: %s C" % minimum(usaf)
         print "2%% Max: %s C" % twopercent(usaf)
         import modules
         m = getattr(modules,args['mname'])()
-        print m.Vmin(twopercent(usaf))
-        print m.Vmax(minimum(usaf))
+        print "Minimum: %sV" % m.Vmin(twopercent(usaf))
+        print "Maximum: %sV" % m.Vmax(minimum(usaf))
+        print "Max in series", int(maxVoltage/m.Vmax(minimum(usaf)))
 
 
     except (KeyboardInterrupt, SystemExit):

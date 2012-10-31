@@ -22,6 +22,7 @@
 from math import radians
 from math import degrees
 from math import fabs
+from math import pi
 from numpy import sin, cos
 #import solar
 import pysolar
