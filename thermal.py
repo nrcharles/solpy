@@ -18,18 +18,18 @@ import numpy as np
 from   numpy import sin, cos, tan, arcsin, arccos, arctan, pi
 import solar
 from   collectors import *
-from   datetime import datetime, timedelta
+from   datetime import datetime, timedelta, date
 
 
 class location():
     ''' This should be merged with the pv location class...'''
     def __init__(self, name='default',lat=0,lon=0,alt=0):
         self.name  = name
-        self.lat   = lat
-        self.alt   = alt
-        self.lon   = lon
-        self.lon_s = round(lon/15)*15
-        self.phi   = self.lat*pi/180.0            # Latitude, in radians
+        self.lat   = lat                    # Latitude  [degrees]
+        self.alt   = alt                    # Altitude  [m]
+        self.lon   = lon                    # Longitude [degrees]
+        self.lon_s = round(lon/15)*15       # Standard longitude [degrees]   # UNUSED??
+        self.phi   = self.lat*pi/180.0      # Latitude, [radians]
 
 class solar_day():
     '''solar_day uses Duffie & Beckman solar position algorithm for 1 day's solar angles.
@@ -43,13 +43,30 @@ class solar_day():
         # Variables: all numpy arrays of length 24h * 60min = 1440 
         if time == None: self.time = np.array([datetime(2000,1,1)+timedelta(days=n-1,minutes=m) for m in range(1440)])
         else:            self.time = time
-        self.omega   = np.array([(t.hour+(t.minute/60.0)-12)*15*(pi/180) for t in self.time])  # Hour angle (15' per hour, a.m. -ve)
+        self.omega   = np.array([(t.hour+(t.minute/60.0)-12)*15.0*(pi/180.0) for t in self.time])  # Hour angle (15' per hour, a.m. -ve)
         self.gamma_s = np.array([solar.azimuth(self.L.phi,self.delta,m) for m in self.omega]) # Solar azimuth
         self.theta_z = arccos( cos(self.L.phi)*cos(self.delta)*cos(self.omega) +
                        sin(self.L.phi)*sin(self.delta) )              # Zenith angle (1.6.5)
         self.theta   = arccos( cos(self.theta_z)*cos(self.C.beta) +   # Angle of incidence on collector (1.6.3)
-                       sin(self.theta_z)*sin(self.C.beta)*cos(self.gamma_s-self.C.gamma) ) 
-        
+                       sin(self.theta_z)*sin(self.C.beta)*cos(self.gamma_s-self.C.gamma) )
+        self.R_b     = cos(np.clip(self.theta,0,pi/2))/cos(np.clip(self.theta_z,0,1.55)) # (1.8.1) Ratio of radiation on sloped/horizontal surface
+    def clear_sky(self):
+        return np.array([clear_sky(self.n,t,self.L.alt) for t in self.theta_z])
+    def R_b(self):
+        pass
+   
+def day_of_year(dtime):
+    '''returns n, the day of year, for a given python datetime object'''
+    if isinstance(dtime,int):
+        ndate = datetime.now().replace(month=1,day=1)+timedelta(days=dtime-1)
+        return ndate.date()
+    elif isinstance(dtime,datetime) or isinstance(dtime,date):
+        n = (dtime - dtime.replace(month=1,day=1)).days + 1
+        return n
+    else: 
+        print('ERROR: day_of_year takes an int (n) or datetime.datetime object')
+        return ' '
+     
 def solar_time(n):
     '''solar_time: returns E, for solar/local time offset.'''
     B = ((n-1) * (360.0/365))*(pi/180.0)    # See D&B p.11
@@ -59,7 +76,7 @@ def solar_time(n):
 def clear_sky(n, theta_z, alt):
     '''clear_sky: returns an estimate of the clear sky radiation for a given day, time.
        output: G_c = [G_ct, G_cb, G_cd] '''
-    A   = alt/1000.0                           # Altitude in km
+    A   = alt/1000.0                           # Altitude [km]
     r_0 = 0.95                                 # r_0 - r_k are correction factors from Table 2.8.1 (p.73)
     r_1 = 0.98                                 # (for tropical climate; 
     r_k = 1.02 
@@ -75,10 +92,15 @@ def clear_sky(n, theta_z, alt):
     if (G_o > 0.0): G_c = [(tau_b+tau_d)*G_o, tau_b*G_o, tau_d*G_o]
     return G_c
 
-def intercepted(S):
+def Intercepted_Tang(S,I_nb,I_nd):
     ''' intercepted: Calculations for radiation intercepted by glass tube collector, 
         based on Tang, 2009
-        NB: Deviations from Tang's notation: lamba > phi; phi > gamma'''
+        NB: Deviations from Tang's notation (to confirm with D&B used elsewhere): 
+            lamba -> phi; phi -> gamma'''
+    # Collector Constants
+    D1 = S.C.c.t.D1
+    D2 = S.C.c.t.D2
+    B  = S.C.c.B
 
     # Solar position vectors
     n_x  =  cos(S.delta)*cos(S.L.phi)*cos(S.omega) + sin(S.delta)*sin(S.L.phi)
@@ -87,33 +109,52 @@ def intercepted(S):
     np_x = n_x*cos(S.C.beta) - (n_y*sin(S.C.gamma)+n_z*cos(S.C.gamma))*sin(S.C.beta)
     np_y = n_y*cos(S.C.gamma) - n_z*sin(S.C.gamma)
     np_z = n_x*sin(S.C.beta) + (n_y*sin(S.C.gamma)+n_z*cos(S.C.gamma))*cos(S.C.beta)
-    io   = np.zeros_like(np_x)
-    for i in range(0,len(np_x)-1):
-       if np_x[i] > 0: io[i] = 1.0
 
     # Beam radiation, directly intercepted
-    Omega   = arctan(abs(np_z/np_x))
-    Omega_0 = arccos((S.C.D1+S.C.D2)/(2*S.C.B))
-    Omega_1 = arccos((S.C.D1-S.C.D2)/(2*S.C.B))
-    fOmega = []
-    #if   Omega <= Omega_0: fOmega = 1.0
-    #elif Omega >= Omega_1: fOmega = 0.0
-    #else: fOmega = (S.C.B/S.C.D1)*cos(Omega) + 0.5*(1-(S.C.D2/S.C.D1))
-    for Om in Omega:
-        if   Om <= Omega_0: fOmega.append(1.0)
-        elif Om >= Omega_1: fOmega.append(0.0)
-        else: fOmega.append((S.C.B/S.C.D1)*cos(Om) + 0.5*(1-(S.C.D2/S.C.D1)))
-    #I_bt = S.C.D1 * I_b * np.sqrt(np_x*np_x + np_z*np_z) * fOmega
-    fOmega *= io
-    F_bt = np.sqrt(np_x*np_x + np_z*np_z) * fOmega
-
+    Omega = {'T': arctan(abs(np_y/np_x)),
+             'H': arctan(abs(np_z/np_x)) }[S.C.c.type]
+    Omega_0 = arccos((D1+D2)/(2*B))
+    Omega_1 = arccos((D1-D2)/(2*B))
+    # f(Omega): added np_x condition to avoid after-sunset values, np.clip to cut -ve values
+    fOmega  = np.zeros_like(np_x)
+    for i in range(len(Omega)):
+        if   np_x[i]  <= 0.0:      fOmega[i] = 0.0
+        elif Omega[i] <= Omega_0:  fOmega[i] = 1.0
+        elif Omega[i] >= Omega_1:  fOmega[i] = 0.0
+        else: fOmega[i] = np.clip((B/D1)*cos(Omega[i]) + 0.5*(1-(D2/D1)),0,2)
+    cosOt = { 'T': np.sqrt(np_x*np_x + np_y*np_y),
+              'H': np.sqrt(np_x*np_x + np_z*np_z) }[S.C.c.type]
+    I_bt = D1 * cosOt * fOmega * I_nb
+    
     # Diffuse radiation, directly intercepted
-    if ((pi/2)-S.C.beta) >= Omega_0:
-        piF = Omega_0 + (1-(S.C.D2/S.C.D1))*((pi/2) - S.C.beta + Omega_1 - 2*Omega_0)/4 + \
-              (S.C.B/(2*S.C.D1))*(sin(Omega_1)+cos(S.C.beta)-2*sin(Omega_0))
-    else:
-        piF = 0.5*(Omega_0+(pi/2)-S.C.beta) + (1-(S.C.D2/S.C.D1))*(Omega_1 - Omega_0)/4 + \
-              (S.C.B/(2*S.C.D1))*(sin(Omega_1) - sin(Omega_0))
-    #I_dt = S.C.D1 * I_d * piF   # NB: for H-type, where I_d,S.C.beta = I_d
-    F_dt = piF
-    return F_bt, F_dt, Omega, fOmega
+    if   S.C.c.type == 'T':
+        piF  = Omega_0 + 0.5*(1-(D2/D1))*(Omega_1-Omega_0) + (B/D1)*(sin(Omega_1)-sin(Omega_0))
+        I_dB = 0.5 * (1+cos(S.C.beta)) * I_nd
+    elif S.C.c.type == 'H':
+        if ((pi/2)-S.C.beta) >= Omega_0:  piF = Omega_0 + (1-(D2/D1))*((pi/2) - S.C.beta + Omega_1 - 2*Omega_0)/4 + \
+                    (B/(2*D1))*(sin(Omega_1)+cos(S.C.beta)-2*sin(Omega_0))
+        else: piF = 0.5*(Omega_0+(pi/2)-S.C.beta) + (1-(D2/D1))*(Omega_1 - Omega_0)/4 + \
+                    (B/(2*D1))*(sin(Omega_1) - sin(Omega_0))
+        I_dB = I_nd
+    I_dt = D1 * piF * I_dB
+
+#     # Debugging plot:
+#     import matplotlib.pyplot as plt
+#     import matplotlib.dates  as mdates
+#     fig = plt.figure(1, figsize=(14,8))
+#     ax  = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+#     t   = S.time[1]
+#     ax.plot(S.time,I_bt,'red',   label=r'$I_{bt}$',linewidth=2)
+#     ax.plot(S.time,I_dt,'orange',label=r'$I_{dt}$',linewidth=2)
+#     ax.plot(S.time,np_x,'blue', label=r'$n^{\prime}_x$',linewidth=1)
+#     ax.plot(S.time,fOmega,'green', label=r'$f(\Omega)$',linewidth=2)
+#     ax.plot(S.time,Omega,'black', label=r'$\Omega$',linewidth=1)
+#     ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
+#     ax.set_xlim((t.replace(hour=6,minute=0),t.replace(hour=20,minute=0)))
+#     ax.legend()
+#     ax.set_ylim((-1,5))
+#     plt.show()
+
+    # Total intercepted radiation for entire collector array
+    I_total = S.C.N_tubes*S.C.c.t.L_ab * (I_bt + I_dt)
+    return I_total
