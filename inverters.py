@@ -37,6 +37,8 @@ class inverter(object):
 class m215(inverter):
     #Pdc = PV array max power?
     #Vdc = Vmpp?
+    make = "Enphase"
+    model = "M215"
     C0 = -0.000068474
     C1 = -0.000796158
     C2 = -0.0268797
@@ -71,6 +73,20 @@ class sb7000us_277(inverter):
     C3=-0.00000530729066392536
     MPPT_low=250
     MPPT_high=480
+
+class sb8000us(inverter):
+    make="SMA"
+    model="SB8000 US"
+    C0 = -0.00000222772078
+    C1 = 0.00000850700797
+    C2 = 0.000093723546
+    C3 = 0.00459934981
+    Pdco = 7915.204
+    Paco = 7600
+    Pso = 29.20185
+    Vdco = 345.38383
+    MPPT_low = 300
+    MPPT_high = 480
 
 class sma500heus(inverter):
     Paco=500000

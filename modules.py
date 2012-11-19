@@ -30,12 +30,22 @@ class module(object):
         m = self.__class__
         return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVmp
 
+#this needs rewritten
 class pvArray(module):
     """structure to aggregate panels into an array)"""
     def __init__(self,pname, series, parallel = 1):
         self.panel = pname
+        self.make = pname.make
+        self.model = pname.model
         self.series = series
         self.parallel = parallel
+        self.Isc = pname.Isc*parallel
+        self.Impp = pname.Impp*parallel
+        self.Voc = pname.Voc*series
+        self.Vmpp = pname.Vmpp*series
+        self.Pmax = pname.Pmax*series*parallel
+        self.Vrated = pname.Vrated
+        
     def Vdc(self):
         return self.panel.Vdc() * self.series
     def Vmax(self,ashraeMin):
@@ -46,6 +56,8 @@ class pvArray(module):
         return self.panel.output(Insolation)*self.series*self.parallel
 
 class mage285(module):
+    make = "Mage"
+    model = ""
     Pmax = 285
     Vmpp = 35.59
     Impp = 8.01
@@ -62,24 +74,28 @@ class mage285(module):
     nameplate = 1.0
 
 class mage250(module):
+    make = "Mage"
+    model = "250/6 MNS"
+    Vrated = 600
     Pmax = 250
-    Vmpp = 30.00
-    Impp = 8.35
-    Isc = 8.85
-    Voc = 37.50
+    Vmpp = 30.55
+    Impp = 8.21
+    Isc = 8.70
+    Voc = 37.70
     #Uoc %/K
     beta = -0.32
     #Pmax %/K
     gamma = -0.43
     TkVoc = beta * Voc /100
     TkVmp = gamma * Vmpp/100
-    A = 1.630 * .982
-    Eff = .1562
+    A = 1.644 * .992
+    Eff = .1533
     nameplate = 1.0
 
 
 
 class mage240(module):
+    make = "Mage"
     Pmax = 240
     Vmpp = 29.48
     Impp = 8.14
@@ -95,6 +111,8 @@ class mage240(module):
     Eff = .146
 
 class mage235(module):
+    make = "Mage"
+    model = ""
     Pmax = 235
     Vmpp = 29.69
     Impp = 7.92
@@ -110,6 +128,8 @@ class mage235(module):
     Eff = .144
 
 class motech245(module):
+    make = "Motech"
+    model = "245"
     Pmax = 245
     Vmpp = 29.9
     Impp = 8.2
@@ -138,6 +158,8 @@ class sinodeu120(module):
     Eff = Pmax/A/1000
 
 class generic170(module):
+    make = ""
+    model = ""
     Pmax = 170
     Vmpp = 34.8
     Impp =4.9
@@ -149,6 +171,8 @@ class generic170(module):
     A = Pmax/Eff/1000
 
 class generic180(module):
+    make = ""
+    model = ""
     Pmax = 180
     Vmpp = 25.9
     Impp = 6.95
@@ -163,6 +187,8 @@ class generic180(module):
     A = Pmax/Eff/1000
 
 class astroenergy290(module):
+    make = ""
+    model = ""
     Pmax = 290
     Vmpp = 35.68
     Impp = 8.15
@@ -177,6 +203,8 @@ class astroenergy290(module):
     A = Pmax/Eff/1000
 
 class asp390(module):
+    make = ""
+    model = ""
     Pmax = 390
     Vmpp = 49.38
     Impp = 7.92
@@ -191,6 +219,8 @@ class asp390(module):
     A = Pmax/Eff/1000
 
 class asw270p(module):
+    make = ""
+    model = ""
     Pmax = 270
     Vmpp = 35.2
     Impp = 7.670
@@ -212,21 +242,22 @@ class testModules(unittest.TestCase):
         self.mage250o = mage250().output(950)
 
     def testMageOutput(self):
-        self.assertAlmostEqual(237.522, self.mage250o,3)
+        self.assertAlmostEqual(237.509, self.mage250o,3)
 
 if __name__=="__main__":
     #p = generic180()
-    series = 11
+    series = 13
     #p = sinodeu120()
     #p = motech245()
     #p = astroenergy290()
     #p = asp390()
     p = mage250()
     print p.Eff
+    print p 
 
-    print "Vmax:",p.Vmax(-23) * series
-    print "Vmin:",p.Vmin(37,30) * series
-    print "Vmin 10%:",p.Vmin(37,30) * series*.90
+    print "Vmax:", p.Vmax(-20.6)
+    print "Vmin:",p.Vmin(31,25) * series
+    print "Vmin 10%:",p.Vmin(31,25) * series*.90
 
     print p.output(950)
     a = pvArray(motech245(), 14,2)

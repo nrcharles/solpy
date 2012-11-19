@@ -106,6 +106,13 @@ class system(object):
         print "Daily Average: %s kWh" % (round(t/365/10)/100)
         return fig
 
+    def power(self,time):
+        #in progress
+        output = 0
+        for i in self.shape:
+            output += i.Pac(ins)
+        pass
+
     def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""
         import datetime
@@ -119,9 +126,9 @@ class system(object):
         minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRize))
 
         setTime = datetime.datetime(2000,12,22,setHour-self.tz)
-        altSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
+        altitudeSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
         setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
-        shadowLength = delta / math.tan(math.radians(altSet))
+        shadowLength = delta / math.tan(math.radians(altitudeSet))
         minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
 
         return max(minimumSpaceRise,minimumSpaceSet)
