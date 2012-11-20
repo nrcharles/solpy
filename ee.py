@@ -518,7 +518,9 @@ def checkAmpacity(c, oca):
             conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
             if conductor_oc > oca:
                 print "Minimum size is %s %s" % (s, c.material)
-                return
+                return conductor(s,c.material)
+    else:
+        return c
 
 if __name__ == "__main__":
     #house = netlist()

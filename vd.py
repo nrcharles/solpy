@@ -53,7 +53,8 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         vd = 2.0* a * r * l/1000.0
         print "Voltage drop: %sV" % vd
         print "Percent drop: %s%%" % (vd * 100/v)
-        ee.checkAmpacity(tconductor, ocp)
+        tconductor = ee.checkAmpacity(tconductor, ocp)
+        return tconductor
 
     else:
         print "Allowed Voltage drop: %sV" % vd
@@ -61,6 +62,7 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         r = (vd*1000)/(2.0 * a*l)
         print "Resistance: %s" % r
         sets = 1
+        conductor = None
         while 1:
             conductor = ee.findConductor((r*sets),material,c,pf,t)
             if conductor:
@@ -69,9 +71,11 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
 
         if sets > 1:
             print "WARNING: %s sets of conductors" % sets
-        print "Conductor %s" % conductor
-        ee.checkAmpacity(conductor, ocp/sets)
-    return vd
+            return [conductor for i in range(sets)]
+        else:
+            print "Conductor %s" % conductor
+            conductor = ee.checkAmpacity(conductor, ocp/sets)
+            return conductor
 
 if __name__ == "__main__":
     import argparse
