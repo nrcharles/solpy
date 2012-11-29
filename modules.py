@@ -143,6 +143,20 @@ class astroenergy290(module):
     Eff = .149
     A = Pmax/Eff/1000
 
+class asp240(module):
+    Pmax = 240
+    Vmpp = 30.54
+    Impp = 7.87
+    Isc = 8.48
+    Voc = 37.26
+    beta = -0.335 #%/C
+    gamma = -0.40 #%/C
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    TkPmp = -0.40 * Vmpp/100
+    Eff = .1482
+    A = Pmax/Eff/1000
+
 class asp390(module):
     Pmax = 390
     Vmpp = 49.38
@@ -183,7 +197,7 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 14
+    series = 23
     #p = sinodeu120()
     #p = motech245()
     #p = astroenergy290()
@@ -197,7 +211,7 @@ if __name__=="__main__":
 
     print p.output(950)
     a = pvArray(motech245(), 14,2)
-    print a.Vmax(-12)
+    print a.Vmax(-20)
     print a.Vmin(33)
     print a.output(950)
     suite = unittest.TestLoader().loadTestsFromTestCase(testModules)
