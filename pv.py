@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import tmy3
+import geo
 import numpy as np
 from inverters import *
 from modules import *
@@ -42,9 +43,9 @@ class system(object):
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
         #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
-        self.place= tmy3.zipToCoordinates(self.zipcode)
-        self.tz = tmy3.zipToTZ(self.zipcode)
-        self.name, self.usaf = tmy3.closestUSAF(self.place)
+        self.place= geo.zipToCoordinates(self.zipcode)
+        self.tz = geo.zipToTZ(self.zipcode)
+        self.name, self.usaf = geo.closestUSAF(self.place)
 
     def model(self,mname = 'p9'):
         import matplotlib.pyplot as plt
@@ -105,16 +106,30 @@ class system(object):
         print "Daily Average: %s kWh" % (round(t/365/10)/100)
         return fig
 
-    def minRowSpace(self, delta):
+    def power(self,time):
+        #in progress
+        output = 0
+        for i in self.shape:
+            output += i.Pac(ins)
+        pass
+
+    def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""
         import datetime
         import pysolar
         import math
-        s_alt_rise = pysolar.Altitude(self.place[0],self.place[1],datetime.datetime(2000,12,22,9-self.tz))
-        d_shadow = delta / math.tan(math.radians(s_alt_rise))
-        d_min = d_shadow * math.cos(math.radians(180+self.azimuth))
-        s_alt_set = pysolar.Altitude(self.place[0],self.place[1],datetime.datetime(2000,12,22,15-self.tz))
-        d_shadow = delta / math.tan(math.radians(s_alt_set))
-        d_min1 = d_shadow * math.cos(math.radians(180+self.azimuth))
-        return max(d_min,d_min1)
+
+        riseTime = datetime.datetime(2000,12,22,riseHour-self.tz)
+        altitudeRise = pysolar.Altitude(self.place[0],self.place[1],riseTime)
+        azimuthRize = pysolar.Azimuth(self.place[0],self.place[1],riseTime)
+        shadowLength = delta / math.tan(math.radians(altitudeRise))
+        minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRize))
+
+        setTime = datetime.datetime(2000,12,22,setHour-self.tz)
+        altitudeSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
+        setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
+        shadowLength = delta / math.tan(math.radians(altitudeSet))
+        minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
+
+        return max(minimumSpaceRise,minimumSpaceSet)
 

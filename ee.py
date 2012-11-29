@@ -16,6 +16,9 @@ CONDUCTOR_STANDARD_SIZES = ["14","12","10","8","6","4","2","1","1/0","2/0",\
 OCP_STANDARD_SIZES = [15,20,25,30,35,40,45,50,50,60,70,80,90,100,110,125,150,\
         175,200,225,250,300,350,400,450,500,600,700,800,1000,1200,1600,2000,\
         2500,3000,4000,5000,6000]
+OCP_STANDARD_FUSES = [1,3,6,10,15,20,25,30,35,40,45,50,50,60,70,80,90,100,\
+        110,125,150,175,200,225,250,300,350,400,450,500,600,601,700,800,1000,\
+        1200,1600,2000,2500,3000,4000,5000,6000]
 #NEC 310.15(B)(16)
 CU_AMPACITY_A30_75 = {"14":20,
         "12":25,
@@ -273,6 +276,11 @@ _AL = {"14" : 5.170,
     "600" : .0353,
     "750" : .0282}
 
+def ocpSize(a):
+    for i in OCP_STANDARD_SIZES:
+        if i > a:
+            return i
+
 class transformer(object):
     def __init__(self, rating, loss, noload):
         self.rating = rating
@@ -510,7 +518,9 @@ def checkAmpacity(c, oca):
             conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
             if conductor_oc > oca:
                 print "Minimum size is %s %s" % (s, c.material)
-                return
+                return conductor(s,c.material)
+    else:
+        return c
 
 if __name__ == "__main__":
     #house = netlist()

@@ -1,14 +1,27 @@
 import csv
 import datetime
 import os
-import math
 import irradiation
-import solar
-import pysolar as s
 
 #path to tmy3 data
 #default = ~/tmp3/
 path = os.environ['HOME'] + "/tmy3/"
+
+def tmybasename(USAF):
+    f = open('tmy3urls.csv')
+    for line in f.readlines():
+        if line.find(USAF) is not -1:
+            return line.rstrip().partition(',')[0]
+
+
+def downloadTMY(USAF):
+    url = "http://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/data/tmy3/"
+    import urllib2
+    tmyfile = tmybasename(USAF)
+    u = urllib2.urlopen(url + tmyfile)
+    localFile = open(path + tmyfile, 'w')
+    localFile.write(u.read())
+    localFile.close()
 
 def strptime(string, tz=0):
     #necessary because of 24:00 end of day labeling
@@ -34,7 +47,14 @@ def normalizeDate(tmyDate, year):
 class data():
     def __init__(self, USAF):
         filename = path + USAF + 'TY.csv'
-        self.csvfile = open(filename)
+        self.csvfile = None
+        try:
+            self.csvfile = open(filename)
+        except:
+            print "File not found"
+            print "Downloading ..."
+            downloadTMY(USAF)
+            self.csvfile = open(filename)
         header =  self.csvfile.readline().split(',')
         self.tmy_data = csv.DictReader(self.csvfile)
         self.latitude = float(header[4])
@@ -55,50 +75,13 @@ class data():
     def __del__(self):
         self.csvfile.close()
 
-def closestUSAF(place):
-    latitude,longitude = place
-    index = open(path + 'TMY3_StationsMeta.csv')
-    index_data = csv.DictReader(index)
-    d1 = 9999
-    name = ''
-    usaf = ''
-    for i in index_data:
-        d2 = math.sqrt(math.pow((float(i['Latitude']) - latitude),2) +math.pow((float(i['Longitude']) - longitude),2))
-        if d2 < d1:
-            d1 = d2
-            name = i['Site Name']
-            usaf = i['USAF']
-    index.close()
-    return name, usaf
-
-def zipToCoordinates(zip):
-    index = open('zipcode.csv')
-    #read over license
-    headerLen = 31
-    for i in range(headerLen):
-        index.readline()
-    index_data = csv.DictReader(index)
-    for i in index_data:
-        if int(i['zip']) == zip:
-            return float(i['latitude']),float( i['longitude'])
-
-def zipToTZ(zip):
-    index = open('zipcode.csv')
-    #read over license
-    headerLen = 31
-    for i in range(headerLen):
-        index.readline()
-    index_data = csv.DictReader(index)
-    for i in index_data:
-        if int(i['zip']) == zip:
-            return int(i['timezone'])
-
 if __name__ == "__main__":
+    import geo
     tilt = 32.0
     #import matplotlib.pyplot as plt
     #place = zipToCoordinates(17601) #Lancaster
-    place = zipToCoordinates(19113) #Philadelphia
-    name, usaf = closestUSAF(place)
+    place = geo.zipToCoordinates(19113) #Philadelphia
+    name, usaf = geo.closestUSAF(place)
     t = 0
     for r in data(usaf):
         output = irradiation.irradiation(r,place,tilt)
