@@ -36,16 +36,9 @@ class pvArray(module):
     """structure to aggregate panels into an array)"""
     def __init__(self,pname, series, parallel = 1):
         self.panel = pname
-        self.make = pname.make
-        self.model = pname.model
         self.series = series
         self.parallel = parallel
-        self.Isc = pname.Isc*parallel
-        self.Impp = pname.Impp*parallel
-        self.Voc = pname.Voc*series
-        self.Vmpp = pname.Vmpp*series
         self.Pmax = pname.Pmax*series*parallel
-        self.Vrated = pname.Vrated
         
     def Vdc(self):
         return self.panel.Vdc() * self.series

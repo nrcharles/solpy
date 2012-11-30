@@ -25,6 +25,7 @@ def micro_notes(system, Vnominal=240.0):
         print "Short-Circuit Current (Isc): %s A" % i.array.Isc
         print "Maximum Power (Pmax): %s W" % i.array.Pmax
         print "Module Rated Max Voltage: %s V" % i.array.Vrated
+        print ""
         print "Inverter Make: %s" % i.make
         print "Inverter Model: %s" % i.model
         print "Max Power: %s W" % i.Paco
@@ -46,14 +47,15 @@ def string_notes(system, Vnominal=240.0):
     twopercentTemp = epw.twopercent(usaf)
     for i in set(system.shape):
         print "PV Module Ratings @ STC"
-        print "Module Make: %s" % i.array.make
-        print "Module Model: %s" % i.array.model
+        print "Module Make: %s" % i.array.panel.make
+        print "Module Model: %s" % i.array.panel.model
         print "Max Power-Point Current (Imp): %s A" % i.array.panel.Impp
         print "Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp
         print "Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc
         print "Short-Circuit Current (Isc): %s A" % i.array.panel.Isc
         print "Maximum Power (Pmax): %s W" % i.array.panel.Pmax
         print "Module Rated Max Voltage: %s V" % i.array.panel.Vrated
+        print ""
         print "Inverter Make: %s" % i.make
         print "Inverter Model: %s" % i.model
         print "Max Power: %s W" % i.Paco
@@ -143,9 +145,9 @@ if __name__ == "__main__":
     micro_notes(plant)
     micro_calcs(plant,220)
     print ""
-    #plant = pv.system([inverters.sb7000us(modules.pvArray(modules.mage250(),14,2))]*4 \
-    #        +[inverters.sb6000us(modules.pvArray(modules.mage250(),14,2))]*11)
-    #plant.setZipcode(21863)
+    plant = pv.system([inverters.sb7000us(modules.pvArray(modules.mage250(),14,2))]*4 \
+            +[inverters.sb6000us(modules.pvArray(modules.mage250(),14,2))]*11)
+    plant.setZipcode(21863)
     #plant.setZipcode(17601)
-    #string_notes(plant)
+    string_notes(plant)
 
