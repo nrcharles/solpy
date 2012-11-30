@@ -30,6 +30,16 @@ import ee
 
 #def solve()
 #def vd(args, **kwargs):
+
+def incEGC(egc,ratio):
+    if ratio > 0:
+        increased = ee.CMIL[egc]*ratio
+        for c in ee.CONDUCTOR_STANDARD_SIZES:
+            if ee.CMIL[c] >= increased:
+                return c
+    else: 
+        return egc
+
 def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
     #a =  eval(args['current'])
     #l = eval(args['length'])
@@ -42,10 +52,13 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
     #material = 'CU'
     oc = a * 1.25
     print "Continous Current: %s" % a
-    ocp =ee.findOCP(oc)
+    ocp = ee.findOCP(oc)
     print "OCP Size: %s" % ocp
+    egc = ee.findEGC(ocp,material)
     vd = v * percent/100.0
     r = 0
+    ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
+    print "Ratio: ",ratio
     if size:
         tconductor = ee.conductor(size, material)
         r = ee.resistance( tconductor,c,pf, t)
@@ -54,6 +67,7 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         print "Voltage drop: %sV" % vd
         print "Percent drop: %s%%" % (vd * 100/v)
         tconductor = ee.checkAmpacity(tconductor, ocp)
+        print "EGC Size: %s" % incEGC(egc,ratio)
         return tconductor
 
     else:
@@ -71,10 +85,12 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
 
         if sets > 1:
             print "WARNING: %s sets of conductors" % sets
+            print "EGC Size: %s" % incEGC(egc,ratio)
             return [conductor for i in range(sets)]
         else:
             print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets)
+            print "EGC Size: %s" % incEGC(egc,ratio)
             return conductor
 
 if __name__ == "__main__":

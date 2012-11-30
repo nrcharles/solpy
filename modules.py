@@ -7,6 +7,7 @@ class module(object):
     #SAM = 1
     #PVWatts = .95
     nameplate = .95
+    Vrated = 600
     #nameplate = 1
     #beta Voc %/Tempunit
     #gamma Pmax %/Tempunit
@@ -76,8 +77,8 @@ class mage285(module):
 class mage250(module):
     make = "Mage"
     model = "250/6 MNS"
-    Vrated = 600
     Pmax = 250
+    Vrated = 600
     Vmpp = 30.55
     Impp = 8.21
     Isc = 8.70
@@ -91,8 +92,6 @@ class mage250(module):
     A = 1.644 * .992
     Eff = .1533
     nameplate = 1.0
-
-
 
 class mage240(module):
     make = "Mage"
@@ -260,7 +259,7 @@ if __name__=="__main__":
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
 
     print p.output(950)
-    a = pvArray(motech245(), 14,2)
+    #a = pvArray(motech245(), 14,2)
     print a.Vmax(-12)
     print a.Vmin(33)
     print a.output(950)

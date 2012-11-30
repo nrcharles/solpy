@@ -51,6 +51,8 @@ class m215(inverter):
     availability = 0.99
 
 class sb6000us(inverter):
+    make="SMA"
+    model="SB6000 US"
     C0 = -0.00000585799
     C1 = 0.0000473779
     C2 = 0.00302826
@@ -59,6 +61,20 @@ class sb6000us(inverter):
     Paco = 6000
     Pso = 34.0589
     Vdco = 311.5
+    MPPT_low = 250
+    MPPT_high = 480
+
+class sb7000us(inverter):
+    make="SMA"
+    model="SB7000 US"
+    Paco = 7000
+    Pdco = 7339.27515031677
+    Pso = 48.2787579483879
+    C0=-4.65883895157974E-06
+    C1=5.63595857586651E-05
+    C2=2.23860122284997E-03
+    C3=2.1574092288579E-04
+    Vdco = 309.953333333333
     MPPT_low = 250
     MPPT_high = 480
 
