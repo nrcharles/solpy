@@ -86,6 +86,25 @@ class mage250(module):
     Eff = .1533
     nameplate = 1.0
 
+class mage250ml(module):
+    make = "Mage"
+    model = "250/6 ML"
+    Pmax = 250
+    Vrated = 600
+    Vmpp = 32.02
+    Impp = 7.81
+    Isc = 8.22
+    Voc = 37.82
+    #Uoc %/K
+    beta = -0.41
+    #Pmax %/K
+    gamma = -0.55
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    A = 1.655 * .989
+    Eff = .154
+    nameplate = 1.0
+
 class mage240(module):
     make = "Mage"
     Pmax = 240
@@ -148,6 +167,47 @@ class sinodeu120(module):
     TkVmp = gamma * Vmpp/100
     A = 1.480*670
     Eff = Pmax/A/1000
+
+class suntech285(module):
+    make = "SUNTECH"
+    model = "STP285-VRM-1.5"
+    Pmax = 285
+    Vrated = 1000
+    Vmpp = 35.4
+    Impp = 8.06
+    Isc = 8.37
+    Voc = 44.9
+    #Uoc %/K
+    beta = -0.33
+    #Pmax %/K
+    gamma = -0.44
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    A = 1.956* 1.066
+    Eff = .147
+    nameplate = 1.0
+
+
+
+class rec300(module):
+    make = "REC"
+    model = "REC300PE72"
+    Pmax = 300
+    Vrated = 1000
+    Vmpp = 36.1
+    Impp = 8.33
+    Isc = 8.86
+    Voc = 44.9
+    #Uoc %/K
+    beta = -0.28
+    #Pmax %/K
+    gamma = -0.41
+    TkVoc = beta * Voc /100
+    TkVmp = gamma * Vmpp/100
+    A = 1.9812 * .9906
+    Eff = .153
+    nameplate = 1.0
+
 
 class generic170(module):
     make = ""
@@ -261,15 +321,15 @@ if __name__=="__main__":
     print p.Eff
     print p 
 
-    print "Vmax:", p.Vmax(-20.6)
+    print "Vmax:", p.Vmax(-7.5)*series
     print "Vmin:",p.Vmin(31,25) * series
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
 
-    print p.output(950)
+    #print p.output(950)
     #a = pvArray(motech245(), 14,2)
-    a = pvArray(motech245(), 14,2)
-    print a.Vmax(-20)
-    print a.Vmin(33)
-    print a.output(950)
+    #a = pvArray(motech245(), 14,2)
+    #print a.Vmax(-20)
+    #print a.Vmin(33)
+    #print a.output(950)
     suite = unittest.TestLoader().loadTestsFromTestCase(testModules)
     unittest.TextTestRunner(verbosity=2).run(suite)

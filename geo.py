@@ -18,7 +18,8 @@ def closestUSAF(place, stationClass=3):
     index.close()
     return name, usaf
 
-def zipToCoordinates(zip):
+def zipToCoordinates(zipcode):
+    """takes string"""
     index = open('zipcode.csv')
     #read over license
     headerLen = 31
@@ -26,7 +27,7 @@ def zipToCoordinates(zip):
         index.readline()
     index_data = csv.DictReader(index)
     for i in index_data:
-        if int(i['zip']) == zip:
+        if i['zip'] == zipcode:
             return float(i['latitude']),float( i['longitude'])
 
 def zipToTZ(zip):

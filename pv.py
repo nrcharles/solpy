@@ -132,4 +132,19 @@ class system(object):
         minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
 
         return max(minimumSpaceRise,minimumSpaceSet)
+    def describe(self):
+        d = {}
+        for i in set(self.shape):
+            d[i.model] = 0
+            if hasattr(i.array,'model'):
+                d[i.array.model]=0
+            else:
+                d[i.array.panel.model]=0
+        for i in self.shape:
+            d[i.model] += 1
+            if hasattr(i.array,'model'):
+                d[i.array.model]+=1
+            else:
+                d[i.array.panel.model]+=i.array.series*i.array.parallel
+        return d
 

@@ -15,10 +15,20 @@ def micro_notes(system, Vnominal=240.0):
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
+    ac_rated = 0
+    dc_rated = 0
+    for i in system.shape:
+        dc_rated += i.array.Pmax
+        ac_rated += i.Paco
+    descrip = system.describe()
+    #print descrip
+    print "%s KW AC RATED" % round(ac_rated/1000.0,2)
+    print "%s KW DC RATED" % round(dc_rated/1000.0,2)
     for i in set(system.shape):
         print "PV Module Ratings @ STC"
         print "Module Make: %s" % i.array.make
         print "Module Model: %s" % i.array.model
+        print "Quantity: %s" % descrip[i.array.model]
         print "Max Power-Point Current (Imp): %s A" % i.array.Impp
         print "Max Power-Point Voltage (Vmp): %s V" % i.array.Vmpp
         print "Open-Circuit Voltage (Voc): %s V" % i.array.Voc
@@ -28,6 +38,7 @@ def micro_notes(system, Vnominal=240.0):
         print ""
         print "Inverter Make: %s" % i.make
         print "Inverter Model: %s" % i.model
+        print "Quantity: %s" % descrip[i.model]
         print "Max Power: %s W" % i.Paco
         print "Max AC Current: %s A" % round(i.Paco/Vnominal,2)
         print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/Vnominal*1.25)
@@ -135,19 +146,19 @@ def write_notes(system, Vnominal=240.0):
     rc = call(cmd)
 
 if __name__ == "__main__":
-    plant = pv.system(pv.default* 100)
-    print pv.__file__
+    plant = pv.system(pv.default* 27)
+    #print pv.__file__
     import os
     (filepath, filename) = os.path.split(pv.__file__)
     print filepath
-    plant.setZipcode(21863)
+    plant.setZipcode('14837')
     #write_notes(plant)
     micro_notes(plant)
-    micro_calcs(plant,220)
+    #micro_calcs(plant,220)
     print ""
-    plant = pv.system([inverters.sb7000us(modules.pvArray(modules.mage250(),14,2))]*4 \
-            +[inverters.sb6000us(modules.pvArray(modules.mage250(),14,2))]*11)
-    plant.setZipcode(21863)
+    #plant = pv.system([inverters.sb7000us(modules.pvArray(modules.mage250(),14,2))]*4 \
+    #        +[inverters.sb6000us(modules.pvArray(modules.mage250(),14,2))]*11)
+    #plant.setZipcode('21863')
     #plant.setZipcode(17601)
-    string_notes(plant)
+    #string_notes(plant)
 

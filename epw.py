@@ -100,7 +100,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
     #import sys
     #opts, args = getopt.getopt(sys.argv[1:], 'f:h')
-    parser.add_argument('-z', '--zipcode',type=int,required=True)
+    parser.add_argument('-z', '--zipcode',required=True)
     parser.add_argument('-m', '--mname')
     parser.add_argument('-v', '--voltage',type=int,default=600)
     args = vars(parser.parse_args())
@@ -112,14 +112,14 @@ if __name__ == "__main__":
         maxVoltage = args['voltage']
         stationClass = 1
         name, usaf = geo.closestUSAF( geo.zipToCoordinates(zip), stationClass)
-        print "%s USAF: %s" %  (name, usaf)
-        print "Minimum Temperature: %s C" % minimum(usaf)
-        print "2%% Max: %s C" % twopercent(usaf)
         import modules
         m = getattr(modules,args['mname'])()
-        print "Minimum: %sV" % m.Vmin(twopercent(usaf))
+        print "%s USAF: %s" %  (name, usaf)
+        print "Minimum Temperature: %s C" % minimum(usaf)
         print "Maximum: %sV" % m.Vmax(minimum(usaf))
         print "Max in series", int(maxVoltage/m.Vmax(minimum(usaf)))
+        print "2%% Max: %s C" % twopercent(usaf)
+        print "Minimum: %sV" % m.Vmin(twopercent(usaf))
 
 
     except (KeyboardInterrupt, SystemExit):
