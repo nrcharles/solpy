@@ -57,10 +57,12 @@ class moduleJ(object):
         self.Pmax = self.Vmpp*self.Impp
         self.Isc =  self.properties['i_sc_ref']
         self.Voc = self.properties['v_oc_ref']
-        self.beta = self.properties['beta_oc']
-        self.gamma = self.properties['gamma_r']
-        self.TkVoc = self.beta * self.Voc/100
-        self.TkVmp = self.gamma * self.Vmpp/100
+        #self.beta = self.properties['beta_oc']
+        #self.gamma = self.properties['gamma_r']
+        #Voc V/C
+        self.TkVoc = self.properties['beta_oc']
+        #Pmp W/C
+        self.TkVmp = self.properties['gamma_r']
         self.A = self.properties['a_c']
         self.Eff = self.Pmax/self.A/1000
         self.nameplate = 1.0
