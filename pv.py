@@ -21,7 +21,7 @@ from inverters import *
 from modules import *
 import irradiation
 
-default = [m215(mage250())]
+default = [inverter("Enphase Energy: M215-60-SIE-S2x 240V",mage250())]
 
 def _calc(record):
     d = record['datetime']

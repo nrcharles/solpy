@@ -1,3 +1,4 @@
+import json
 class inverter(object):
     """Sandia Model"""
     #Inverter Output = Array STC power * Irradiance * Negative Module Power Tolerance * Soiling * Temperature factor * Wiring efficiency * Inverter efficiency
@@ -18,103 +19,50 @@ class inverter(object):
     NMPT = .97
     Tfactor = .98
 
-    def __init__(self, array):
+    def __init__(self, model, array):
         self.array = array
+        self.properties = None
+        inverters = json.loads(open('si.json').read())
+        for i in inverters:
+            if i['inverter']==model:
+                self.properties = i
+                break
+        if self.properties == None:
+            raise Exception("Inverter not found")
+        self.ac_voltage = self.properties['inverter']
+        self.inverter = self.properties['inverter']
+        self.vdcmax = self.properties['vdcmax']
+        self.Pdco = self.properties['pdco']
+        self.Paco = self.properties['paco']
+        self.pnt = self.properties['pnt']
+        self.Pso = self.properties['pso']
+        self.Vdco = self.properties['vdco']
+        self.C0 = self.properties['c0']
+        self.C1 = self.properties['c1']
+        self.C2 = self.properties['c2']
+        self.C3 = self.properties['c3']
+        self.idcmax = self.properties['idcmax']
+        self.mppt_hi = self.properties['mppt_hi']
+        self.mppt_low = self.properties['mppt_low']
+        self.make,self.model = self.inverter.split(":",2)
+
     def Pac(self, Insolation):
-        m = self.__class__
         Pdc = self.array.output(Insolation)
         Vdc = self.array.Vdc()
-        A = m.Pdco * (1 + m.C1 * (Vdc - m.Vdco))
-        B = m.Pso * (1 + m.C2 * (Vdc - m.Vdco))
-        C = m.C0 * (1 + m.C3 * (Vdc - m.Vdco))
-        Pac = ((m.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
-        derate = m.mismatch * m.soiling * m.dc_wiring * m.connections \
-                * m.availability# * m.Tfactor #* m.NMPT
+        A = self.Pdco * (1 + self.C1 * (Vdc - self.Vdco))
+        B = self.Pso * (1 + self.C2 * (Vdc - self.Vdco))
+        C = self.C0 * (1 + self.C3 * (Vdc - self.Vdco))
+        Pac = ((self.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
+        derate = self.mismatch * self.soiling * self.dc_wiring * self.connections \
+                * self.availability# * m.Tfactor #* m.NMPT
         return Pac * derate
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
 
-class m215(inverter):
-    #Pdc = PV array max power?
-    #Vdc = Vmpp?
-    make = "Enphase"
-    model = "M215"
-    C0 = -0.000068474
-    C1 = -0.000796158
-    C2 = -0.0268797
-    C3 = -0.09924
-    Pdco = 224.7
-    Paco = 215
-    Pso = 0.749507
-    Vdco = 28.8966
-    Mismatch = 1.0
-    availability = 0.99
-
-class sb6000us(inverter):
-    make="SMA"
-    model="SB6000 US"
-    C0 = -0.00000585799
-    C1 = 0.0000473779
-    C2 = 0.00302826
-    C3 = 0.000333289
-    Pdco = 6392.01
-    Paco = 6000
-    Pso = 34.0589
-    Vdco = 311.5
-    MPPT_low = 250
-    MPPT_high = 480
-
-class sb7000us(inverter):
-    make="SMA"
-    model="SB7000 US"
-    Paco = 7000
-    Pdco = 7339.27515031677
-    Pso = 48.2787579483879
-    C0=-4.65883895157974E-06
-    C1=5.63595857586651E-05
-    C2=2.23860122284997E-03
-    C3=2.1574092288579E-04
-    Vdco = 309.953333333333
-    MPPT_low = 250
-    MPPT_high = 480
-
-class sb7000us_277(inverter):
-    Paco = 7000
-    Pdco=7335.42562702603
-    Vdco=309.356666666667
-    Pso=47.9026450806276
-    C0=-0.00000461857893486423
-    C1=0.0000600783584419095
-    C2=0.00226319921317282
-    C3=-0.00000530729066392536
-    MPPT_low=250
-    MPPT_high=480
-
-class sb8000us(inverter):
-    make="SMA"
-    model="SB8000 US"
-    C0 = -0.00000222772078
-    C1 = 0.00000850700797
-    C2 = 0.000093723546
-    C3 = 0.00459934981
-    Pdco = 7915.204
-    Paco = 7600
-    Pso = 29.20185
-    Vdco = 345.38383
-    MPPT_low = 300
-    MPPT_high = 480
-
-class sma500heus(inverter):
-    Paco=500000
-    Pdco=511509.576101489
-    Vdco=370.783516666667
-    Pso=1879.21196407648
-    C0=-4.02893540862159E-08
-    C1=3.1055697368418E-05
-    C2=5.65754481955764E-03
-    C3=7.39241352563372E-04
-    MPPT_low=330
-    MPPT_high=600
+def models():
+    """returns list of available inverter models"""
+    #return json.loads(open('si.json').read())
+    return [i['inverter'] for i in json.loads(open('si.json').read()) ]
 
 def insolationToA(ins, peakA):
     """scale current in response to insolation"""
@@ -124,13 +72,12 @@ if __name__=="__main__":
     from modules import mage250,pvArray
 
     p = mage250()
-    e = m215(p)
+    #e = m215(p)
+    e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",p)
     s = pvArray(p,14,2)
     s = pvArray(p,14,20*8)
     #si = sb6000us(s)
-    si = sma500heus(s)
 
     print e.Pac(950)
     print e.I(960,240)
-    print si.Pac(800)
 
