@@ -1,4 +1,6 @@
 import unittest
+import json
+STC = 25
 
 class module(object):
     """base module class which specific modules inherit"""
@@ -30,6 +32,52 @@ class module(object):
         #Pole mount = 20
         m = self.__class__
         return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVmp
+
+class moduleJ(object):
+    """base module class which specific modules inherit"""
+    #PV module nameplate DC rating     0.80 - 1.05
+    #SAM = 1
+    #PVWatts = .95
+    nameplate = .95
+    Vrated = 600
+    #nameplate = 1
+    #beta Voc %/Tempunit
+    #gamma Pmax %/Tempunit
+    def __init__(self,model):
+        self.properties = None
+        panels = json.loads(open('sp.json').read())
+        for i in panels:
+            if i['panel']==model:
+                self.properties = i
+                break
+        if self.properties == None:
+            raise Exception("Panel not found")
+        self.Vmpp = self.properties['v_mp_ref']
+        self.Impp = self.properties['i_mp_ref']
+        self.Pmax = self.Vmpp*self.Impp
+        self.Isc =  self.properties['i_sc_ref']
+        self.Voc = self.properties['v_oc_ref']
+        self.beta = self.properties['beta_oc']
+        self.gamma = self.properties['gamma_r']
+        self.TkVoc = self.beta * self.Voc/100
+        self.TkVmp = self.gamma * self.Vmpp/100
+        self.A = self.properties['a_c']
+        self.Eff = self.Pmax/self.A/1000
+        self.nameplate = 1.0
+
+    def output(self,Insolation):
+        return Insolation * self.A * self.Eff * self.nameplate
+    def Vmax(self,ashraeMin):
+        return self.Voc + (ashraeMin-STC) * self.TkVoc
+    def Vdc(self):
+        return self.Vmpp
+
+    def Vmin(self,ashrae2p,Tadd = 30):
+        #Tadd
+        #Roof mount =30
+        #Ground mount = 25
+        #Pole mount = 20
+        return self.Vmpp + (Tadd+ashrae2p-STC) * self.TkVmp
 
 #this needs rewritten
 class pvArray(module):
@@ -301,6 +349,11 @@ class asw270p(module):
     TkPmp = gamma * Vmpp/100
     A = 1.954*.990
     Eff = Pmax/A/1000
+
+def models():
+    """returns list of available panel models"""
+    #return json.loads(open('si.json').read())
+    return [i['panel'] for i in json.loads(open('sp.json').read()) ]
 
 class testModules(unittest.TestCase):
     """Unit Tests"""
