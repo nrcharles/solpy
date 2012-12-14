@@ -90217,7 +90217,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.002765, 
   "i_o_ref": 2.377e-10, 
-  "panel": "Mage Solar USA Powertec Plus : 190-5 MH-US"
+  "panel": "Mage Solar : Powertec Plus 190-5 MH-US"
  }, 
  {
   "i_mp_ref": 5.28, 
@@ -90237,7 +90237,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.00279, 
   "i_o_ref": 2.59e-10, 
-  "panel": "Mage Solar USA Powertec Plus : 195-5MH-US"
+  "panel": "Mage Solar : Powertec Plus 195-5MH-US"
  }, 
  {
   "i_mp_ref": 7.85, 
@@ -90257,7 +90257,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.00498, 
   "i_o_ref": 4.341e-10, 
-  "panel": "Mage Solar USA Powertec Plus 230-6 : PH-US"
+  "panel": "Mage Solar : Powertec Plus 230-6 PH-US"
  }, 
  {
   "i_mp_ref": 7.72, 
@@ -90277,7 +90277,7 @@
   "gamma_r": -0.451, 
   "alpha_sc": 0.004316, 
   "i_o_ref": 3.54e-10, 
-  "panel": "Mage Solar USA Powertec Plus 230-6 : PL"
+  "panel": "Mage Solar : Powertec Plus 230-6 PL"
  }, 
  {
   "i_mp_ref": 7.79, 
@@ -90297,7 +90297,7 @@
   "gamma_r": -0.519, 
   "alpha_sc": 0.002232, 
   "i_o_ref": 1.229e-09, 
-  "panel": "Mage Solar USA Powertec Plus 235-6 : ML"
+  "panel": "Mage Solar : Powertec Plus 235-6 ML"
  }, 
  {
   "i_mp_ref": 7.79, 
@@ -90317,7 +90317,7 @@
   "gamma_r": -0.451, 
   "alpha_sc": 0.004363, 
   "i_o_ref": 4.03e-10, 
-  "panel": "Mage Solar USA Powertec Plus 235-6 : PL"
+  "panel": "Mage Solar : Powertec Plus 235-6 PL"
  }, 
  {
   "i_mp_ref": 7.98, 
@@ -90337,7 +90337,7 @@
   "gamma_r": -0.611, 
   "alpha_sc": 0.003725, 
   "i_o_ref": 1.01e-08, 
-  "panel": "Mage Solar USA Powertec Plus : 235-6PH-US"
+  "panel": "Mage Solar : Powertec Plus 235-6PH-US"
  }, 
  {
   "i_mp_ref": 7.87, 
@@ -90357,7 +90357,7 @@
   "gamma_r": -0.519, 
   "alpha_sc": 0.002256, 
   "i_o_ref": 1.365e-09, 
-  "panel": "Mage Solar USA Powertec Plus 240-6 : ML"
+  "panel": "Mage Solar : Powertec Plus 240-6 ML"
  }, 
  {
   "i_mp_ref": 7.87, 
@@ -90377,7 +90377,7 @@
   "gamma_r": -0.451, 
   "alpha_sc": 0.00441, 
   "i_o_ref": 4.48e-10, 
-  "panel": "Mage Solar USA Powertec Plus 240-6 : PL"
+  "panel": "Mage Solar : Powertec Plus 240-6 PL"
  }, 
  {
   "i_mp_ref": 8.08, 
@@ -90397,7 +90397,7 @@
   "gamma_r": -0.451, 
   "alpha_sc": 0.005139, 
   "i_o_ref": 3.63e-10, 
-  "panel": "Mage Solar USA Powertec Plus 240-6 : PNS"
+  "panel": "Mage Solar : Powertec Plus 240-6 PNS"
  }, 
  {
   "i_mp_ref": 7.94, 
@@ -90417,7 +90417,7 @@
   "gamma_r": -0.519, 
   "alpha_sc": 0.00228, 
   "i_o_ref": 1.546e-09, 
-  "panel": "Mage Solar USA Powertec Plus 245-6 : ML"
+  "panel": "Mage Solar : Powertec Plus 245-6 ML"
  }, 
  {
   "i_mp_ref": 8, 
@@ -90437,7 +90437,7 @@
   "gamma_r": -0.462, 
   "alpha_sc": 0.006198, 
   "i_o_ref": 7.61e-10, 
-  "panel": "Mage Solar USA Powertec Plus 245-6 : MNBS"
+  "panel": "Mage Solar : Powertec Plus 245-6 MNBS"
  }, 
  {
   "i_mp_ref": 8.35, 
@@ -90457,7 +90457,7 @@
   "gamma_r": -0.463, 
   "alpha_sc": 0.00708, 
   "i_o_ref": 7.4e-10, 
-  "panel": "Mage Solar USA Powertec Plus 250-6 : MNCS"
+  "panel": "Mage Solar : Powertec Plus 250-6 MNCS"
  }, 
  {
   "i_mp_ref": 7.21, 
@@ -90477,7 +90477,7 @@
   "gamma_r": -0.47, 
   "alpha_sc": 0.00435, 
   "i_o_ref": 3.23e-09, 
-  "panel": "Mage Solar USA Powertec Plus 250-6 : MNS"
+  "panel": "Mage Solar : Powertec Plus 250-6 MNS"
  }, 
  {
   "i_mp_ref": 5, 
@@ -90497,7 +90497,7 @@
   "gamma_r": -0.421, 
   "alpha_sc": 0.001674, 
   "i_o_ref": 5.982e-11, 
-  "panel": "MAGE Solar Powertec Plus : 180-5 ME"
+  "panel": "MAGE Solar : Powertec Plus 180-5 ME"
  }, 
  {
   "i_mp_ref": 5.07, 
@@ -90517,7 +90517,7 @@
   "gamma_r": -0.477, 
   "alpha_sc": 0.00235, 
   "i_o_ref": 3.328e-10, 
-  "panel": "MAGE Solar Powertec Plus : 185-5 MH"
+  "panel": "MAGE Solar : Powertec Plus 185-5 MH"
  }, 
  {
   "i_mp_ref": 5.1, 
@@ -90537,7 +90537,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.005396, 
   "i_o_ref": 1.715e-09, 
-  "panel": "MAGE Solar Powertec Plus : 185-5MJB"
+  "panel": "MAGE Solar : Powertec Plus 185-5MJB"
  }, 
  {
   "i_mp_ref": 5.2, 
@@ -90577,7 +90577,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.002765, 
   "i_o_ref": 2.377e-10, 
-  "panel": "MAGE Solar Powertec Plus : 190-5MH"
+  "panel": "MAGE Solar : Powertec Plus 190-5MH"
  }, 
  {
   "i_mp_ref": 5.19, 
@@ -90597,7 +90597,7 @@
   "gamma_r": -0.514, 
   "alpha_sc": 0.000267, 
   "i_o_ref": 3.884e-10, 
-  "panel": "MAGE Solar Powertec Plus : 190-5MI"
+  "panel": "MAGE Solar : Powertec Plus 190-5MI"
  }, 
  {
   "i_mp_ref": 5.28, 
@@ -90617,7 +90617,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.00279, 
   "i_o_ref": 2.625e-10, 
-  "panel": "MAGE Solar Powertec Plus : 195-5MH"
+  "panel": "MAGE Solar : Powertec Plus 195-5MH"
  }, 
  {
   "i_mp_ref": 5.35, 
@@ -90637,7 +90637,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.002895, 
   "i_o_ref": 4.074e-10, 
-  "panel": "MAGE Solar Powertec Plus : 200-5MH"
+  "panel": "MAGE Solar : Powertec Plus 200-5MH"
  }, 
  {
   "i_mp_ref": 7.53, 
@@ -90657,7 +90657,7 @@
   "gamma_r": -0.451, 
   "alpha_sc": 0.003347, 
   "i_o_ref": 2.227e-10, 
-  "panel": "MAGE Solar Powertec Plus : 220-6 PH"
+  "panel": "MAGE Solar : Powertec Plus 220-6 PH"
  }, 
  {
   "i_mp_ref": 7.53, 
@@ -90677,7 +90677,7 @@
   "gamma_r": -0.605, 
   "alpha_sc": 0.004819, 
   "i_o_ref": 1.07e-08, 
-  "panel": "MAGE Solar Powertec Plus : 220-6PI"
+  "panel": "MAGE Solar : Powertec Plus 220-6PI"
  }, 
  {
   "i_mp_ref": 7.7, 
@@ -90697,7 +90697,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.00489, 
   "i_o_ref": 4.261e-10, 
-  "panel": "MAGE Solar Powertec Plus : 225-6PH"
+  "panel": "MAGE Solar : Powertec Plus 225-6PH"
  }, 
  {
   "i_mp_ref": 7.69, 
@@ -90717,7 +90717,7 @@
   "gamma_r": -0.435, 
   "alpha_sc": 0.003635, 
   "i_o_ref": 1.594e-10, 
-  "panel": "MAGE Solar Powertec Plus : 230-6MI"
+  "panel": "MAGE Solar : Powertec Plus 230-6MI"
  }, 
  {
   "i_mp_ref": 7.67, 
@@ -90737,7 +90737,7 @@
   "gamma_r": -0.438, 
   "alpha_sc": 0.003153, 
   "i_o_ref": 4.548e-10, 
-  "panel": "MAGE Solar Powertec Plus : 230-6MO"
+  "panel": "MAGE Solar : Powertec Plus 230-6MO"
  }, 
  {
   "i_mp_ref": 7.64, 
@@ -90757,7 +90757,7 @@
   "gamma_r": -0.45, 
   "alpha_sc": 0.00495, 
   "i_o_ref": 7.487e-10, 
-  "panel": "MAGE Solar Powertec Plus : 230-6PE"
+  "panel": "MAGE Solar : Powertec Plus 230-6PE"
  }, 
  {
   "i_mp_ref": 7.67, 
@@ -90777,7 +90777,7 @@
   "gamma_r": -0.48, 
   "alpha_sc": 0.005154, 
   "i_o_ref": 2.532e-09, 
-  "panel": "MAGE Solar Powertec Plus : 230-6PF"
+  "panel": "MAGE Solar : Powertec Plus 230-6PF"
  }, 
  {
   "i_mp_ref": 7.85, 
@@ -90797,7 +90797,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.00498, 
   "i_o_ref": 4.341e-10, 
-  "panel": "MAGE Solar Powertec Plus : 230-6PH"
+  "panel": "MAGE Solar : Powertec Plus 230-6PH"
  }, 
  {
   "i_mp_ref": 7.78, 
@@ -90817,7 +90817,7 @@
   "gamma_r": -0.463, 
   "alpha_sc": 0.006162, 
   "i_o_ref": 7.581e-10, 
-  "panel": "MAGE Solar Powertec Plus : 230-6PI"
+  "panel": "MAGE Solar : Powertec Plus 230-6PI"
  }, 
  {
   "i_mp_ref": 7.62, 
@@ -90837,7 +90837,7 @@
   "gamma_r": -0.514, 
   "alpha_sc": 0.00487, 
   "i_o_ref": 2.886e-09, 
-  "panel": "MAGE Solar Powertec Plus : 230-6PJ"
+  "panel": "MAGE Solar : Powertec Plus 230-6PJ"
  }, 
  {
   "i_mp_ref": 7.67, 
@@ -90857,7 +90857,7 @@
   "gamma_r": -0.445, 
   "alpha_sc": 0.003978, 
   "i_o_ref": 7.15e-10, 
-  "panel": "MAGE Solar Powertec Plus : 230-6PO"
+  "panel": "MAGE Solar : Powertec Plus 230-6PO"
  }, 
  {
   "i_mp_ref": 7.76, 
@@ -90897,7 +90897,7 @@
   "gamma_r": -0.5, 
   "alpha_sc": 0.00346, 
   "i_o_ref": 2.546e-09, 
-  "panel": "MAGE Solar Powertec Plus : 235-6MF"
+  "panel": "MAGE Solar : Powertec Plus 235-6MF"
  }, 
  {
   "i_mp_ref": 7.83, 
@@ -90917,7 +90917,7 @@
   "gamma_r": -0.435, 
   "alpha_sc": 0.003684, 
   "i_o_ref": 1.533e-10, 
-  "panel": "MAGE Solar Powertec Plus : 235-6MI"
+  "panel": "MAGE Solar : Powertec Plus 235-6MI"
  }, 
  {
   "i_mp_ref": 7.83, 
@@ -90937,7 +90937,7 @@
   "gamma_r": -0.438, 
   "alpha_sc": 0.003219, 
   "i_o_ref": 4.644e-10, 
-  "panel": "MAGE Solar Powertec Plus : 235-6MO"
+  "panel": "MAGE Solar : Powertec Plus 235-6MO"
  }, 
  {
   "i_mp_ref": 7.75, 
@@ -90957,7 +90957,7 @@
   "gamma_r": -0.45, 
   "alpha_sc": 0.005022, 
   "i_o_ref": 7.755e-10, 
-  "panel": "MAGE Solar Powertec Plus : 235-6PE"
+  "panel": "MAGE Solar : Powertec Plus 235-6PE"
  }, 
  {
   "i_mp_ref": 7.98, 
@@ -90977,7 +90977,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.005022, 
   "i_o_ref": 4.561e-10, 
-  "panel": "MAGE Solar Powertec Plus : 235-6PH"
+  "panel": "MAGE Solar : Powertec Plus 235-6PH"
  }, 
  {
   "i_mp_ref": 7.71, 
@@ -90997,7 +90997,7 @@
   "gamma_r": -0.453, 
   "alpha_sc": 0.006157, 
   "i_o_ref": 7.718e-10, 
-  "panel": "MAGE Solar Powertec Plus : 235-6PJ"
+  "panel": "MAGE Solar : Powertec Plus 235-6PJ"
  }, 
  {
   "i_mp_ref": 7.83, 
@@ -91017,7 +91017,7 @@
   "gamma_r": -0.445, 
   "alpha_sc": 0.004061, 
   "i_o_ref": 7.299e-10, 
-  "panel": "MAGE Solar Powertec Plus : 235-6PO"
+  "panel": "MAGE Solar : Powertec Plus 235-6PO"
  }, 
  {
   "i_mp_ref": 7.8, 
@@ -91037,7 +91037,7 @@
   "gamma_r": -0.5, 
   "alpha_sc": 0.00348, 
   "i_o_ref": 2.561e-09, 
-  "panel": "MAGE Solar Powertec Plus : 240-6MF"
+  "panel": "MAGE Solar : Powertec Plus 240-6MF"
  }, 
  {
   "i_mp_ref": 7.95, 
@@ -91057,7 +91057,7 @@
   "gamma_r": -0.435, 
   "alpha_sc": 0.003746, 
   "i_o_ref": 1.681e-10, 
-  "panel": "MAGE Solar Powertec Plus : 240-6MI"
+  "panel": "MAGE Solar : Powertec Plus 240-6MI"
  }, 
  {
   "i_mp_ref": 7.95, 
@@ -91077,7 +91077,7 @@
   "gamma_r": -0.438, 
   "alpha_sc": 0.00327, 
   "i_o_ref": 4.857e-10, 
-  "panel": "MAGE Solar Powertec Plus : 240-6MO"
+  "panel": "MAGE Solar : Powertec Plus 240-6MO"
  }, 
  {
   "i_mp_ref": 7.86, 
@@ -91097,7 +91097,7 @@
   "gamma_r": -0.45, 
   "alpha_sc": 0.005088, 
   "i_o_ref": 7.86e-10, 
-  "panel": "MAGE Solar Powertec Plus : 240-6PE"
+  "panel": "MAGE Solar : Powertec Plus 240-6PE"
  }, 
  {
   "i_mp_ref": 8.09, 
@@ -91117,7 +91117,7 @@
   "gamma_r": -0.46, 
   "alpha_sc": 0.005064, 
   "i_o_ref": 4.886e-10, 
-  "panel": "MAGE Solar Powertec Plus : 240-6PH"
+  "panel": "MAGE Solar : Powertec Plus 240-6PH"
  }, 
  {
   "i_mp_ref": 7.8, 
@@ -91137,7 +91137,7 @@
   "gamma_r": -0.453, 
   "alpha_sc": 0.006267, 
   "i_o_ref": 8.953e-10, 
-  "panel": "MAGE Solar Powertec Plus : 240-6PJ"
+  "panel": "MAGE Solar : Powertec Plus 240-6PJ"
  }, 
  {
   "i_mp_ref": 8, 
@@ -91157,7 +91157,7 @@
   "gamma_r": -0.445, 
   "alpha_sc": 0.004149, 
   "i_o_ref": 7.458e-10, 
-  "panel": "MAGE Solar Powertec Plus : 240-6PO"
+  "panel": "MAGE Solar : Powertec Plus 240-6PO"
  }, 
  {
   "i_mp_ref": 4.85, 
@@ -91177,7 +91177,7 @@
   "gamma_r": -0.467, 
   "alpha_sc": 0.003713, 
   "i_o_ref": 1.161e-09, 
-  "panel": "MAGE Solar 245-5 : MR"
+  "panel": "Mage Solar : 245-5 MR"
  }, 
  {
   "i_mp_ref": 4.88, 
@@ -91197,7 +91197,7 @@
   "gamma_r": -0.467, 
   "alpha_sc": 0.003734, 
   "i_o_ref": 1.339e-09, 
-  "panel": "MAGE Solar 250-5 : MR"
+  "panel": "Mage Solar : 250-5 MR"
  }, 
  {
   "i_mp_ref": 8.01, 
@@ -91217,7 +91217,7 @@
   "gamma_r": -0.19, 
   "alpha_sc": 0, 
   "i_o_ref": 0, 
-  "panel": "Mage : Solar: 285/6 PL"
+  "panel": "Mage Solar: 285/6 PL"
  }, 
  {
   "i_mp_ref": 7.87, 
