@@ -352,10 +352,26 @@ class asw270p(module):
     A = 1.954*.990
     Eff = Pmax/A/1000
 
-def models():
+def manufacturers():
+    a =  [i['panel'].split(":")[0] for i in json.loads(open('sp.json').read()) ]
+    a.sort()
+    b = [i for i in set(a)]
+    b.sort()
+    return b
+
+
+def models(manufacturer = None):
     """returns list of available panel models"""
     #return json.loads(open('si.json').read())
-    return [i['panel'] for i in json.loads(open('sp.json').read()) ]
+    if manufacturer ==None:
+        return [i['panel'] for i in json.loads(open('sp.json').read()) ]
+    else:
+        a = []
+        for i in json.loads(open('sp.json').read()):
+            if i['panel'].find(manufacturer) != -1:
+                a.append(i['panel'])
+        return a
+
 
 class testModules(unittest.TestCase):
     """Unit Tests"""
