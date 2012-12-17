@@ -30,7 +30,7 @@ def zipToCoordinates(zipcode):
         if i['zip'] == zipcode:
             return float(i['latitude']),float( i['longitude'])
 
-def zipToTZ(zip):
+def zipToTZ(zipcode):
     index = open('zipcode.csv')
     #read over license
     headerLen = 31
@@ -38,5 +38,5 @@ def zipToTZ(zip):
         index.readline()
     index_data = csv.DictReader(index)
     for i in index_data:
-        if int(i['zip']) == zip:
+        if i['zip'] == zipcode:
             return int(i['timezone'])
