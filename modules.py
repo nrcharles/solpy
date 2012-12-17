@@ -31,7 +31,9 @@ class module(object):
         #Ground mount = 25
         #Pole mount = 20
         m = self.__class__
-        return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVmp
+        return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVoc
+        #tkVmp or tkVoc?
+        #return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVmp
 
 class moduleJ(object):
     """base module class which specific modules inherit"""
@@ -62,7 +64,9 @@ class moduleJ(object):
         #Voc V/C
         self.TkVoc = self.properties['beta_oc']
         #Pmp W/C
-        self.TkVmp = self.properties['gamma_r']
+        self.TkPmp = self.properties['gamma_r']*self.Pmax/100
+        self.gamma = self.properties['gamma_r']
+        self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
         self.A = self.properties['a_c']
         self.Eff = self.Pmax/self.A/1000
         self.nameplate = 1.0
