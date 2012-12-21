@@ -91,7 +91,8 @@ class system(object):
             output = 0
             for i in self.shape:
                 output += i.Pac(ins)
-            print dt,',', output
+            #should probably have a flag for this to output CSV file
+            #print dt,',', output
             if dt.day is day:
                 do += output
             else:
