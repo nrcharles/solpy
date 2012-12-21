@@ -50,16 +50,25 @@ def micro_notes(system, Vnominal=240.0):
     print "Minimum Temperature: %s C" % mintemp
     print "2%% Max: %s C" % twopercentTemp
 
-def string_notes(system, Vnominal=240.0):
+def string_notes(system):
     """page 5"""
     stationClass = 3
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
+    ac_rated = 0
+    dc_rated = 0
+    for i in system.shape:
+        dc_rated += i.array.Pmax
+        ac_rated += i.Paco
+    print "%s KW AC RATED" % round(ac_rated/1000.0,2)
+    print "%s KW DC RATED" % round(dc_rated/1000.0,2)
+    descrip = system.describe()
     for i in set(system.shape):
         print "PV Module Ratings @ STC"
         print "Module Make: %s" % i.array.panel.make
         print "Module Model: %s" % i.array.panel.model
+        print "Quantity: %s" % descrip[i.array.panel.model]
         print "Max Power-Point Current (Imp): %s A" % i.array.panel.Impp
         print "Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp
         print "Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc
@@ -69,13 +78,16 @@ def string_notes(system, Vnominal=240.0):
         print ""
         print "Inverter Make: %s" % i.make
         print "Inverter Model: %s" % i.model
+        print "Quantity: %s" % descrip[i.model]
         print "Max Power: %s W" % i.Paco
-        print "Max AC Current: %s A" % round(i.Paco/Vnominal,2)
-        print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/Vnominal*1.25)
+        print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,2)
+        print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
         print "Max System Voltage: %s V" % round(i.array.Vmax(mintemp),1)
+    print ""
+    #BUG: This doesn't work for 3 phase
     print "AC Output Current: %s A" % \
-            round(sum([i.Paco for i in system.shape])/Vnominal,2)
-    print "Nominal AC Voltage: %s V" % Vnominal
+            round(sum([i.Paco for i in system.shape])/i.ac_voltage,2)
+    print "Nominal AC Voltage: %s V" % i.ac_voltage
     
 
     print "Minimum Temperature: %s C" % mintemp
@@ -131,7 +143,7 @@ def write_notes(system, Vnominal=240.0):
     fields.append(('AC OUTPUT CURRENT', \
             round(sum([i.Paco for i in system.shape])/Vnominal,2)))
     print "Nominal AC Voltage: %s" % Vnominal
-    fields.append(('NOMINAL AC VOLTAGE_2',240))
+    fields.append(('NOMINAL AC VOLTAGE_2',i.ac_voltage))
 
     print "Minimum Temperature: %s C" % mintemp
     print "2%% Max: %s C" % twopercentTemp
@@ -146,19 +158,26 @@ def write_notes(system, Vnominal=240.0):
     rc = call(cmd)
 
 if __name__ == "__main__":
-    plant = pv.system(pv.default* 27)
+    plant = pv.system(pv.default* 40)
+    import inverters
+    import modules
+    enphase = inverters.inverter('Enphase Energy: M215-60-SIE-S2x-NA 240V',modules.mage250ml())
+    plant = pv.system([enphase]*40)
+
     #print pv.__file__
     import os
     (filepath, filename) = os.path.split(pv.__file__)
     print filepath
-    plant.setZipcode('14837')
+    plant.setZipcode('44460')
     #write_notes(plant)
-    micro_notes(plant)
+    #micro_notes(plant)
     #micro_calcs(plant,220)
     print ""
-    #plant = pv.system([inverters.sb7000us(modules.pvArray(modules.mage250(),14,2))]*4 \
-    #        +[inverters.sb6000us(modules.pvArray(modules.mage250(),14,2))]*11)
-    #plant.setZipcode('21863')
+    plant = pv.system([inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*4 \
+            +[inverters.inverter("SMA America: SB6000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*11)
+    #plant = pv.system([inverters.inverter("SMA America: SB8000US-11 240V",modules.pvArray(modules.mage250ml(),13,3))])
+    #plant.setZipcode('44050')
+    plant.setZipcode('21863')
     #plant.setZipcode(17601)
-    #string_notes(plant)
+    string_notes(plant)
 

@@ -29,7 +29,7 @@ class inverter(object):
                 break
         if self.properties == None:
             raise Exception("Inverter not found")
-        self.ac_voltage = self.properties['inverter']
+        self.ac_voltage = self.properties['ac_voltage']
         self.inverter = self.properties['inverter']
         self.vdcmax = self.properties['vdcmax']
         self.Pdco = self.properties['pdco']

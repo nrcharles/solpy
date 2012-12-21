@@ -145,14 +145,14 @@ class mage250ml(module):
     model = "250/6 ML"
     Pmax = 250
     Vrated = 600
-    Vmpp = 32.02
-    Impp = 7.81
-    Isc = 8.22
-    Voc = 37.82
+    Vmpp = 30.90
+    Impp = 8.09
+    Isc = 8.79
+    Voc = 37.57
     #Uoc %/K
-    beta = -0.41
+    beta = -0.33
     #Pmax %/K
-    gamma = -0.55
+    gamma = -0.43
     TkVoc = beta * Voc /100
     TkVmp = gamma * Vmpp/100
     A = 1.655 * .989
@@ -387,7 +387,7 @@ class testModules(unittest.TestCase):
 
 if __name__=="__main__":
     #p = generic180()
-    series = 13
+    series = 14
     #p = sinodeu120()
     #p = motech245()
     #p = astroenergy290()
@@ -396,7 +396,7 @@ if __name__=="__main__":
     print p.Eff
     print p 
 
-    print "Vmax:", p.Vmax(-7.5)*series
+    print "Vmax:", p.Vmax(-15)*series
     print "Vmin:",p.Vmin(31,25) * series
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
 

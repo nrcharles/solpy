@@ -65,7 +65,11 @@ def twopercent(USAF):
             temp = float(data[2][5].strip())
         except:
             pass
-    return temp
+    if temp:
+        return temp
+    else:
+        print "Warning: 2% High Temperature not found, using worst case"
+        return 38.0
 
 def minimum(USAF):
     #(DB=>MWB) 2%, MaxDB=
@@ -90,7 +94,11 @@ def minimum(USAF):
                     return float(line[37:-1].split('\xb0')[0])
         except:
             pass
-    return temp
+    if temp:
+        return temp
+    else:
+        print "Warning: Minimum Temperature not found, using worst case"
+        return -23.0
 
 
 
