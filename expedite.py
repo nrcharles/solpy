@@ -24,6 +24,13 @@ def micro_notes(system, Vnominal=240.0):
     #print descrip
     print "%s KW AC RATED" % round(ac_rated/1000.0,2)
     print "%s KW DC RATED" % round(dc_rated/1000.0,2)
+    print ""
+    print "AC Output Current: %s A" % \
+            round(sum([i.Paco for i in system.shape])/Vnominal,2)
+    print "Nominal AC Voltage: %s V" % Vnominal
+    print "Weather Station: %s" % name
+    print "Minimum Temperature: %s C" % mintemp
+    print "2%% Max Temperature: %s C" % twopercentTemp
     for i in set(system.shape):
         print "PV Module Ratings @ STC"
         print "Module Make: %s" % i.array.make
@@ -41,14 +48,8 @@ def micro_notes(system, Vnominal=240.0):
         print "Quantity: %s" % descrip[i.model]
         print "Max Power: %s W" % i.Paco
         print "Max AC Current: %s A" % round(i.Paco/Vnominal,2)
-        print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/Vnominal*1.25)
-        print "Max System Voltage: %s V" %round(i.array.Vmax(mintemp),1)
-    print "AC Output Current: %s A" % \
-            round(sum([i.Paco for i in system.shape])/Vnominal,2)
-    print "Nominal AC Voltage: %s V" % Vnominal
-
-    print "Minimum Temperature: %s C" % mintemp
-    print "2%% Max: %s C" % twopercentTemp
+        #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/Vnominal*1.25)
+        print "Max System DC Voltage: %s V" %round(i.array.Vmax(mintemp),1)
 
 def string_notes(system):
     """page 5"""
@@ -63,6 +64,14 @@ def string_notes(system):
         ac_rated += i.Paco
     print "%s KW AC RATED" % round(ac_rated/1000.0,2)
     print "%s KW DC RATED" % round(dc_rated/1000.0,2)
+    print ""
+    #BUG: This doesn't work for 3 phase
+    print "AC Output Current: %s A" % \
+            round(sum([i.Paco for i in system.shape])/i.ac_voltage,2)
+    print "Nominal AC Voltage: %s V" % i.ac_voltage
+
+    print "Minimum Temperature: %s C" % mintemp
+    print "2%% Max Temperature: %s C" % twopercentTemp
     descrip = system.describe()
     for i in set(system.shape):
         print "PV Module Ratings @ STC"
@@ -83,15 +92,6 @@ def string_notes(system):
         print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,2)
         print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
         print "Max System Voltage: %s V" % round(i.array.Vmax(mintemp),1)
-    print ""
-    #BUG: This doesn't work for 3 phase
-    print "AC Output Current: %s A" % \
-            round(sum([i.Paco for i in system.shape])/i.ac_voltage,2)
-    print "Nominal AC Voltage: %s V" % i.ac_voltage
-    
-
-    print "Minimum Temperature: %s C" % mintemp
-    print "2%% Max Temperature: %s C" % twopercentTemp
 
 def micro_calcs(system,d,Vnominal=240):
     """page 4"""
@@ -158,26 +158,28 @@ def write_notes(system, Vnominal=240.0):
     rc = call(cmd)
 
 if __name__ == "__main__":
-    plant = pv.system(pv.default* 40)
     import inverters
     import modules
-    enphase = inverters.inverter('Enphase Energy: M215-60-SIE-S2x-NA 240V',modules.mage250ml())
-    plant = pv.system([enphase]*40)
+    plant = pv.system(pv.default*45)
+    #enphase = inverters.inverter('Enphase Energy: M215-60-SIE-S2x-NA 240V',modules.mage250ml())
+    #plant = pv.system([enphase]*24)
 
     #print pv.__file__
-    import os
-    (filepath, filename) = os.path.split(pv.__file__)
-    print filepath
-    plant.setZipcode('44460')
+    #import os
+    #(filepath, filename) = os.path.split(pv.__file__)
+    #print filepath
+    #plant.setZipcode('17847')
+    #plant.setZipcode('44460')
     #write_notes(plant)
     #micro_notes(plant)
     #micro_calcs(plant,220)
     print ""
-    plant = pv.system([inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*4 \
-            +[inverters.inverter("SMA America: SB6000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*11)
+    #plant = pv.system([inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*4 \
+    #        +[inverters.inverter("SMA America: SB6000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*11)
     #plant = pv.system([inverters.inverter("SMA America: SB8000US-11 240V",modules.pvArray(modules.mage250ml(),13,3))])
     #plant.setZipcode('44050')
-    plant.setZipcode('21863')
+    #plant.setZipcode('21863')
     #plant.setZipcode(17601)
-    string_notes(plant)
+    import pes
+    string_notes(pes.bb)
 
