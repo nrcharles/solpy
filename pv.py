@@ -17,11 +17,25 @@
 import tmy3
 import geo
 import numpy as np
-from inverters import *
-from modules import *
+import inverters
+import modules
 import irradiation
 
-default = [inverter("Enphase Energy: M215-60-SIE-S2x 240V",mage250())]
+default = [inverters.inverter("Enphase Energy: M215-60-SIE-S2x 240V",\
+        modules.mage250())]
+
+def jsonToSystem(jsystem):
+    """Load a system from a json description"""
+    jshape = []
+    for i in jsystem["array"]:
+        jshape.append(inverters.inverter(i["inverter"], \
+                modules.pvArray(modules.moduleJ(i["panel"]),\
+                i["series"],i["parallel"])))
+    tsystem = system(jshape)
+    tsystem.setZipcode(jsystem["zipcode"])
+    tsystem.tilt = jsystem["tilt"]
+    tsystem.azimuth = jsystem["azimuth"]
+    return tsystem
 
 def _calc(record):
     d = record['datetime']
@@ -39,6 +53,7 @@ class system(object):
         self.tilt = 32
         self.azimuth = 180
         self.shape = shape
+        self.phase = 1
 
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
