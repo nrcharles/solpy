@@ -150,18 +150,19 @@ class system(object):
 
         return max(minimumSpaceRise,minimumSpaceSet)
     def describe(self):
-        d = {}
+        dp = {}
+        di = {}
         for i in set(self.shape):
-            d[i.model] = 0
+            di[i.model] = 0
             if hasattr(i.array,'model'):
-                d[i.array.model]=0
+                dp[i.array.model]=0
             else:
-                d[i.array.panel.model]=0
+                dp[i.array.panel.model]=0
         for i in self.shape:
-            d[i.model] += 1
+            di[i.model] += 1
             if hasattr(i.array,'model'):
-                d[i.array.model]+=1
+                dp[i.array.model]+=1
             else:
-                d[i.array.panel.model]+=i.array.series*i.array.parallel
-        return d
+                dp[i.array.panel.model]+=i.array.series*i.array.parallel
+        return di,dp
 

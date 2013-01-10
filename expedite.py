@@ -72,26 +72,33 @@ def string_notes(system):
 
     print "Minimum Temperature: %s C" % mintemp
     print "2%% Max Temperature: %s C" % twopercentTemp
-    descrip = system.describe()
-    for i in set(system.shape):
-        print "PV Module Ratings @ STC"
-        print "Module Make: %s" % i.array.panel.make
-        print "Module Model: %s" % i.array.panel.model
-        print "Quantity: %s" % descrip[i.array.panel.model]
-        print "Max Power-Point Current (Imp): %s A" % i.array.panel.Impp
-        print "Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp
-        print "Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc
-        print "Short-Circuit Current (Isc): %s A" % i.array.panel.Isc
-        print "Maximum Power (Pmax): %s W" % i.array.panel.Pmax
-        print "Module Rated Max Voltage: %s V" % i.array.panel.Vrated
-        print ""
-        print "Inverter Make: %s" % i.make
-        print "Inverter Model: %s" % i.model
-        print "Quantity: %s" % descrip[i.model]
-        print "Max Power: %s W" % i.Paco
-        print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,2)
-        print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
-        print "Max System Voltage: %s V" % round(i.array.Vmax(mintemp),1)
+    print ""
+    di, dp = system.describe()
+    aMax = 0
+    for i in system.shape:
+        if dp.has_key(i.array.panel.model):
+            print "PV Module Ratings @ STC"
+            print "Module Make: %s" % i.array.panel.make
+            print "Module Model: %s" % i.array.panel.model
+            print "Quantity: %s" % dp[i.array.panel.model]
+            print "Max Power-Point Current (Imp): %s A" % i.array.panel.Impp
+            print "Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp
+            print "Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc
+            print "Short-Circuit Current (Isc): %s A" % i.array.panel.Isc
+            print "Maximum Power (Pmax): %s W" % i.array.panel.Pmax
+            print "Module Rated Max Voltage: %s V" % i.array.panel.Vrated
+            dp.pop(i.array.panel.model)
+        if di.has_key(i.model):
+            print "Inverter Make: %s" % i.make
+            print "Inverter Model: %s" % i.model
+            print "Quantity: %s" % di[i.model]
+            print "Max Power: %s W" % i.Paco
+            print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,2)
+            print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
+            di.pop(i.model)
+        if i.array.Vmax(mintemp) > aMax:
+            aMax = i.array.Vmax(mintemp)
+    print "Max System Voltage: %s V" % round(aMax,1)
 
 def micro_calcs(system,d,Vnominal=240):
     """page 4"""
