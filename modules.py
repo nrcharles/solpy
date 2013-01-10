@@ -54,6 +54,8 @@ class moduleJ(object):
                 break
         if self.properties == None:
             raise Exception("Panel not found")
+        self.make = model.split(':')[0].rstrip()
+        self.model = model.split(':')[1].strip()
         self.Vmpp = self.properties['v_mp_ref']
         self.Impp = self.properties['i_mp_ref']
         self.Pmax = self.Vmpp*self.Impp
@@ -392,6 +394,9 @@ if __name__=="__main__":
     #p = motech245()
     #p = astroenergy290()
     #p = asp390()
+    p = moduleJ('Mage Solar : Powertec Plus 250-6 MNS')
+    print ":%s:" %p.make
+    print ":%s:" %p.model
     p = mage250()
     print p.Eff
     print p 
