@@ -65,14 +65,6 @@ def string_notes(system):
     print "%s KW AC RATED" % round(ac_rated/1000.0,2)
     print "%s KW DC RATED" % round(dc_rated/1000.0,2)
     print ""
-    #BUG: This doesn't work for 3 phase
-    print "AC Output Current: %s A" % \
-            round(sum([i.Paco for i in system.shape])/i.ac_voltage,2)
-    print "Nominal AC Voltage: %s V" % i.ac_voltage
-
-    print "Minimum Temperature: %s C" % mintemp
-    print "2%% Max Temperature: %s C" % twopercentTemp
-    print ""
     di, dp = system.describe()
     aMax = 0
     for i in system.shape:
@@ -87,6 +79,7 @@ def string_notes(system):
             print "Short-Circuit Current (Isc): %s A" % i.array.panel.Isc
             print "Maximum Power (Pmax): %s W" % i.array.panel.Pmax
             print "Module Rated Max Voltage: %s V" % i.array.panel.Vrated
+            print ""
             dp.pop(i.array.panel.model)
         if di.has_key(i.model):
             print "Inverter Make: %s" % i.make
@@ -95,10 +88,18 @@ def string_notes(system):
             print "Max Power: %s W" % i.Paco
             print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,2)
             print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
+            print ""
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
             aMax = i.array.Vmax(mintemp)
-    print "Max System Voltage: %s V" % round(aMax,1)
+    #BUG: This doesn't work for 3 phase
+    print "System AC Output Current: %s A" % \
+            round(sum([i.Paco for i in system.shape])/i.ac_voltage,2)
+    print "Nominal AC Voltage: %s V" % i.ac_voltage
+
+    print "Minimum Temperature: %s C" % mintemp
+    print "2%% Max Temperature: %s C" % twopercentTemp
+    print "System Max DC Voltage: %s V" % round(aMax,1)
 
 def micro_calcs(system,d,Vnominal=240):
     """page 4"""
@@ -180,7 +181,7 @@ if __name__ == "__main__":
     #write_notes(plant)
     #micro_notes(plant)
     #micro_calcs(plant,220)
-    print ""
+    #print ""
     #plant = pv.system([inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*4 \
     #        +[inverters.inverter("SMA America: SB6000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*11)
     #plant = pv.system([inverters.inverter("SMA America: SB8000US-11 240V",modules.pvArray(modules.mage250ml(),13,3))])
