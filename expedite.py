@@ -86,15 +86,20 @@ def string_notes(system):
             print "Inverter Model: %s" % i.model
             print "Quantity: %s" % di[i.model]
             print "Max Power: %s W" % i.Paco
-            print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,2)
+            print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,1)
             print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
             print ""
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
             aMax = i.array.Vmax(mintemp)
     #BUG: This doesn't work for 3 phase
-    print "System AC Output Current: %s A" % \
-            round(sum([i.Paco for i in system.shape])/i.ac_voltage,2)
+    if system.phase == 1:
+        print "System AC Output Current: %s A" % \
+                round(sum([i.Paco for i in system.shape])/i.ac_voltage,1)
+    else:
+        print "System AC Output Current: %s A" % \
+                round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1)
+
     print "Nominal AC Voltage: %s V" % i.ac_voltage
 
     print "Minimum Temperature: %s C" % mintemp
@@ -166,28 +171,21 @@ def write_notes(system, Vnominal=240.0):
     rc = call(cmd)
 
 if __name__ == "__main__":
-    import inverters
-    import modules
-    plant = pv.system(pv.default*45)
-    #enphase = inverters.inverter('Enphase Energy: M215-60-SIE-S2x-NA 240V',modules.mage250ml())
-    #plant = pv.system([enphase]*24)
+    import argparse
+    import json
+    import sys
+    parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
+    parser.add_argument('-o', '--output')
+    parser.add_argument('-s', '--system')
+    args = vars(parser.parse_args())
+    try:
+        #start program
+        plant = pv.jsonToSystem(json.loads(open(args['system']).read()))
+        string_notes(plant)
+        #graph = plant.model()
+        #graph.savefig('pv_output_%s.png' % plant.zipcode)
 
-    #print pv.__file__
-    #import os
-    #(filepath, filename) = os.path.split(pv.__file__)
-    #print filepath
-    #plant.setZipcode('17847')
-    #plant.setZipcode('44460')
-    #write_notes(plant)
-    #micro_notes(plant)
-    #micro_calcs(plant,220)
-    #print ""
-    #plant = pv.system([inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*4 \
-    #        +[inverters.inverter("SMA America: SB6000US-11 277V",modules.pvArray(modules.mage250ml(),14,2))]*11)
-    #plant = pv.system([inverters.inverter("SMA America: SB8000US-11 240V",modules.pvArray(modules.mage250ml(),13,3))])
-    #plant.setZipcode('44050')
-    #plant.setZipcode('21863')
-    #plant.setZipcode(17601)
-    import pes
-    string_notes(pes.bb)
-
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit(1)
+    except:
+        raise
