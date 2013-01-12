@@ -21,8 +21,32 @@ import inverters
 import modules
 import irradiation
 
-default = [inverters.inverter("Enphase Energy: M215-60-SIE-S2x 240V",\
-        modules.mage250())]
+class resultSet(object):
+    def _init_(self):
+        self.timeseries = None
+        self.values = None
+        self.dailyAve = 0
+        self.annualOutput = 0
+        self.clippingHours = 0
+
+    def plot(self):
+        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        months   = mdates.MonthLocator()
+        mFormat = mdates.DateFormatter('%b')
+        ax.xaxis.set_major_locator(months)
+        ax.xaxis.set_major_formatter(mFormat)
+        ax.plot(self.timeseries, self.values)
+        return fig
+        #plt.ion()
+        #plt.show()
+
+    def pnt(self):
+        print "Year 1 Annual Output: %s kWh" % self.annualOutput
+        print "Year 1 Daily Average: %s kWh" % self.dailyAve
+        print "Inverter hours clipping: %s" % self.clippingHours
 
 def jsonToSystem(jsystem):
     """Load a system from a json description"""
@@ -35,6 +59,8 @@ def jsonToSystem(jsystem):
     tsystem.setZipcode(jsystem["zipcode"])
     tsystem.tilt = jsystem["tilt"]
     tsystem.azimuth = jsystem["azimuth"]
+    tsystem.phase = jsystem["phase"]
+    tsystem.systemName = jsystem["system_name"]
     return tsystem
 
 def _calc(record):
@@ -43,7 +69,8 @@ def _calc(record):
             irradiation.azimuth, irradiation.mname)
     year = 2000
     dt = tmy3.normalizeDate(d,year)
-    return dt, ins
+    drybulb = float(record['Dry-bulb (C)'])
+    return dt, ins, drybulb
 
 class system(object):
     def __init__(self,shape):
@@ -54,23 +81,18 @@ class system(object):
         self.azimuth = 180
         self.shape = shape
         self.phase = 1
+        self.systemName = ""
 
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
-        #name, usaf = closestUSAF((38.17323,-75.370674))#Snow Hill,MD
         self.place= geo.zipToCoordinates(self.zipcode)
         self.tz = geo.zipToTZ(self.zipcode)
         self.name, self.usaf = geo.closestUSAF(self.place)
 
     def model(self,mname = 'p9'):
-        import matplotlib.pyplot as plt
-        import matplotlib.dates as mdates
         from multiprocessing import Pool
         from multiprocessing import cpu_count
         import epw
-
-        print self.shape[0].array.Vmax(epw.minimum(self.usaf))
-        print self.shape[0].array.Vmin(epw.twopercent(self.usaf))
 
         #hack for threading
         #probably should be abstracted some other way
@@ -82,7 +104,6 @@ class system(object):
         pool = Pool(processes=cpu_count())
         insOutput = pool.map(_calc,tmy3.data(self.usaf))
 
-        #create graph
         ts = np.array([])
         hins = np.array([])
         dts = np.array([])
@@ -92,20 +113,18 @@ class system(object):
         day = 0
         do = 0
         dmax = 0
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        year = 2000
-        months   = mdates.MonthLocator()
-        mFormat = mdates.DateFormatter('%b')
-        ax.xaxis.set_major_locator(months)
-        ax.xaxis.set_major_formatter(mFormat)
+        clip = 0
 
-        for dt,ins in insOutput:
+        for dt,ins,drybulb in insOutput:
             ts = np.append(ts,dt)
             hins = np.append(hins,ins)
             output = 0
             for i in self.shape:
-                output += i.Pac(ins)
+                iOut = i.Pac(ins)
+                output += iOut
+                if iOut > .99 *i.Paco:
+                    clip += 1
+
             #should probably have a flag for this to output CSV file
             #print dt,',', output
             if dt.day is day:
@@ -117,11 +136,13 @@ class system(object):
                 do = 0
             t += output
             day = dt.day
-        ax.plot(dts,dins)
-
-        print "Annual Output: %s kWh" % (round(t/10)/100)
-        print "Daily Average: %s kWh" % (round(t/365/10)/100)
-        return fig
+        rs = resultSet()
+        rs.timeseries = dts
+        rs.values = dins
+        rs.clippingHours = clip
+        rs.dailyAve = (round(t/365/10)/100)
+        rs.annualOutput = (round(t/10)/100)
+        return rs
 
     def power(self,time):
         #in progress
@@ -149,6 +170,7 @@ class system(object):
         minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
 
         return max(minimumSpaceRise,minimumSpaceSet)
+
     def describe(self):
         dp = {}
         di = {}

@@ -13,46 +13,24 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import tmy3
-import numpy as np
 #from numpy import *
-from inverters import *
-from modules import *
-import irradiation
 import matplotlib
 import pv
+import json
+import sys
 
 if __name__ == "__main__":
     import argparse
     matplotlib.use('Agg')
-    parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
-    #import sys
-    #opts, args = getopt.getopt(sys.argv[1:], 'f:h')
-    parser.add_argument('-o', '--output')
-    parser.add_argument('-z', '--zipcode',type=int)
-    parser.add_argument('-t', '--tilt', type=float)
-    parser.add_argument('-s', '--shape', type=int, help='Array Shape, currently number of microinverters', default=1)
-    parser.add_argument('-a', '--azimuth',type=float, default=180,help='array azimuth')
+    parser = argparse.ArgumentParser(description='Model a PV system. annual and daily output')
+    parser.add_argument('-f', '--file',help='json system description',required=True)
     args = vars(parser.parse_args())
-    #print args
-
     try:
         #start program
-        p = mage250()
-        e = m215(p)
-        s = pvArray(p,14,2)
-        si = sb6000us(s)
-        array = [e] * args['shape']
-        #print e.Pac(950)
-        #print e.I(960,240)
-        #print si.Pac(800)
-        "Print modeling array and inverter: currently hardcoded to Enphase m215 and Mage 250"
-        a = pv.system(array)
-        a.setZipcode(args['zipcode'])
-        a.tilt = args['tilt']
-        a.azimuth =  args['azimuth']
-        graph = a.model()
-        graph.savefig('pv_output_%s.png' % args['zipcode'])
+        plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
+        output  = plant.model()
+        output.pnt()
+        output.plot().savefig('%s_output_%s.pdf' % (plant.systemName, plant.zipcode),format='pdf')
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
