@@ -6,25 +6,42 @@ This is primarily a research and analysis tool and there is no guarantee on the 
 
 Features
 --------
--Liu & Jordan diffuse irradiance model
--Perez et al. diffuse irradiance model
--Sandia Inverter model
--Sandia Module model
--NEC voltage drop caculations
+-Liu & Jordan diffuse irradiance model  
+-Perez et al. diffuse irradiance model  
+-Sandia Inverter model  
+-Sandia Module model  
+-NEC voltage drop caculations  
 
 Files
 -----
--fisheye.py - fisheye image to shading vectors
--tmy3.py - read tmy3 data
--pv.py - system performance prediction
--vd.py - voltage drop
+-expedite.py - calculate information needed for the expedited permit process  
+-epw.py - EPW weather data  
+-fisheye.py - fisheye image to shading vectors  
+-tmy3.py - read tmy3 data  
+-pv.py - system performance prediction  
+-vd.py - voltage drop  
 
 Usage
 -----
-The command to model an array of 30 Enphase M215 and Mage 250 panels would be something like
+PV systems are descibed with json.
 
-pvcli -z 17601 -a 225 -t 32 -s 1
+`{"system_name":"System Name",
+        "zipcode":"17601",
+        "tilt":34,
+        "azimuth":180,
+        "phase":1,
+        "voltage":240,
+        "array":[
+            {"inverter":"SMA America: SB6000US 240V",
+            "panel":"Mage Solar : Powertec Plus 250-6 MNCS",
+            "series":14,
+            "parallel":2
+            }
+            ]}`
 
+If that json was was in a file called template.json, the command to model it would be;
+
+pvcli -f template.json
 
 Ipython
 -------
@@ -32,4 +49,4 @@ This is the sort of project that lends itself nicely to ipython.  Since discover
 
 $ipython qtconsole --colors=Linux --pylab=inline
 
-![example](http://char1es.net/ipython_example.png)
+![example](http://char1es.net/ipython_pv_example.png)
