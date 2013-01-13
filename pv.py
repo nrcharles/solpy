@@ -48,29 +48,28 @@ class resultSet(object):
         print "Year 1 Daily Average: %s kWh" % self.dailyAve
         print "Inverter hours clipping: %s" % self.clippingHours
 
-def jsonToSystem(jsystem):
+def jsonToSystem(jsonDescription):
     """Load a system from a json description"""
-    jshape = []
-    for i in jsystem["array"]:
-        jshape.append(inverters.inverter(i["inverter"], \
+    jsonShape = []
+    for i in jsonDescription["array"]:
+        jsonShape.append(inverters.inverter(i["inverter"], \
                 modules.pvArray(modules.moduleJ(i["panel"]),\
                 i["series"],i["parallel"])))
-    tsystem = system(jshape)
-    tsystem.setZipcode(jsystem["zipcode"])
-    tsystem.tilt = jsystem["tilt"]
-    tsystem.azimuth = jsystem["azimuth"]
-    tsystem.phase = jsystem["phase"]
-    tsystem.systemName = jsystem["system_name"]
-    return tsystem
+    plant = system(jsonShape)
+    plant.setZipcode(jsonDescription["zipcode"])
+    plant.tilt = jsonDescription["tilt"]
+    plant.azimuth = jsonDescription["azimuth"]
+    plant.phase = jsonDescription["phase"]
+    plant.systemName = jsonDescription["system_name"]
+    return plant
 
 def _calc(record):
-    d = record['datetime']
-    ins = irradiation.irradiation(record,irradiation.place, irradiation.tilt,
-            irradiation.azimuth, irradiation.mname)
+    insolation = irradiation.irradiation(record,irradiation.place, 
+            irradiation.tilt, irradiation.azimuth, irradiation.mname)
     year = 2000
-    dt = tmy3.normalizeDate(d,year)
+    timestamp = tmy3.normalizeDate(record['datetime'],year)
     drybulb = float(record['Dry-bulb (C)'])
-    return dt, ins, drybulb
+    return timestamp, insolation, drybulb
 
 class system(object):
     def __init__(self,shape):
@@ -92,7 +91,6 @@ class system(object):
     def model(self,mname = 'p9'):
         from multiprocessing import Pool
         from multiprocessing import cpu_count
-        import epw
 
         #hack for threading
         #probably should be abstracted some other way
@@ -102,54 +100,52 @@ class system(object):
         irradiation.mname = mname
 
         pool = Pool(processes=cpu_count())
-        insOutput = pool.map(_calc,tmy3.data(self.usaf))
+        insolationOutput = pool.map(_calc,tmy3.data(self.usaf))
 
-        ts = np.array([])
-        hins = np.array([])
-        dts = np.array([])
-        dins = np.array([])
-        t = 0
-        l = 0
+        houlyTimeseries = np.array([])
+        hourlyInsolation = np.array([])
+
+        dailyTimeseries = np.array([])
+        dailyInsolation = np.array([])
+
+        totalOutput = 0
         day = 0
-        do = 0
-        dmax = 0
+        dailyOutput = 0
+        dailyMax = 0
         clip = 0
 
-        for dt,ins,drybulb in insOutput:
-            ts = np.append(ts,dt)
-            hins = np.append(hins,ins)
+        for timestamp,insolation,drybulb in insolationOutput:
+            houlyTimeseries = np.append(houlyTimeseries,timestamp)
+            hourlyInsolation = np.append(hourlyInsolation,insolation)
             output = 0
             for i in self.shape:
-                iOut = i.Pac(ins)
+                iOut = i.Pac(insolation)
                 output += iOut
-                if iOut > .99 *i.Paco:
+                if iOut > .999 * i.Paco:
                     clip += 1
 
             #should probably have a flag for this to output CSV file
-            #print dt,',', output
-            if dt.day is day:
-                do += output
+            #print timestamp,',', output
+            if timestamp.day is day:
+                dailyOutput += output
             else:
-                dmax = max(dmax,do)
-                dts = np.append(dts,dt)
-                dins = np.append(dins,do/1000)
-                do = 0
-            t += output
-            day = dt.day
-        rs = resultSet()
-        rs.timeseries = dts
-        rs.values = dins
-        rs.clippingHours = clip
-        rs.dailyAve = (round(t/365/10)/100)
-        rs.annualOutput = (round(t/10)/100)
-        return rs
+                dailyMax = max(dailyMax,dailyOutput)
+                dailyTimeseries = np.append(dailyTimeseries,timestamp)
+                dailyInsolation = np.append(dailyInsolation,dailyOutput/1000)
+                dailyOutput = 0
+            totalOutput += output
+            day = timestamp.day
 
-    def power(self,time):
-        #in progress
-        output = 0
-        for i in self.shape:
-            output += i.Pac(ins)
-        pass
+        rs = resultSet()
+
+        rs.timeseries = dailyTimeseries
+        rs.values = dailyInsolation
+
+        rs.clippingHours = clip
+        rs.dailyAve = (round(totalOutput/365/10)/100)
+        rs.annualOutput = (round(totalOutput/10)/100)
+
+        return rs
 
     def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""

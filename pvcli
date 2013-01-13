@@ -29,7 +29,7 @@ if __name__ == "__main__":
         #start program
         plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
         output  = plant.model()
-        output.pnt()
+        output.summary()
         output.plot().savefig('%s_output_%s.pdf' % (plant.systemName, plant.zipcode),format='pdf')
 
     except (KeyboardInterrupt, SystemExit):
