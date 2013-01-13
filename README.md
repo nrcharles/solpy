@@ -23,21 +23,21 @@ Files
 
 Usage
 -----
-PV systems are descibed with json.
+PV systems are descibed with json. For example:
 
-`{"system_name":"System Name",  
-        "zipcode":"17601",  
-        "tilt":34,  
-        "azimuth":180,  
-        "phase":1,  
-        "voltage":240,  
-        "array":[  
-            {"inverter":"SMA America: SB6000US 240V",  
-            "panel":"Mage Solar : Powertec Plus 250-6 MNCS",  
-            "series":14,  
-            "parallel":2  
-            }  
-            ]}`
+    {"system_name":"System Name",
+        "zipcode":"17601",
+        "tilt":34,
+        "azimuth":180,
+        "phase":1,
+        "voltage":240,
+        "array":[
+            {"inverter":"SMA America: SB6000US 240V",
+            "panel":"Mage Solar : Powertec Plus 250-6 MNCS",
+            "series":14,
+            "parallel":2}
+            ]
+        }
 
 If that json was was in a file called template.json, the command to model it would be;
 

@@ -59,8 +59,8 @@ class data():
         self.tmy_data = csv.DictReader(self.csvfile)
         self.latitude = float(header[4])
         self.longitude = float(header[5])
-        print header[1]
-        print self.latitude, self.longitude
+        #print header[1]
+        #print self.latitude, self.longitude
     def __iter__(self):
         return self
 
