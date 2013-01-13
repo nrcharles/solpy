@@ -43,7 +43,7 @@ class resultSet(object):
         #plt.ion()
         #plt.show()
 
-    def pnt(self):
+    def summary(self):
         print "Year 1 Annual Output: %s kWh" % self.annualOutput
         print "Year 1 Daily Average: %s kWh" % self.dailyAve
         print "Inverter hours clipping: %s" % self.clippingHours
