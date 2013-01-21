@@ -116,11 +116,11 @@ class system(object):
 
         for timestamp,insolation,drybulb in insolationOutput:
             houlyTimeseries = np.append(houlyTimeseries,timestamp)
-            hourlyInsolation = np.append(hourlyInsolation,insolation)
             output = 0
             for i in self.shape:
                 iOut = i.Pac(insolation)
                 output += iOut
+                hourlyInsolation = np.append(hourlyInsolation,output)
                 if iOut > .999 * i.Paco:
                     clip += 1
 
@@ -140,6 +140,8 @@ class system(object):
 
         rs.timeseries = dailyTimeseries
         rs.values = dailyInsolation
+        #rs.timeseries = houlyTimeseries
+        #rs.values = hourlyInsolation
 
         rs.clippingHours = clip
         rs.dailyAve = (round(totalOutput/365/10)/100)
