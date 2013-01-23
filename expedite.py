@@ -77,7 +77,7 @@ def string_notes(system):
             print "Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp
             print "Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc
             print "Short-Circuit Current (Isc): %s A" % i.array.panel.Isc
-            print "Maximum Power (Pmax): %s W" % i.array.panel.Pmax
+            print "Maximum Power (Pmax): %s W" % round(i.array.panel.Pmax,1)
             print "Module Rated Max Voltage: %s V" % i.array.panel.Vrated
             print ""
             dp.pop(i.array.panel.model)
@@ -86,7 +86,7 @@ def string_notes(system):
             print "Inverter Model: %s" % i.model
             print "Quantity: %s" % di[i.model]
             print "Max Power: %s W" % i.Paco
-            print "Max AC Current: %s A" % round(i.Paco/i.ac_voltage,1)
+            print "Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1)
             print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
             print ""
             di.pop(i.model)
@@ -175,8 +175,7 @@ if __name__ == "__main__":
     import json
     import sys
     parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
-    parser.add_argument('-o', '--output')
-    parser.add_argument('-s', '--system')
+    parser.add_argument('-f', '--file')
     args = vars(parser.parse_args())
     try:
         #start program
