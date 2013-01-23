@@ -391,4 +391,4 @@ def position(latitude_deg, longitude_deg, utc_datetime, S, plane_azimuth, elevat
     Z = math.radians(topocentric_zenith_angle)
     
     theta = math.radians(IncidenceAngle(topocentric_zenith_angle, slope, slope_orientation, topocentric_azimuth_angle)) 
-    return theta, Z #, zenith
+    return theta, Z, math.radians(topocentric_azimuth_angle)

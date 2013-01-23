@@ -394,14 +394,14 @@ if __name__=="__main__":
     #p = motech245()
     #p = astroenergy290()
     #p = asp390()
-    p = moduleJ('Mage Solar : Powertec Plus 250-6 MNS')
+    p = moduleJ('Mage Solar : Powertec Plus 245-6 MNBS')
     print ":%s:" %p.make
     print ":%s:" %p.model
     p = mage250()
     print p.Eff
     print p 
 
-    print "Vmax:", p.Vmax(-15)*series
+    print "Vmax:", p.Vmax(-13)*series
     print "Vmin:",p.Vmin(31,25) * series
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
 

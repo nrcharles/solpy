@@ -29,6 +29,8 @@ import pysolar
 global tilt
 global azimuth
 global place
+global horizon
+
 
 def total(radiation, theta, Z, tilt= 0, plane_azimuth = 180, model = "lj"):
     #theta = incidence angle of the sun
@@ -164,10 +166,12 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     #print Xc
     #Xc = max(0,Xc)
     #Xc = Xh*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
-    return Xc
+
+    #possible bug?  not sure why the negative insolation sometimes
+    return max(Xc,0.0)
 
 
-def irradiation(record, place, t = 0.0, array_azimuth = 180.0, mtype = 'lj'):
+def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, mtype = 'lj'):
     latitude, longitude = place
 
     ghi = int(record['GHI (W/m^2)'])
@@ -180,7 +184,12 @@ def irradiation(record, place, t = 0.0, array_azimuth = 180.0, mtype = 'lj'):
         #calculate total radiation
         #theta = incident angle
         #theta, Z = solar.position(latitude, longitude, record['datetime'], t, azimuth)
-        theta, Z = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
+        theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
+        nA = degrees(ta) % 360-180
+        if horizon(nA) > degrees(theta):
+            dni = 0
+            print "shaded", nA,degrees(theta),horizon(nA)
+            pass
         gth = total((etr, ghi, dni, dhi), theta, Z, t, array_azimuth, mtype)
         return gth
     else:

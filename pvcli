@@ -18,16 +18,20 @@ import matplotlib
 import pv
 import json
 import sys
+import pathfinder
 
 if __name__ == "__main__":
     import argparse
     matplotlib.use('Agg')
     parser = argparse.ArgumentParser(description='Model a PV system. annual and daily output')
     parser.add_argument('-f', '--file',help='json system description',required=True)
+    parser.add_argument('-s', '--shade',help='Solar Pathfinder Horizon file')
     args = vars(parser.parse_args())
     try:
         #start program
         plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
+        if args['shade']:
+            plant.horizon = pathfinder.horizon('example.hor')
         output  = plant.model()
         output.summary()
         output.plot().savefig('%s_output_%s.pdf' % (plant.systemName, plant.zipcode),format='pdf')

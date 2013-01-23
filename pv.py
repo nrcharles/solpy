@@ -20,6 +20,8 @@ import numpy as np
 import inverters
 import modules
 import irradiation
+from scipy.interpolate import interp1d
+
 
 class resultSet(object):
     def _init_(self):
@@ -52,9 +54,12 @@ def jsonToSystem(jsonDescription):
     """Load a system from a json description"""
     jsonShape = []
     for i in jsonDescription["array"]:
-        jsonShape.append(inverters.inverter(i["inverter"], \
+        scale = 1
+        if "scale" in i:
+            scale = i["scale"]
+        jsonShape += [inverters.inverter(i["inverter"], \
                 modules.pvArray(modules.moduleJ(i["panel"]),\
-                i["series"],i["parallel"])))
+                i["series"],i["parallel"]))] * scale
     plant = system(jsonShape)
     plant.setZipcode(jsonDescription["zipcode"])
     plant.tilt = jsonDescription["tilt"]
@@ -65,7 +70,8 @@ def jsonToSystem(jsonDescription):
 
 def _calc(record):
     insolation = irradiation.irradiation(record,irradiation.place, 
-            irradiation.tilt, irradiation.azimuth, irradiation.mname)
+            irradiation.horizon, irradiation.tilt, irradiation.azimuth,
+            irradiation.mname)
     year = 2000
     timestamp = tmy3.normalizeDate(record['datetime'],year)
     drybulb = float(record['Dry-bulb (C)'])
@@ -81,6 +87,7 @@ class system(object):
         self.shape = shape
         self.phase = 1
         self.systemName = ""
+        self.horizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
 
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
@@ -98,6 +105,7 @@ class system(object):
         irradiation.tilt = self.tilt
         irradiation.azimuth = self.azimuth
         irradiation.mname = mname
+        irradiation.horizon = self.horizon
 
         pool = Pool(processes=cpu_count())
         insolationOutput = pool.map(_calc,tmy3.data(self.usaf))
