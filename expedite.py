@@ -179,7 +179,7 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     try:
         #start program
-        plant = pv.jsonToSystem(json.loads(open(args['system']).read()))
+        plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
         string_notes(plant)
         #graph = plant.model()
         #graph.savefig('pv_output_%s.png' % plant.zipcode)
