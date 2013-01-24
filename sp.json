@@ -90440,6 +90440,26 @@
   "panel": "Mage Solar : Powertec Plus 245-6 MNBS"
  }, 
  {
+  "i_mp_ref": 8.09, 
+  "r_sh_ref": 27.07, 
+  "a_ref": 1.7494, 
+  "source": "Mono-c-Si", 
+  "r_s": 0.269, 
+  "beta_oc": -0.12818, 
+  "n_s": 60, 
+  "v_mp_ref": 30.90, 
+  "adjust": 29.22, 
+  "a_c": 1.631, 
+  "t_noct": 46.8, 
+  "i_l_ref": 8.786, 
+  "i_sc_ref": 8.79, 
+  "v_oc_ref": 37.57, 
+  "gamma_r": -0.47, 
+  "alpha_sc": 0.00435, 
+  "i_o_ref": 3.23e-09, 
+  "panel": "Mage Solar : Powertec Plus 250-6 ML"
+ }, 
+ {
   "i_mp_ref": 8.35, 
   "r_sh_ref": 9273.23, 
   "a_ref": 1.6161, 
