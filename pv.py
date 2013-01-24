@@ -176,6 +176,28 @@ class system(object):
         minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
 
         return max(minimumSpaceRise,minimumSpaceSet)
+    
+    def minSetback(self, delta, riseHour=9, setHour=15):
+        """East West Setback"""
+        import datetime
+        import pysolar
+        import math
+
+        riseTime = datetime.datetime(2000,12,22,riseHour-self.tz)
+        altitudeRise = pysolar.Altitude(self.place[0],self.place[1],riseTime)
+        azimuthRize = pysolar.Azimuth(self.place[0],self.place[1],riseTime)
+        shadowLength = delta / math.tan(math.radians(altitudeRise))
+        minimumSpaceRise = shadowLength * math.sin(math.radians(azimuthRize))
+
+        setTime = datetime.datetime(2000,12,22,setHour-self.tz)
+        altitudeSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
+        setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
+        shadowLength = delta / math.tan(math.radians(altitudeSet))
+        minimumSpaceSet = shadowLength * math.sin(math.radians(setAzimuth))
+
+        return max(minimumSpaceRise,minimumSpaceSet)
+    
+
 
     def describe(self):
         dp = {}
