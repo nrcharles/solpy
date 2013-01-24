@@ -1,9 +1,11 @@
 import csv
 import math
+import os
+SPATH = os.path.dirname(os.path.abspath(__file__))
 
 def closestUSAF(place, stationClass=3):
     latitude,longitude = place
-    index = open('StationsMeta.csv')
+    index = open(SPATH + '/StationsMeta.csv')
     index_data = csv.DictReader(index)
     d1 = 9999
     name = ''
@@ -20,7 +22,7 @@ def closestUSAF(place, stationClass=3):
 
 def zipToCoordinates(zipcode):
     """takes string"""
-    index = open('zipcode.csv')
+    index = open(SPATH + '/zipcode.csv')
     #read over license
     headerLen = 31
     for i in range(headerLen):
@@ -31,7 +33,7 @@ def zipToCoordinates(zipcode):
             return float(i['latitude']),float( i['longitude'])
 
 def zipToTZ(zipcode):
-    index = open('zipcode.csv')
+    index = open(SPATH + '/zipcode.csv')
     #read over license
     headerLen = 31
     for i in range(headerLen):
