@@ -1,4 +1,6 @@
 import json
+import os
+SPATH = os.path.dirname(os.path.abspath(__file__))
 class inverter(object):
     """Sandia Model"""
     #Inverter Output = Array STC power * Irradiance * Negative Module Power Tolerance * Soiling * Temperature factor * Wiring efficiency * Inverter efficiency
@@ -22,7 +24,7 @@ class inverter(object):
     def __init__(self, model, array):
         self.array = array
         self.properties = None
-        inverters = json.loads(open('si.json').read())
+        inverters = json.loads(open(SPATH + '/si.json').read())
         for i in inverters:
             if i['inverter']==model:
                 self.properties = i
