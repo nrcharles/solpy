@@ -1,6 +1,8 @@
 import unittest
 import json
 STC = 25
+import os
+SPATH = os.path.dirname(os.path.abspath(__file__))
 
 class module(object):
     """base module class which specific modules inherit"""
@@ -47,7 +49,7 @@ class moduleJ(object):
     #gamma Pmax %/Tempunit
     def __init__(self,model):
         self.properties = None
-        panels = json.loads(open('sp.json').read())
+        panels = json.loads(open(SPATH + '/sp.json').read())
         for i in panels:
             if i['panel']==model:
                 self.properties = i
