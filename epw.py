@@ -5,6 +5,7 @@ import geo
 #path to epw data
 #default = ~/epw/
 path = os.environ['HOME'] + "/epw/"
+SPATH = os.path.dirname(os.path.abspath(__file__))
 
 try:
     os.listdir(os.environ['HOME'] + '/epw')
@@ -20,7 +21,7 @@ def basename(USAF):
         if f.find(USAF) is not -1:
             return f[0:f.rfind('.')]
 def epwbasename(USAF):
-    f = open('epwurls.csv')
+    f = open(SPATH + '/epwurls.csv')
     for line in f.readlines():
         if line.find(USAF) is not -1:
             return line.rstrip()
