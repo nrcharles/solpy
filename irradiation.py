@@ -31,48 +31,6 @@ global azimuth
 global place
 global horizon
 
-
-def total(radiation, theta, Z, tilt= 0, plane_azimuth = 180, model = "lj"):
-    #theta = incidence angle of the sun
-    #Z = solar Zenith angle
-    S = radians(tilt) #
-    #Gth = Btd + Dth + Rth
-    etr, ghi, dni, dhi = radiation
-
-    Bh = dni #hourly direct solar radiation
-    Dh = dhi
-    Gh = ghi
-
-    #NREL Manual
-    Bth = max(0,Bh * cos(theta))
-
-    #sky-diffuse
-    Dth = 0
-    #Badescu 2002 (badescu)
-    if model == "badescu":
-         rd = 3+cos(2*S)/4
-         Dth = rd*Dh # ?
-    if model == "tian":
-         #Tian et al. 2001 (tian)
-         rd = 1 -S/(2 *pi)
-         Dth = rd*Dh # ?
-    if model == "lj":
-         #Liu and Jordan (lj)
-         rd = (1+cos(S))/2
-         Dth = rd*Dh # ?
-    if model == "p9":
-         #print "perez(%s,%s,%s,%s,%s,%s,%s)" % ( Dh,dni,dhi,etr,S,theta,Z)
-         Dth = perez(Dh,dni,dhi,etr,S,theta,Z)
-         #print Dth 
-
-    #ground diffuse
-    # p = ground reflectivity
-    p = 0.2
-    Rth = Gh*p*(1-cos(S))/2 #?
-
-    Gth = Bth + Dth +Rth
-    return Gth
-
 def airmass(zenith):
     """returns airmass for zenith in radians"""
     #Pickering 2002 footnote 39
@@ -171,29 +129,51 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     return max(Xc,0.0)
 
 
-def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, mtype = 'lj'):
+def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 'lj'):
     latitude, longitude = place
 
-    ghi = int(record['GHI (W/m^2)'])
-    dhi = int(record['DHI (W/m^2)'])
-    dni = int(record['DNI (W/m^2)'])
+    Gh = int(record['GHI (W/m^2)'])
+    Dh = int(record['DHI (W/m^2)'])
+    Bh = int(record['DNI (W/m^2)'])
     etr = int(record['ETR (W/m^2)'])
 
+    #theta = incidence angle of the sun
+    theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
+    nA = degrees(ta) % 360-180
+    if horizon(nA) > degrees(theta):
+        Bh = 0
+        print "shaded", nA,degrees(theta),horizon(nA)
+    #Z = solar Zenith angle
+    S = radians(t) #
+
+    #NREL Manual
+    Bth = max(0,Bh * cos(theta))
+
+    #sky-diffuse
+    Dth = 0
+    if model == "badescu":
+        #Badescu 2002 (badescu)
+         rd = 3+cos(2*S)/4
+         Dth = rd*Dh
+    if model == "tian":
+         #Tian et al. 2001 (tian)
+         rd = 1 -S/(2 *pi)
+         Dth = rd*Dh
+    if model == "lj":
+         #Liu and Jordan (lj)
+         rd = (1+cos(S))/2
+         Dth = rd*Dh
+    if model == "p9":
+         Dth = perez(Dh, Bh, Dh, etr, S, theta, Z)
+
+    #ground diffuse p = ground reflectivity
+    p = 0.2
+    Rth = Gh*p*(1-cos(S))/2 #?
 
     if t > 0:
-        #calculate total radiation
-        #theta = incident angle
-        #theta, Z = solar.position(latitude, longitude, record['datetime'], t, azimuth)
-        theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
-        nA = degrees(ta) % 360-180
-        if horizon(nA) > degrees(theta):
-            dni = 0
-            print "shaded", nA,degrees(theta),horizon(nA)
-            pass
-        gth = total((etr, ghi, dni, dhi), theta, Z, t, array_azimuth, mtype)
-        return gth
+        return Bth + Dth +Rth
     else:
-        return ghi
+        return Gh
 
 if __name__ == "__main__":
     #for i in range(-90,180):
