@@ -39,7 +39,7 @@ PV systems are descibed with json. For example:
             ]
         }
 
-If that json was was in a file called template.json, the command to model it would be;
+If that json was in a file called template.json, the command to model it would be;
 
 pvcli -f template.json
 
