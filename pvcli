@@ -19,6 +19,7 @@ import pv
 import json
 import sys
 import pathfinder
+import expedite
 
 if __name__ == "__main__":
     import argparse
@@ -32,6 +33,9 @@ if __name__ == "__main__":
         plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
         if args['shade']:
             plant.horizon = pathfinder.horizon('example.hor')
+        
+        expedite.string_notes(plant)
+        print ""
         output  = plant.model()
         output.summary()
         output.plot().savefig('%s_output_%s.pdf' % (plant.systemName, plant.zipcode),format='pdf')
