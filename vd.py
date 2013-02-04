@@ -66,8 +66,10 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         print r
         vd = 2.0* a * r * l/1000.0
         print "Voltage drop: %sV" % vd
-        print "Percent drop: %s%%" % (vd * 100/v)
+        vdp=(vd * 100/v)
+        print "Percent drop: %s%%" % vdp
         tconductor = ee.checkAmpacity(tconductor, ocp)
+        tconductor.lastVD = vd
         print "EGC Size: %s" % incEGC(tconductor,egc,ratio)
         return tconductor
 
@@ -91,6 +93,7 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         else:
             print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets)
+
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)
             return conductor
 
