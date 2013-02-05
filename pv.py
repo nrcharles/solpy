@@ -176,7 +176,7 @@ class system(object):
         minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
 
         return max(minimumSpaceRise,minimumSpaceSet)
-    
+
     def minSetback(self, delta, riseHour=9, setHour=15):
         """East West Setback"""
         import datetime
@@ -196,8 +196,6 @@ class system(object):
         minimumSpaceSet = shadowLength * math.sin(math.radians(setAzimuth))
 
         return max(minimumSpaceRise,minimumSpaceSet)
-    
-
 
     def describe(self):
         dp = {}
