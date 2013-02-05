@@ -467,10 +467,10 @@ class circuit():
         pass
 
 class conductor(object):
-    def __init__(self, size, material,vdp=0.0):
+    def __init__(self, size, material,vd=0.0):
         self.material = material
         self.size = size
-        self.lastVDP = vdp
+        self.lastVD = vd
 
     def r(self, conduit = ""):
         #print "%s_%s" % (conduit, self.material)
@@ -492,6 +492,7 @@ class conductor(object):
         return "%s %s" % (self.size, self.material)
     def __add__(self, t):
         return t + self.lastVD
+    __radd__ = __add__
 
 #class conduit():
 #    def __init__(self,material):

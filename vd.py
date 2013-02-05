@@ -51,7 +51,6 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
     #percent = args['drop']
     #material = 'CU'
     oc = a * 1.25
-    print "Continous Current: %s" % a
     ocp = ee.findOCP(oc)
     print "OCP Size: %s" % ocp
     egc = ee.findEGC(ocp,material)
@@ -59,19 +58,17 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
     r = 0
     #ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
     ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
-    print "Ratio: ",ratio
     if size:
-        tconductor = ee.conductor(size, material)
-        r = ee.resistance( tconductor,c,pf, t)
-        print r
-        vd = 2.0* a * r * l/1000.0
+        conductor = ee.conductor(size, material)
+        conductor = ee.checkAmpacity(conductor, ocp)
+        r = ee.resistance( conductor,c,pf, t)
+        vd = 2.0 * ee.resistance( conductor,c,pf, t) *a *l/1000.0
         print "Voltage drop: %sV" % vd
         vdp=(vd * 100/v)
         print "Percent drop: %s%%" % vdp
-        tconductor = ee.checkAmpacity(tconductor, ocp)
-        tconductor.lastVD = vd
-        print "EGC Size: %s" % incEGC(tconductor,egc,ratio)
-        return tconductor
+        conductor.lastVD = vd
+        print "EGC Size: %s" % incEGC(conductor,egc,ratio)
+        return conductor
 
     else:
         print "Allowed Voltage drop: %sV" % vd
@@ -83,16 +80,21 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         while 1:
             conductor = ee.findConductor((r*sets),material,c,pf,t)
             if conductor:
+                conductor.lastVD = vd
                 break
             sets +=1
 
         if sets > 1:
             print "WARNING: %s sets of conductors" % sets
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)
+            vd = 2.0 * ee.resistance( conductor,c * 1.0 / sets,pf, t) *a *l/1000.0
+            conductor.lastVD = vd
             return [conductor for i in range(sets)]
         else:
             print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets)
+            vd = 2.0 * ee.resistance( conductor,c,pf, t) *a *l/1000.0
+            conductor.lastVD = vd
 
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)
             return conductor
