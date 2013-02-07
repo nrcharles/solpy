@@ -90380,6 +90380,26 @@
   "panel": "Mage Solar : Powertec Plus 240-6 PL"
  }, 
  {
+  "i_mp_ref": 7.93, 
+  "r_sh_ref": 164.9, 
+  "a_ref": 1.5762, 
+  "source": "Multi-c-Si", 
+  "r_s": 0.26, 
+  "beta_oc": -0.11987, 
+  "n_s": 60, 
+  "v_mp_ref": 30.91, 
+  "adjust": 14.32, 
+  "a_c": 1.637, 
+  "t_noct": 47.2, 
+  "i_l_ref": 8.493, 
+  "i_sc_ref": 8.57, 
+  "v_oc_ref": 37.46, 
+  "gamma_r": -0.452, 
+  "alpha_sc": 0.00441, 
+  "i_o_ref": 4.48e-10, 
+  "panel": "Mage Solar : Powertec Plus 245-6 PL *"
+ }, 
+ {
   "i_mp_ref": 8.08, 
   "r_sh_ref": 185.21, 
   "a_ref": 1.5745, 
