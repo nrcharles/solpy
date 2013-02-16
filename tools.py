@@ -24,7 +24,8 @@ def fill(inverter, zipcode, acDcRatio = 1.2, stationClass = 1, Vmax = 600, bipol
                 pRatio = p*s*psize*1.0/inverterNominal
                 if pRatio < (acDcRatio*(1+pTol)) and \
                         pRatio > (acDcRatio*(1-pTol)):
-                            solutions.append("%sW - %sS x %sP - ratio %s" % (round(s*p*psize,1),s,p, round(pRatio,2)))
+                            sol ="%sW - %sS x %sP - ratio %s" % (round(s*p*psize,1),s,p, round(pRatio,2))
+                            solutions.append(sol)
                             inverter.array.series = s
                             inverter.array.parallel = p
     if len(solutions) ==0:
@@ -36,19 +37,19 @@ if __name__ == "__main__":
     import inverters
     import modules
     zc='44701'
-    zc='44681'
+    zc='27713'
     #zc='44050'
     #zc='23173'
     #m = "Suntech Power : STP245-20-Wd"
     #m = "Mage Solar : Powertec Plus 245-6 PL *"
-    m = "Mage Solar : Powertec Plus 285-6 PL"
+    m = "Mage Solar : Powertec Plus 250-6 MNCS"
     ms = modules.moduleJ(m)
     #ms = modules.mage285()
     #ms = modules.mage250ml()
     system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,11,6))
-    print fill(system,zc)
+    #print fill(system,zc)
     system = inverters.inverter("Refusol: 24 kW 480V",modules.pvArray(ms,11,6))
-    print fill(system,zc)
+    #print fill(system,zc)
     system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,14,2))
     print fill(system,zc)
     system = inverters.inverter("SMA America: SB8000US-11 277V",modules.pvArray(ms,14,2))
