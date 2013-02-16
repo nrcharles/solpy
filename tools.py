@@ -7,7 +7,9 @@ def fill(inverter, zipcode, acDcRatio = 1.2, stationClass = 1, Vmax = 600, bipol
     derate20 = .9
     minV = inverter.array.panel.Vmin(epw.twopercent(usaf)) * derate20
     #print "MinV", minV
-    smax = int(inverter.vdcmax/maxV)
+    if inverter.vdcmax != 0:
+         Vmax = inverter.vdcmax
+    smax = int(Vmax/maxV)
     #range to search
     pTol = .30
     inverterNominal = inverter.Paco
@@ -40,8 +42,8 @@ if __name__ == "__main__":
     #zc='44050'
     #zc='23173'
     #m = "Suntech Power : STP245-20-Wd"
-    #m = "Mage Solar : Powertec Plus 245-6 PL *"
-    m = "Mage Solar : Powertec Plus 285-6 PL"
+    m = "Mage Solar : Powertec Plus 245-6 ML"
+    #m = "Mage Solar : Powertec Plus 285-6 PL"
     ms = modules.moduleJ(m)
     #ms = modules.mage285()
     #ms = modules.mage250ml()
