@@ -61,10 +61,24 @@ class inverter(object):
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
 
-def models():
+def manufacturers():
+    a =  [i['inverter'].split(":")[0] for i in json.loads(open(SPATH + '/si.json').read()) ]
+    a.sort()
+    b = [i for i in set(a)]
+    b.sort()
+    return b
+
+def models(manufacturer = None):
     """returns list of available inverter models"""
-    #return json.loads(open('si.json').read())
-    return [i['inverter'] for i in json.loads(open('si.json').read()) ]
+    if manufacturer ==None:
+        return [i['inverter'] for i in json.loads(open(SPATH + '/si.json').read()) ]
+    else:
+        a = []
+        for i in json.loads(open(SPATH + '/si.json').read()):
+            if i['inverter'].find(manufacturer) != -1:
+                a.append(i['inverter'])
+        return a
+
 
 def insolationToA(ins, peakA):
     """scale current in response to insolation"""

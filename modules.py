@@ -49,6 +49,7 @@ class moduleJ(object):
     #gamma Pmax %/Tempunit
     def __init__(self,model):
         self.properties = None
+	print SPATH
         panels = json.loads(open(SPATH + '/sp.json').read())
         for i in panels:
             if i['panel']==model:
@@ -361,7 +362,7 @@ class asw270p(module):
     Eff = Pmax/A/1000
 
 def manufacturers():
-    a =  [i['panel'].split(":")[0] for i in json.loads(open('sp.json').read()) ]
+    a =  [i['panel'].split(":")[0] for i in json.loads(open(SPATH + '/sp.json').read()) ]
     a.sort()
     b = [i for i in set(a)]
     b.sort()
@@ -372,10 +373,10 @@ def models(manufacturer = None):
     """returns list of available panel models"""
     #return json.loads(open('si.json').read())
     if manufacturer ==None:
-        return [i['panel'] for i in json.loads(open('sp.json').read()) ]
+        return [i['panel'] for i in json.loads(open(SPATH + '/sp.json').read()) ]
     else:
         a = []
-        for i in json.loads(open('sp.json').read()):
+        for i in json.loads(open(SPATH + '/sp.json').read()):
             if i['panel'].find(manufacturer) != -1:
                 a.append(i['panel'])
         return a
