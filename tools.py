@@ -1,11 +1,14 @@
-def fill(inverter, zipcode, acDcRatio = 1.2, stationClass = 1, Vmax = 600, bipolar= True):
+def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, Vmax = 600, bipolar= True):
     """maximize array"""
     import geo
     import epw
+    tDerate = {"Roof":30,
+            "Ground":25,
+            "Pole":20}
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(zipcode), stationClass)
     maxV = inverter.array.panel.Vmax(epw.minimum(usaf))
     derate20 = .9
-    minV = inverter.array.panel.Vmin(epw.twopercent(usaf)) * derate20
+    minV = inverter.array.panel.Vmin(epw.twopercent(usaf),tDerate[mount]) * derate20
     #print "MinV", minV
     if inverter.vdcmax != 0:
          Vmax = inverter.vdcmax
@@ -57,7 +60,7 @@ if __name__ == "__main__":
     system = inverters.inverter("Refusol: 24 kW 480V",modules.pvArray(ms,11,6))
     print fill(system,zc)
     system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,14,2))
-    print fill(system,zc)
+    print fill(system,zc,mount="Roof")
     system = inverters.inverter("SMA America: SB8000US-11 277V",modules.pvArray(ms,14,2))
     print fill(system,zc)
     system = inverters.inverter("SMA America: SB6000US-11 277V",modules.pvArray(ms,14,2))
