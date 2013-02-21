@@ -18,11 +18,14 @@ def fill(inverter, zipcode, acDcRatio = 1.2, stationClass = 1, Vmax = 600, bipol
     psize = inverter.array.panel.Pmax
     print "Nominal Panel Power:", round(psize,1)
     solutions = []
-    print "I DC Max:%s" % inverter.idcmax
+
+    Imax = max(inverter.idcmax,inverter.Pdco*1.0/inverter.mppt_low)
+    stringMax = int(round(Imax/inverter.array.panel.Impp))+1
+
     #Diophantine equation
     for s in range(smax+1):
         if (s*minV) >= inverter.mppt_low:
-            for p in range(12):
+            for p in range(stringMax):
                 pRatio = p*s*psize*1.0/inverterNominal
                 if pRatio < (acDcRatio*(1+pTol)) and \
                         pRatio > (acDcRatio*(1-pTol)):
@@ -50,9 +53,9 @@ if __name__ == "__main__":
     #ms = modules.mage285()
     #ms = modules.mage250ml()
     system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,11,6))
-    #print fill(system,zc)
+    print fill(system,zc)
     system = inverters.inverter("Refusol: 24 kW 480V",modules.pvArray(ms,11,6))
-    #print fill(system,zc)
+    print fill(system,zc)
     system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,14,2))
     print fill(system,zc)
     system = inverters.inverter("SMA America: SB8000US-11 277V",modules.pvArray(ms,14,2))
