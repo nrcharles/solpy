@@ -14,7 +14,7 @@
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License along
-#    with Pysolar. If not, see <http://www.gnu.org/licenses/>.
+#    with solpy. If not, see <http://www.gnu.org/licenses/>.
 
 """Calculate different kinds of radiation components via default values
 
