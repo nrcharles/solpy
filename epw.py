@@ -17,6 +17,7 @@
 import os
 import re
 import geo
+import csv
 #path to epw data
 #default = ~/epw/
 path = os.environ['HOME'] + "/epw/"
@@ -116,6 +117,45 @@ def minimum(USAF):
         print "Warning: Minimum Temperature not found, using worst case"
         return -23.0
 
+class data():
+    def __init__(self, USAF):
+        #filename = path + USAF + 'TY.csv'
+        filename = '%s/%s.epw' % (path,basename(USAF))
+        self.csvfile = None
+        try:
+            self.csvfile = open(filename)
+        except:
+            print "File not found"
+            print "Downloading ..."
+            downloadEPW(USAF)
+            self.csvfile = open(filename)
+        header = ""
+        fieldnames = ["Year","Month","Day","Hour","Minute","DS","Drybulb (C)",
+                "Dewpoint (C)", "Relative Humidity", "Pressure (Pa)",
+                "ETR (W/m^2)","ETRN (W/m^2)","HIR (W/m^2)","GHI (W/m^2)",
+                "DNI (W/m^2)","DHI (W/m^2)","GHIL (lux)","DNIL (lux)",
+                "DFIL (lux)","Zlum (Cd/m2)","Wdir (degrees)","Wspd (m/s)",
+                "Ts cover", "O sky cover","CeilHgt (m)","Present Weather", 
+                "Pw codes","Pwat (cm)","AOD (unitless)","Snow Depth (cm)", 
+                "Days since snowfall"]
+        for i in range(8):
+            header +=  self.csvfile.readline()
+        self.epw_data = csv.DictReader(self.csvfile,fieldnames=fieldnames)
+        print header
+        #print self.latitude, self.longitude
+    def __iter__(self):
+        return self
+
+    def next(self):
+        t = self.epw_data.next()
+        #sd = t['Date (MM/DD/YYYY)'] +' '+ t['Time (HH:MM)']
+        #tz = -5
+        #t['utc_datetime'] = strptime(sd,tz)
+        #t['datetime'] = strptime(sd)
+        return t
+
+    def __del__(self):
+        self.csvfile.close()
 
 
 if __name__ == "__main__":
