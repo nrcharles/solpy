@@ -87,7 +87,7 @@ def string_notes(system):
             print "Quantity: %s" % di[i.model]
             print "Max Power: %s W" % i.Paco
             print "Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1)
-            print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
+            #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
             print ""
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
