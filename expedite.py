@@ -77,49 +77,52 @@ def string_notes(system):
     for i in system.shape:
         dc_rated += i.array.Pmax
         ac_rated += i.Paco
-    print "%s KW AC RATED" % round(ac_rated/1000.0,2)
-    print "%s KW DC RATED" % round(dc_rated/1000.0,2)
-    print ""
+    notes = []
+    notes.append("%s KW AC RATED" % round(ac_rated/1000.0,2))
+    notes.append("%s KW DC RATED" % round(dc_rated/1000.0,2))
+    notes.append("")
     di, dp = system.describe()
     aMax = 0
     for i in system.shape:
         if dp.has_key(i.array.panel.model):
-            print "PV Module Ratings @ STC"
-            print "Module Make: %s" % i.array.panel.make
-            print "Module Model: %s" % i.array.panel.model
-            print "Quantity: %s" % dp[i.array.panel.model]
-            print "Max Power-Point Current (Imp): %s A" % i.array.panel.Impp
-            print "Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp
-            print "Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc
-            print "Short-Circuit Current (Isc): %s A" % i.array.panel.Isc
-            print "Maximum Power (Pmax): %s W" % round(i.array.panel.Pmax,1)
-            print "Module Rated Max Voltage: %s V" % i.array.panel.Vrated
-            print ""
+            notes.append( "PV Module Ratings @ STC")
+            notes.append("Module Make: %s" % i.array.panel.make)
+            notes.append("Module Model: %s" % i.array.panel.model)
+            notes.append("Quantity: %s" % dp[i.array.panel.model])
+            notes.append("Max Power-Point Current (Imp): %s A" % i.array.panel.Impp)
+            notes.append("Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp)
+            notes.append("Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc)
+            notes.append("Short-Circuit Current (Isc): %s A" % i.array.panel.Isc)
+            notes.append("Maximum Power (Pmax): %s W" % round(i.array.panel.Pmax,1))
+            notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
+            notes.append("")
             dp.pop(i.array.panel.model)
         if di.has_key(i.model):
-            print "Inverter Make: %s" % i.make
-            print "Inverter Model: %s" % i.model
-            print "Quantity: %s" % di[i.model]
-            print "Max Power: %s W" % i.Paco
-            print "Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1)
+            notes.append("Inverter Make: %s" % i.make)
+            notes.append("Inverter Model: %s" % i.model)
+            notes.append("Quantity: %s" % di[i.model])
+            notes.append("Max Power: %s W" % i.Paco)
+            notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
             #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
-            print ""
+            notes.append("")
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
             aMax = i.array.Vmax(mintemp)
     #BUG: This doesn't work for 3 phase
     if system.phase == 1:
-        print "System AC Output Current: %s A" % \
-                round(sum([i.Paco for i in system.shape])/i.ac_voltage,1)
+        notes.append( "System AC Output Current: %s A" % \
+                round(sum([i.Paco for i in system.shape])/i.ac_voltage,1))
     else:
-        print "System AC Output Current: %s A" % \
-                round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1)
+        notes.append( "System AC Output Current: %s A" % \
+                round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1))
 
-    print "Nominal AC Voltage: %s V" % i.ac_voltage
+    notes.append("Nominal AC Voltage: %s V" % i.ac_voltage)
 
-    print "Minimum Temperature: %s C" % mintemp
-    print "2%% Max Temperature: %s C" % twopercentTemp
-    print "System Max DC Voltage: %s V" % round(aMax,1)
+    notes.append("Minimum Temperature: %s C" % mintemp)
+    notes.append("2 Percent Max Temperature: %s C" % twopercentTemp)
+    notes.append("System Max DC Voltage: %s V" % round(aMax,1))
+    print "\n".join(notes)
+    return notes
 
 def micro_calcs(system,d,Vnominal=240):
     """page 4"""
@@ -174,7 +177,7 @@ def write_notes(system, Vnominal=240.0):
     fields.append(('NOMINAL AC VOLTAGE_2',i.ac_voltage))
 
     print "Minimum Temperature: %s C" % mintemp
-    print "2%% Max: %s C" % twopercentTemp
+    print "2 Percent Max: %s C" % twopercentTemp
     from fdfgen import forge_fdf
     fdf = forge_fdf("",fields,[],[],[])
     fdf_file = open("data.fdf","w")
