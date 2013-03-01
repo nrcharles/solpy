@@ -65,7 +65,6 @@ class moduleJ(object):
     #gamma Pmax %/Tempunit
     def __init__(self,model):
         self.properties = None
-	print SPATH
         panels = json.loads(open(SPATH + '/sp.json').read())
         for i in panels:
             if i['panel']==model:
