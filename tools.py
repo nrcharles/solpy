@@ -52,7 +52,7 @@ def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, Vma
                 pRatio = p*s*psize*1.0/inverterNominal
                 if pRatio < (acDcRatio*(1+pTol)) and \
                         pRatio > (acDcRatio*(1-pTol)):
-                            sol ="%sW - %sS x %sP - ratio %s" % (round(s*p*psize,1),s,p, round(pRatio,2))
+                            sol ="%sW : %sS x %sP : ratio %s : %s - %s V" % (round(s*p*psize,1),s,p, round(pRatio,2), round(s*minV,0), round(s*maxV))
                             solutions.append(sol)
                             inverter.array.series = s
                             inverter.array.parallel = p
