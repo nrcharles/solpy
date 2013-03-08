@@ -25,7 +25,7 @@ path = os.environ['HOME'] + "/tmy3/"
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 def tmybasename(USAF):
-    f = open(SPATH + 'tmy3urls.csv')
+    f = open(SPATH + '/tmy3urls.csv')
     for line in f.readlines():
         if line.find(USAF) is not -1:
             return line.rstrip().partition(',')[0]
