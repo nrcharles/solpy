@@ -79,10 +79,9 @@ class moduleJ(object):
         self.Pmax = self.Vmpp*self.Impp
         self.Isc =  self.properties['i_sc_ref']
         self.Voc = self.properties['v_oc_ref']
-        #self.beta = self.properties['beta_oc']
-        #self.gamma = self.properties['gamma_r']
         #Voc V/C
         self.TkVoc = self.properties['beta_oc']
+        #gamma_r is emperically found in %/C SAM differs from datasheet
         #Pmp W/C
         self.TkPmp = self.properties['gamma_r']*self.Pmax/100
         self.gamma = self.properties['gamma_r']
