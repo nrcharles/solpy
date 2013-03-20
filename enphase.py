@@ -60,6 +60,18 @@ class system(object):
         url = apiurl + "%s/summary?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url).read())
 
+    def alerts(self,level=None):
+        url = apiurl + "%s/alerts?key=%s" % (self.system_id,apikey)
+        return json.loads(urllib2.urlopen(url).read())
+
+    def energy_lifetime(self):
+        url = apiurl + "%s/energy_lifetime?key=%s" % (self.system_id,apikey)
+        return json.loads(urllib2.urlopen(url).read())
+
+    def monthly_production(self, start_date):
+        url = apiurl + "%s/monthly_production?key=%s" % (self.system_id,apikey)
+        return json.loads(urllib2.urlopen(url).read())
+
     def power_today(self):
         url = apiurl + "%s/power_today?key=%s" % (self.system_id,apikey)
         a = json.loads(urllib2.urlopen(url).read())
@@ -74,18 +86,6 @@ class system(object):
         rs.values = production
         return rs
 
-    def alerts(self,level=None):
-        url = apiurl + "%s/alerts?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
-
-    def energy_lifetime(self):
-        url = apiurl + "%s/energy_lifetime?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
-
-    def monthly_production(self, start_date):
-        url = apiurl + "%s/monthly_production?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
-
     def power_week(self):
         url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
         a = json.loads(urllib2.urlopen(url).read())
@@ -94,6 +94,23 @@ class system(object):
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
         timeseries = np.array([begin]) 
         for i in range(1,len(a["production"])):
+            timeseries = np.append(timeseries,begin + interval * i)
+        rs = resultSet()
+        rs.timeseries = timeseries
+        rs.values = production
+        return rs
+
+    def power_week_i(self):
+        url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
+        a = json.loads(urllib2.urlopen(url).read())
+        begin = strToDatetime(a["first_interval_end_date"])
+        interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
+        timeseries = np.array([begin]) 
+        url = apiurl + "%s/power_today?key=%s" % (self.system_id,apikey)
+        ai = json.loads(urllib2.urlopen(url).read())
+        production_i = a["production"]+ai["production"]
+        production = np.array(production_i)
+        for i in range(1,len(production_i)):
             timeseries = np.append(timeseries,begin + interval * i)
         rs = resultSet()
         rs.timeseries = timeseries
@@ -167,18 +184,13 @@ def power_week_i():
     ts = None
     b = []
     for i in index():
-        a = i.power_week()
-        ai = i.power_today()
-        ts = a.timeseries + ai.timeseries
+        a = i.power_week_i()
+        ts = a.timeseries
         b.append(a.values)
-        b.append(ai.values)
-
     rs = resultSet()
     rs.timeseries = ts
     rs.values = sum(b)
     return rs
-
-
 
 if __name__ == "__main__":
     print index()
