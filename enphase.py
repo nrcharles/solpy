@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """This is a thin wrapper around the enphase energy api.  Use simply requires 
-
 importing and then setting the apikey.
 
 import enphase
@@ -29,16 +28,16 @@ import json
 import urllib2
 import numpy as np
 import datetime
-import matplotlib #.pyplot as plt
+import matplotlib
 matplotlib.use('Agg')
 
 apikey = ""
 apiurl = "https://api.enphaseenergy.com/api/systems/"
 
 class resultSet(object):
-    def _init_(self):
-        self.timeseries = None
-        self.values = None
+    def __init__(self,ts,v):
+        self.timeseries = ts
+        self.values = v
     def plot(self):
         fig = matplotlib.pyplot.figure()
         ax = fig.add_subplot(111)
@@ -81,10 +80,7 @@ class system(object):
         timeseries = np.array([begin]) 
         for i in range(1,len(a["production"])):
             timeseries = np.append(timeseries,begin + interval * i)
-        rs = resultSet()
-        rs.timeseries = timeseries
-        rs.values = production
-        return rs
+        return resultSet(timeseries,production)
 
     def power_week(self):
         url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
@@ -95,10 +91,7 @@ class system(object):
         timeseries = np.array([begin]) 
         for i in range(1,len(a["production"])):
             timeseries = np.append(timeseries,begin + interval * i)
-        rs = resultSet()
-        rs.timeseries = timeseries
-        rs.values = production
-        return rs
+        return resultSet(timeseries,production)
 
     def power_week_i(self):
         url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
@@ -112,10 +105,7 @@ class system(object):
         production = np.array(production_i)
         for i in range(1,len(production_i)):
             timeseries = np.append(timeseries,begin + interval * i)
-        rs = resultSet()
-        rs.timeseries = timeseries
-        rs.values = production
-        return rs
+        return resultSet(timeseries,production)
 
     def rgm_stats(self, start_date=None,end_date=None):
         url = apiurl + "%s/rgm_stats?key=%s" % (self.system_id,apikey)
@@ -162,10 +152,7 @@ def power_today():
         a = i.power_today()
         ts = a.timeseries
         b.append(a.values)
-    rs = resultSet()
-    rs.timeseries = ts
-    rs.values = sum(b)
-    return rs
+    return resultSet(ts,sum(b))
 
 def power_week():
     ts = None
@@ -174,10 +161,7 @@ def power_week():
         a = i.power_week()
         ts = a.timeseries
         b.append(a.values)
-    rs = resultSet()
-    rs.timeseries = ts
-    rs.values = sum(b)
-    return rs
+    return resultSet(ts,sum(b))
 
 def power_week_i():
     #include today
@@ -187,10 +171,7 @@ def power_week_i():
         a = i.power_week_i()
         ts = a.timeseries
         b.append(a.values)
-    rs = resultSet()
-    rs.timeseries = ts
-    rs.values = sum(b)
-    return rs
+    return resultSet(ts,sum(b))
 
 if __name__ == "__main__":
     print index()
