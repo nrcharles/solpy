@@ -45,15 +45,8 @@ class resultSet(object):
         return fig
 
 class system(object):
-    def __init__(self, o):
-        self.city = o["city"]
-        self.postal_code = o["postal_code"]
-        self.state = o["state"]
-        self.status = o["status"]
-        self.system_id = o["system_id"]
-        self.system_name = o["system_name"]
-        self.system_public_name = o["system_public_name"]
-        self.timezone = o["timezone"]
+    def __init__(self, **sys_info):
+        self.__dict__.update(sys_info)
 
     def summary(self, summary_date=None):
         url = apiurl + "%s/summary?key=%s" % (self.system_id,apikey)
@@ -119,14 +112,6 @@ class system(object):
         url = apiurl + "%s/envoys?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url).read())
 
-    def inverters(self):
-        url = apiurl + "%s/inverters?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
-
-    def arrays(self):
-        url = apiurl + "%s/inverters?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
-
     def performance_factor(self, tilt=0):
         a = self.summary()
         p = a['current_power']*1.0/(a['modules']*215)
@@ -142,8 +127,7 @@ def strToDatetime(ts1):
 def index():
     url = "https://api.enphaseenergy.com/api/systems?key=%s" % apikey
     a = json.loads(urllib2.urlopen(url).read())
-    b = [system(i) for i in a["systems"]]
-    return b
+    return [system(**i) for i in a["systems"]]
 
 def power_today():
     ts = None
