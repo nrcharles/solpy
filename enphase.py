@@ -150,5 +150,17 @@ def power_today():
     rs.values = sum(b)
     return rs
 
+def power_week():
+    ts = None
+    b = []
+    for i in index():
+        a = i.power_week()
+        ts = a.timeseries
+        b.append(a.values)
+    rs = resultSet()
+    rs.timeseries = ts
+    rs.values = sum(b)
+    return rs
+
 if __name__ == "__main__":
     print index()
