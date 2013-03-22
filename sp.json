@@ -90540,6 +90540,26 @@
   "panel": "Mage Solar : Powertec Plus 285-6 PL *"
  }, 
  {
+  "i_mp_ref": 8.09, 
+  "r_sh_ref": 27.07, 
+  "a_ref": 1.9513, 
+  "source": "Multi-c-Si", 
+  "r_s": 0.269, 
+  "beta_oc": -0.143,
+  "n_s": 72, 
+  "v_mp_ref": 35.86, 
+  "adjust": 29.22, 
+  "a_c": 1.94, 
+  "t_noct": 46.8, 
+  "i_l_ref": 8.486, 
+  "i_sc_ref": 8.64, 
+  "v_oc_ref": 44.65, 
+  "gamma_r": -0.47, 
+  "alpha_sc": 0.00435, 
+  "i_o_ref": 3.23e-09, 
+  "panel": "Mage Solar : Powertec Plus 290-6 PH *"
+ }, 
+ {
   "i_mp_ref": 5, 
   "r_sh_ref": 265.56, 
   "a_ref": 1.774, 
