@@ -34,12 +34,14 @@ class collector(object):
         return c.t.exposed_area() * c.N_tubes
 
 class collectorArray(collector):
-    def __init__(self,coll,series=1,parallel=1,slope=0,azimuth=0,DFR=False):
+    def __init__(self,coll,series=1,parallel=1,slope=0,azimuth=0,DFR=False,S=0.0,rho_g=0.2):
         self.c     = coll               # Collector object
         self.N     = series*parallel    # Currently only considering total size
         self.beta  = slope*pi/180       # Collector slope [radians]
         self.gamma = azimuth*pi/180     # Collector azimuth [radians] (0 = due South)
         self.DFR   = DFR                # Diffuse Flat Reflector [T/F] behind tubes
+        self.S     = S                  # Distance from DFR to center of tubes [m]
+        self.rho_g = rho_g              # Ground reflectance (albedo)
         self.A_gr  = self.c.A_gr*self.N
         self.V     = self.c.V   *self.N
         self.N_tubes=self.c.N_tubes*self.N

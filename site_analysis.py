@@ -18,13 +18,15 @@ from __future__ import print_function  # Temp, while using python 2.7
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 import numpy as np
+import thermal as th
 import solar_fun as s
+import epw_thermal as epw
 import sys, re, calendar, argparse
 from numpy import pi
 from datetime import date, datetime, timedelta
 from scipy.interpolate import interp1d
-version = 0.2
-edited  = 'Jan 15, 2011'
+version = 0.3
+edited  = 'Mar 20, 2013'
 
 class horizon():
     def __init__(self, gamma, alpha, L):
@@ -37,7 +39,7 @@ def get_args():
     '''Sets up the command line parser to get user arguments'''
     parser = argparse.ArgumentParser(usage='%(prog)s [options] FILE',
             description='Use for analyzing potential solar sites for loss of performance due to shading',
-            epilog='Created by Daniel Thomas; Version %s: %s'%(version,edited))
+            epilog='Created by Daniel Thomas; Version %s: %s\n'%(version,edited))
     parser.add_argument('-c','--csv', metavar='FILE',dest='horizon',default=False,
             help='csv input file with horizon altitude data')
     parser.add_argument('-l','--location',metavar='PLACE',dest='location',default=False,
@@ -57,17 +59,17 @@ def load_horizon(fname,loca):
     gamma = np.deg2rad(np.array(fin.readline().rstrip(',\n').split(','),dtype=float)) # azimuth angle [deg]
     alpha = np.deg2rad(np.array(fin.readline().rstrip(',\n').split(','),dtype=float)) # altitude angle [deg]
     pname = re.sub('\..+','',fname)
-    if   loca:     place = s.location(loca)
+    if   loca:     place = th.location(loca)
     elif len(h)>3: # for android .csv files.
         place = s.location('default',h[0],-h[1],h[2])
         #gamma = gamma - pi
-    else:          place = s.location('default')
+    else:          place = th.location('default')
     fin.close()
     return horizon(gamma,alpha,place) #place, hor
 
 def load_horizon_array(array, loca = None):                                                                                                                     
-    if   loca:     place = s.location(loca)
-    else:          place = s.location('default')
+    if   loca:     place = th.location(loca)
+    else:          place = th.location('default')
     #place = s.location('akb')
     gamma = np.deg2rad(np.array([v[0] for v in array]))
     alpha = np.deg2rad(np.array([v[1] for v in array]))
@@ -102,15 +104,20 @@ def plot_sunpath(ax,L,C):
     n_win   = date(2011,12,21).timetuple()[-2]     # n for winter solstice
     n_range = np.rint(np.arange(n_sum,n_win,(n_win-n_sum-0.1)/6.0))
     t_range = np.array(range(600,1801,100)) #[600,700,800,900,1200,1500,1800])
+    t_range = np.array([datetime(2000,1,1)+timedelta(hours=h) for h in [6,7,8,9,12,15,18]])
+    print(t_range)
     t_gamma, t_theta = [],[] 
 
     for n in n_range:      # Plot lines for each month between solstices
-        sday = s.solar_day(n,L,C)
+        sday = th.solar_day(n,L,C)
         if   n == n_range[0]: summer = sday
         elif n == n_range[-1]: winter = sday
         ax.plot(sday.gamma_s,np.rad2deg(sday.theta_z), 'orange')
-        t_gamma.append(sday.gamma_s[sday.i(t_range)])
-        t_theta.append(sday.theta_z[sday.i(t_range)])
+        t_gamma.append(sday.gamma_s[np.searchsorted(sday.time,t_range)])
+        #print(t_gamma)
+        t_theta.append(sday.theta_z[np.searchsorted(sday.time,t_range)])
+        #t_gamma.append(sday.gamma_s[sday.i(t_range)])
+        #t_theta.append(sday.theta_z[sday.i(t_range)])
     f_i = interp1d(winter.gamma_s,np.rad2deg(winter.theta_z),kind='linear',bounds_error=False,fill_value=0)
     f_e = extrap1d(f_i)
     ax.fill_between(summer.gamma_s,np.rad2deg(summer.theta_z),f_e(summer.gamma_s),facecolor='yellow',alpha=0.5)
@@ -120,6 +127,7 @@ def plot_sunpath(ax,L,C):
     for t in range(len(t_range)): # Plot lines for each hour of the day
         x = np.array([t_gamma[n,t] for n in range(len(n_range))])
         y = np.array([t_theta[n,t] for n in range(len(n_range))])
+        print(x,y)
         ax.plot(x,np.rad2deg(y),'orange')
     ax.set_rmax(90)
 
@@ -149,34 +157,29 @@ def shading_losses(H,C,data):
     # Calculate solar radiation:
     i_s     = np.argsort(H.gamma)
     horizon = interp1d(H.gamma[i_s],H.alpha[i_s],kind='linear',bounds_error=False,fill_value=0)
-    t       = datetime(2010,1,1,1) - timedelta(hours=1)
-    days    = range(1,366)       # was range(364)
-    one_day = timedelta(days=1)  # time step
     Q_unsh, Q_sh    = [],[]
     Q_m_unsh,Q_m_sh = np.arange(12),np.arange(12)
 
-    data.set_time(t)
+    #data.set_time(t)
     print('\n Calculating daily shading losses:',end=' ')
-    for n in days: 
-        S  = s.solar_day(n,H.L,C)
+    for n in range(1,366): 
+        S  = th.solar_day(n,H.L,C)
         D  = data.day_data(n)
-        shade = np.copy(S.gamma_s)
-        for i in range(len(S.gamma_s)):  # Evaluate shading as a binary array for whole day
-            if (pi/2 - S.theta_z[i]) <= horizon(S.gamma_s[i]): shade[i] = 0.0
-            else: shade[i] = 1.0
+        day= D['time'][0].date()
 
-        # Uses Tang's evacuated tube collector model; could be replaced by simpler
-        F_bt, F_dt, Omega, fOmega = s.intercepted(S)
-        q_unsh  = C.N_tubes*C.L_ab*C.D1 * (F_bt*D['g_n'] + F_dt*D['g_d'])
-        q_sh    = C.N_tubes*C.L_ab*C.D1 * (F_bt*shade*D['g_n'] + F_dt*D['g_d'])
-        Q_unsh.append(((np.sum(q_unsh)* 60.0/1000000),t.month)) #date()))  # Day total radation in MJ
-        Q_sh.append(  ((np.sum(q_sh)  * 60.0/1000000),t.month))  # Day total radation in MJ
+        g_sh = np.copy(D['g'])
+        for i in range(len(g_sh)):
+            if (pi/2 - S.theta_z[i]) <= horizon(S.gamma_s[i]): g_sh[i] = D['g_d'][i]
+        q_unshaded = S.G_T_HDKR(D['g'],D['g_d'])  # W/m2 on the collector surface
+        q_shaded   = S.G_T_HDKR(g_sh,  D['g_d'])
+        W_to_MJ = 60.0/1000000
+        Q_unsh.append(((np.sum(q_unshaded)* W_to_MJ),day.month)) #date()))  # Day total radation in MJ
+        Q_sh.append(  ((np.sum(q_shaded)  * W_to_MJ),day.month))  # Day total radation in MJ
         
         # Print out n as update...
-        if t.day == 1: print('\n   %s: %s' % (calendar.month_abbr[t.month],t.day),end=' ')
-        else:          print(t.day,end=' ')
+        if day.day == 1: print('\n   %s: %s' % (calendar.month_abbr[day.month],day.day),end=' ')
+        else:          print(day.day,end=' ')
         sys.stdout.flush()
-        t = t + one_day
         
     # Final report of shading losses:
     print('\n\n Monthly totals for shading losses:')
@@ -194,7 +197,8 @@ def shading_losses(H,C,data):
 
 def calc_solarpath(L,gamma,alpha):
 # Plot solar path:
-    C     = s.collector('akb1')         # Collector object from solarfun.py
+    #C     = s.collector('akb1')         # Collector object from solarfun.py
+    C     = th.collectorArray(th.chuanghui_H50(),1,slope=20,azimuth=0,DFR=True,rho_g=0.2)  # Change
     C.beta= 0                           # Calculations for horizontal radiation
 
     gamma = gamma - pi                  # S = 0 deg for solar calculations & plotting
@@ -209,8 +213,9 @@ def calc_solarpath(L,gamma,alpha):
 
 if __name__ == "__main__":
     args  = get_args()
-    L     = s.location()                    # Default location for starters
-    C     = s.collector('akb1')             # Collector object from solarfun.py
+    L     = th.location()                   # Default location for starters
+    C     = th.collectorArray(th.chuanghui_H50(),1,slope=20,azimuth=0,DFR=True,rho_g=0.2)  # Change
+    #C     = s.collector('akb1')             # Collector object from solarfun.py
     C.beta= 0                               # Calculations for horizontal radiation
     plt.ion()
 
@@ -233,7 +238,7 @@ if __name__ == "__main__":
     plt.show()
 
     if args.weather:                         # Calculate losses from weather data
-        data  = s.weather_data(args.weather) # Weather data object from EPW data file
+        data  = epw.weather_data(args.weather) # Weather data object from EPW data file
         shading_losses(H,C,data)
 
     i = raw_input('\n [ENTER to quit]')

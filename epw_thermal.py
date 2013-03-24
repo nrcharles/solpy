@@ -6,12 +6,14 @@ from datetime import datetime, timedelta
 
 class weather_data():
     def __init__(self, placename):
-        self.name   = placename
-        self.filename  = '/Users/daniel/work/solar/weather_data/EPW_data/BGD_%s/BGD_%s.epw' % \
-                      (self.name,self.name)
+        self.filename = placename
         try:
             self.csvfile = open(self.filename)
         except:
+            self.filename = '/Users/daniel/work/solar/weather_data/EPW_data/BGD_%s/BGD_%s.epw' % \
+                      (placename,placename)
+            self.csvfile = open(self.filename)
+        else:
             print "File not found"
             self.csvfile = None
             sys.exit(1)
@@ -42,25 +44,25 @@ class weather_data():
         print('\n  Read from file %s:  data for %s' % (self.filename, data['time'][0].strftime("%b %d, %Y (%A)") ))
         return data
         
-    def __getitem__(self,var):
-        if isinstance(var,tuple):
-            if var[1] == 'next': self.next()
-            else:                self.set_time(var[1])
-            return self.d[var[0]][self.curr]
-        if isinstance(var,str):
-            return self.d[var][self.curr]
-    def next(self):
-        self.curr += 1
-        self.time += self.step #= self.time.replace(hour=self.time.hour+1)
-    def set_time(self, t):
-        self.time = t
-        for i in range(len(self.d)):
-            if self.d['month'][i]==t.month and self.d['day'][i]==t.day and self.d['hour'][i]==t.hour:
-                self.curr = i
-    def day_total(self,var):
-        #print "self.curr =",self.curr
-        if self.time.hour != 1: print 'WARNING: sum not starting from beginning of day.'
-        return sum(self.d[var][i] for i in range(self.curr,self.curr+23))
+#     def __getitem__(self,var):
+#         if isinstance(var,tuple):
+#             if var[1] == 'next': self.next()
+#             else:                self.set_time(var[1])
+#             return self.d[var[0]][self.curr]
+#         if isinstance(var,str):
+#             return self.d[var][self.curr]
+#     def next(self):
+#         self.curr += 1
+#         self.time += self.step #= self.time.replace(hour=self.time.hour+1)
+#     def set_time(self, t):
+#         self.time = t
+#         for i in range(len(self.d)):
+#             if self.d['month'][i]==t.month and self.d['day'][i]==t.day and self.d['hour'][i]==t.hour:
+#                 self.curr = i
+#     def day_total(self,var):
+#         #print "self.curr =",self.curr
+#         if self.time.hour != 1: print 'WARNING: sum not starting from beginning of day.'
+#         return sum(self.d[var][i] for i in range(self.curr,self.curr+23))
         
     def day_data(self,n):
         '''Returns a numpy array with 1-minute data, interpolated from the EPW hourly data'''

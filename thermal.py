@@ -50,8 +50,27 @@ class solar_day():
         self.theta   = arccos( cos(self.theta_z)*cos(self.C.beta) +   # Angle of incidence on collector (1.6.3)
                        sin(self.theta_z)*sin(self.C.beta)*cos(self.gamma_s-self.C.gamma) )
         self.R_b     = cos(np.clip(self.theta,0,pi/2))/cos(np.clip(self.theta_z,0,1.55)) # (1.8.1) Ratio of radiation on sloped/horizontal surface
+
+        G_sc  = 1367.0                             # Solar constant [W/m2] (p.6)
+        G_on  = G_sc * (1+0.033*cos(2.0*pi*n/365)) # Extraterrestial radiation, normal plane [W/m2] (1.4.1)
+        self.G_o   = G_on * cos(self.theta_z)           # Extraterrestial radiation, horizontal [W/m2] (1.10.1)
+        
+
     def clear_sky(self):
         return np.array([clear_sky(self.n,t,self.L.alt) for t in self.theta_z])
+        
+    def G_T_HDKR(self,G,G_d):
+        '''Calculates total radiation on a tilted plane, using the HDKR model'''
+        G_b  = np.clip(G - G_d,0,1500)
+        A_i  = G_b/self.G_o                             # Anisotropy index
+        np.seterr(divide='ignore',invalid='ignore')     # Avoiding errors in divide by inf. below
+        f    = np.sqrt(np.nan_to_num(G_b/G))            # Horizon brightening factor
+        np.seterr(divide='warn',invalid='warn')
+        G_T  = ((G_b + G_d*A_i)*self.R_b + \
+                G_d * (1-A_i) * ((1+cos(self.C.beta))/2) * (1 + f*sin(self.C.beta/2)**3) + \
+                G*self.C.rho_g*((1-cos(self.C.beta))/2)) # Ground reflectance
+        return G_T
+                                       
     def R_b(self):
         pass
    
@@ -92,6 +111,8 @@ def clear_sky(n, theta_z, alt):
     if (G_o > 0.0): G_c = [(tau_b+tau_d)*G_o, tau_b*G_o, tau_d*G_o]
     return G_c
 
+
+
 def Intercepted_Tang(S,I_nb,I_nd):
     ''' intercepted: Calculations for radiation intercepted by glass tube collector, 
         based on Tang, 2009
@@ -101,6 +122,7 @@ def Intercepted_Tang(S,I_nb,I_nd):
     D1 = S.C.c.t.D1
     D2 = S.C.c.t.D2
     B  = S.C.c.B
+    s  = S.C.S
 
     # Solar position vectors
     n_x  =  cos(S.delta)*cos(S.L.phi)*cos(S.omega) + sin(S.delta)*sin(S.L.phi)
@@ -138,6 +160,12 @@ def Intercepted_Tang(S,I_nb,I_nd):
         I_dB = I_nd
     I_dt = D1 * piF * I_dB
 
+    # Beam radiation, reflected from DFR
+    W = B - (D2/cos(Omega))     # Eq. 18
+    C = 2*s/D2
+    dx = s * tan(Omega) - D2/(2*cos(Omega))     # (Eq. 23)
+    
+
 #     # Debugging plot:
 #     import matplotlib.pyplot as plt
 #     import matplotlib.dates  as mdates
@@ -158,3 +186,11 @@ def Intercepted_Tang(S,I_nb,I_nd):
     # Total intercepted radiation for entire collector array
     I_total = S.C.N_tubes*S.C.c.t.L_ab * (I_bt + I_dt)
     return I_total
+
+def F(y):
+    C = 2*s/D2
+    dx = s * tan(Omega) - D2/(2*cos(Omega))     # (Eq. 23)
+    A1 = (2*(dx - y))/D2
+    A2 = (2*(B + dx - y))/D2
+    theta1 = arctan((A1*C + (A1**2 * C**2 - (A1**2 - 1)*(C**2 - 1))**0.5)/(C**2 - 1))
+    theta2 = arctan((-A2*C +(A2**2 * C**2 - (1 - A2**2)*(1 - C**2))**0.5)/(1 - C**2))
