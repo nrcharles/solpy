@@ -87,7 +87,7 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         if sets > 1:
             print "WARNING: %s sets of conductors" % sets
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)
-            vd = 2.0 * ee.resistance( conductor,c * 1.0 / sets,pf, t) *a *l/1000.0
+            vd = 2.0 * ee.resistance( conductor,c,pf, t) *a *l/1000.0
             conductor.lastVD = vd
             return [conductor for i in range(sets)]
         else:
