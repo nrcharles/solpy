@@ -15,8 +15,6 @@
 
 """Calculate expedited permit process info"""
 
-import modules
-import inverters
 import epw
 import geo
 import pv
@@ -95,6 +93,7 @@ def string_notes(system):
             notes.append("Short-Circuit Current (Isc): %s A" % i.array.panel.Isc)
             notes.append("Maximum Power (Pmax): %s W" % round(i.array.panel.Pmax,1))
             notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
+
             notes.append("")
             dp.pop(i.array.panel.model)
         if di.has_key(i.model):
@@ -104,6 +103,14 @@ def string_notes(system):
             notes.append("Max Power: %s W" % i.Paco)
             notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
             #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
+            if i.array.parallel > 1:
+                pass
+                notes.append("DC Operating Current: %s A" % \
+                        round(i.array.panel.Impp*i.array.parallel,1))
+                notes.append("DC Short Circuit Current: %s A" % \
+                        round(i.array.panel.Isc*i.array.parallel,1))
+            if i.array.series > 1:
+                notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
             notes.append("")
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
