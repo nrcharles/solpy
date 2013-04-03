@@ -100,10 +100,9 @@ def insolationToA(ins, peakA):
     pass
 
 if __name__=="__main__":
-    from modules import mage250,pvArray
+    from modules import *
 
-    p = mage250()
-    #e = m215(p)
+    p = moduleJ('Mage Solar : Powertec Plus 245-6 PL *')
     e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",p)
     s = pvArray(p,14,2)
     s = pvArray(p,14,20*8)

@@ -111,6 +111,7 @@ def string_notes(system):
                         round(i.array.panel.Isc*i.array.parallel,1))
             if i.array.series > 1:
                 notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
+                notes.append("System Max DC Voltage: %s V" % round(i.array.Vmax(mintemp),1))
             notes.append("")
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
@@ -127,7 +128,7 @@ def string_notes(system):
 
     notes.append("Minimum Temperature: %s C" % mintemp)
     notes.append("2 Percent Max Temperature: %s C" % twopercentTemp)
-    notes.append("System Max DC Voltage: %s V" % round(aMax,1))
+    #notes.append("System Max DC Voltage: %s V" % round(aMax,1))
     print "\n".join(notes)
     return notes
 

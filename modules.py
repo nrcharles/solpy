@@ -16,6 +16,7 @@
 
 import unittest
 import json
+import re
 STC = 25
 import os
 SPATH = os.path.dirname(os.path.abspath(__file__))
@@ -54,7 +55,7 @@ class module(object):
         #return m.Vmpp + (Tadd+ashrae2p-m.STC)*m.TkVmp
 
 class moduleJ(object):
-    """base module class which specific modules inherit"""
+    """generic module class uses JSON defintion"""
     #PV module nameplate DC rating     0.80 - 1.05
     #SAM = 1
     #PVWatts = .95
@@ -63,6 +64,23 @@ class moduleJ(object):
     #nameplate = 1
     #beta Voc %/Tempunit
     #gamma Pmax %/Tempunit
+    #t_noct  ; NOCT
+    #a_c ; Module Area
+    #n_s  ; Number of Cells 
+    #i_sc_ref  ; I Short Circuit
+    #v_oc_ref ;  VOC
+    #i_mp_ref ;  Imp
+    #v_mp_ref ;  Vmp 
+    #alpha_sc ; Isc temperature cofficient A/C
+    #beta_oc ; Voc temperature cofficient V/C
+    #a_ref ; ideality factor V
+    #i_l_ref ; light current
+    #i_o_ref ; diode reverse saturation current
+    #r_s ; series resistance
+    #r_sh_ref ;  shunt resistance
+    #adjust =   
+    #gamma_r = 
+    #source=Mono-c-Si
     def __init__(self,model):
         self.properties = None
         panels = json.loads(open(SPATH + '/sp.json').read())
@@ -94,7 +112,9 @@ class moduleJ(object):
         return Insolation * self.A * self.Eff * self.nameplate
     def Vmax(self,ashraeMin):
         return self.Voc + (ashraeMin-STC) * self.TkVoc
-    def Vdc(self):
+    def Vdc(self,t=25):
+        #t adjusted for temp
+        #todo fix
         return self.Vmpp
 
     def Vmin(self,ashrae2p,Tadd = 30):
@@ -113,8 +133,8 @@ class pvArray(module):
         self.parallel = parallel
         self.Pmax = pname.Pmax*series*parallel
         
-    def Vdc(self):
-        return self.panel.Vdc() * self.series
+    def Vdc(self, t = 25):
+        return self.panel.Vdc(t) * self.series
     def Vmax(self,ashraeMin):
         return self.panel.Vmax(ashraeMin) * self.series
     def Vmin(self,ashrae2p, Tadd = 30):
@@ -395,6 +415,14 @@ def models(manufacturer = None):
                 a.append(i['panel'])
         return a
 
+def model_search(parms):
+    res = []
+    for i in models():
+        if all(re.search(sub,i) for sub in parms):
+            res.append(i)
+    return res
+
+
 
 class testModules(unittest.TestCase):
     """Unit Tests"""
@@ -414,7 +442,6 @@ if __name__=="__main__":
     p = moduleJ('Mage Solar : Powertec Plus 245-6 MNBS')
     print ":%s:" %p.make
     print ":%s:" %p.model
-    p = mage250()
     print p.Eff
     print p 
 
@@ -423,8 +450,6 @@ if __name__=="__main__":
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
 
     #print p.output(950)
-    #a = pvArray(motech245(), 14,2)
-    #a = pvArray(motech245(), 14,2)
     #print a.Vmax(-20)
     #print a.Vmin(33)
     #print a.output(950)

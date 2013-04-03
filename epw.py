@@ -177,7 +177,20 @@ if __name__ == "__main__":
         stationClass = 1
         name, usaf = geo.closestUSAF( geo.zipToCoordinates(zip), stationClass)
         import modules
-        m = getattr(modules,args['mname'])()
+        models = modules.model_search(args['mname'].split(' '))
+        m = None
+        if len(models) > 1:
+            for i in models:
+                print i
+            sys.exit(1)
+        elif len(models) == 1:
+            print models[0]
+            m = modules.moduleJ(models[0])
+        else:
+            print "Model not found"
+            sys.exit(1)
+
+        #= getattr(modules,args['mname'])()
         print "%s USAF: %s" %  (name, usaf)
         print "Minimum Temperature: %s C" % minimum(usaf)
         print "Maximum: %sV" % m.Vmax(minimum(usaf))
