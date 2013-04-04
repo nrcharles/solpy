@@ -20,6 +20,7 @@ import numpy as np
 import inverters
 import modules
 import irradiation
+import json
 from scipy.interpolate import interp1d
 
 
@@ -49,6 +50,14 @@ class resultSet(object):
         print "Year 1 Annual Output: %s kWh" % self.annualOutput
         print "Year 1 Daily Average: %s kWh" % self.dailyAve
         print "Inverter hours clipping: %s" % self.clippingHours
+
+def fileToSystem(filename):
+    try:
+        return jsonToSystem(json.loads(open(filename).read()))
+
+    except:
+        print "Error: file corrupt or not found:"
+
 
 def jsonToSystem(jsonDescription):
     """Load a system from a json description"""
