@@ -100,8 +100,12 @@ def string_notes(system):
             notes.append("Inverter Make: %s" % i.make)
             notes.append("Inverter Model: %s" % i.model)
             notes.append("Quantity: %s" % di[i.model])
-            notes.append("Max Power: %s W" % i.Paco)
-            notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
+            notes.append("Max Power: %s KW" % round(i.Paco/1000.0,1))
+            #this is hack... This should be calculated based upon power cores
+            if i.ac_voltage == 480:
+                notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage/3**.5,1))
+            else:
+                notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
             #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
             if i.array.parallel > 1:
                 pass
