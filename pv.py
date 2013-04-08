@@ -21,6 +21,7 @@ import inverters
 import modules
 import irradiation
 import json
+import math
 from scipy.interpolate import interp1d
 
 
@@ -166,43 +167,37 @@ class system(object):
 
         return rs
 
-    def minRowSpace(self, delta, riseHour=9, setHour=15):
-        """Row Space Function"""
+    def solstice(self, hour):
+        #position on winter soltice (Dec 21)
         import datetime
         import pysolar
-        import math
+        t = datetime.datetime(2000,12,22,hour-self.tz)
+        altitude = pysolar.Altitude(self.place[0],self.place[1],t)
+        azimuth = pysolar.Azimuth(self.place[0],self.place[1],t)
+        return altitude, azimuth
 
-        riseTime = datetime.datetime(2000,12,22,riseHour-self.tz)
-        altitudeRise = pysolar.Altitude(self.place[0],self.place[1],riseTime)
-        azimuthRize = pysolar.Azimuth(self.place[0],self.place[1],riseTime)
+
+    def minRowSpace(self, delta, riseHour=9, setHour=15):
+        """Row Space Function"""
+        altitudeRise,azimuthRise = self.soltice(riseHour)
         shadowLength = delta / math.tan(math.radians(altitudeRise))
-        minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRize))
+        minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRise))
 
-        setTime = datetime.datetime(2000,12,22,setHour-self.tz)
-        altitudeSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
-        setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
+        altitudeSet,azimuthSet = self.solstice(setHour)
         shadowLength = delta / math.tan(math.radians(altitudeSet))
-        minimumSpaceSet = shadowLength * math.cos(math.radians(setAzimuth))
+        minimumSpaceSet = shadowLength * math.cos(math.radians(azimuthSet))
 
         return max(minimumSpaceRise,minimumSpaceSet)
 
     def minSetback(self, delta, riseHour=9, setHour=15):
         """East West Setback"""
-        import datetime
-        import pysolar
-        import math
-
-        riseTime = datetime.datetime(2000,12,22,riseHour-self.tz)
-        altitudeRise = pysolar.Altitude(self.place[0],self.place[1],riseTime)
-        azimuthRize = pysolar.Azimuth(self.place[0],self.place[1],riseTime)
+        altitudeRise,azimuthRise = self.soltice(riseHour)
         shadowLength = delta / math.tan(math.radians(altitudeRise))
-        minimumSpaceRise = shadowLength * math.sin(math.radians(azimuthRize))
+        minimumSpaceRise = shadowLength * math.sin(math.radians(azimuthRise))
 
-        setTime = datetime.datetime(2000,12,22,setHour-self.tz)
-        altitudeSet = pysolar.Altitude(self.place[0],self.place[1],setTime)
-        setAzimuth = pysolar.Azimuth(self.place[0],self.place[1],setTime)
+        altitudeSet,azimuthSet = self.solstice(setHour)
         shadowLength = delta / math.tan(math.radians(altitudeSet))
-        minimumSpaceSet = shadowLength * math.sin(math.radians(setAzimuth))
+        minimumSpaceSet = shadowLength * math.sin(math.radians(azimuthSet))
 
         return max(minimumSpaceRise,minimumSpaceSet)
 
