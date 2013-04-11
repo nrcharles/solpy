@@ -185,7 +185,7 @@ if __name__ == "__main__":
             sys.exit(1)
         elif len(models) == 1:
             print models[0]
-            m = modules.moduleJ(models[0])
+            m = modules.module(models[0])
         else:
             print "Model not found"
             sys.exit(1)

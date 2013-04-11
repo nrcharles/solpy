@@ -72,7 +72,7 @@ if __name__ == "__main__":
     #m = "Mage Solar : Powertec Plus 285-6 PL"
     #m = "Mage Solar : Powertec Plus 245-6 PL *"
     m = "Mage Solar : Powertec Plus 250-6 MNCS"
-    ms = modules.moduleJ(m)
+    ms = modules.module(m)
     system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,11,6))
     print fill(system,zc)
     system = inverters.inverter("Refusol: 24 kW 480V",modules.pvArray(ms,11,6))
@@ -87,6 +87,6 @@ if __name__ == "__main__":
     iname = "Refusol: 24 kW 480V"
     print m
     #system = inverters.inverter(iname,modules.pvArray(m,1,1))
-    #system = inverters.inverter(iname,modules.pvArray(modules.moduleJ(m),1,1))
+    #system = inverters.inverter(iname,modules.pvArray(modules.module(m),1,1))
     #fill(system,zc,1000)
 

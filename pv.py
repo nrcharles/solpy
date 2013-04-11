@@ -68,7 +68,7 @@ def jsonToSystem(jsonDescription):
         if "scale" in i:
             scale = i["scale"]
         jsonShape += [inverters.inverter(i["inverter"], \
-                modules.pvArray(modules.moduleJ(i["panel"]),\
+                modules.pvArray(modules.module(i["panel"]),\
                 i["series"],i["parallel"]))] * scale
     plant = system(jsonShape)
     plant.setZipcode(jsonDescription["zipcode"])
