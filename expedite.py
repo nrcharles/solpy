@@ -118,6 +118,7 @@ def string_notes(system):
             if i.array.series > 1:
                 notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
                 notes.append("System Max DC Voltage: %s V" % round(i.array.Vmax(mintemp),1))
+                notes.append("Pnom Ratio: %s" % round((i.array.Pmax/i.Paco),2))
             notes.append("")
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
