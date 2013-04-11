@@ -28,10 +28,10 @@ import math
 CONDUCTOR_STANDARD_SIZES = ["14","12","10","8","6","4","2","1","1/0","2/0",\
         "3/0","4/0","250","300","350","400","500","600","750"]
 #NEC 240.6
-OCP_STANDARD_SIZES = [15,20,25,30,35,40,45,50,50,60,70,80,90,100,110,125,150,\
+OCP_STANDARD_SIZES = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,\
         175,200,225,250,300,350,400,450,500,600,700,800,1000,1200,1600,2000,\
         2500,3000,4000,5000,6000]
-OCP_STANDARD_FUSES = [1,3,6,10,15,20,25,30,35,40,45,50,50,60,70,80,90,100,\
+OCP_STANDARD_FUSES = [1,3,6,10,15,20,25,30,35,40,45,50,60,70,80,90,100,\
         110,125,150,175,200,225,250,300,350,400,450,500,600,601,700,800,1000,\
         1200,1600,2000,2500,3000,4000,5000,6000]
 #NEC 310.15(B)(16)
@@ -405,33 +405,6 @@ class junction(object):
             t += child.i(Insolation)
         return t
 
-class cb():
-    def __init__(self, rating, phase =1):
-        self.rating = rating
-    def ampacity(self):
-        return self.rating
-
-class branch():
-    def __init__(self, breaker, wire, j):
-        self.child = j
-        self.breaker = breaker
-        self.wire = wire
-        self.phase = 1
-
-    def vd(self):
-        if self.phase is 1:
-            vdrop = 2 * self.child.a() * self.wire.d * self.wire.r() / 1000
-            return vdrop + self.child.vd()
-    def vdp(self):
-        if self.phase is 1:
-            return self.vd()/240.9 * 100.0
-
-    def a(self):
-        return self.child.a()
-
-    def i(self, Insolation):
-        return self.child.i(Insolation)
-
 class m215():
     def __init__(self, number, landscape = True, phase =1):
         self.phase = phase
@@ -457,29 +430,6 @@ class m215():
             return 0.0036 * n*n + 0.0094 * n + 0.0209
         else:
             print "ERROR"
-
-class wire():
-    def __init__(self, length, size, cu = True):
-        self.cu = cu
-        self.size = size
-        self.d = length
-        self.t = 75
-    def r(self):
-        if self.cu:
-            #r2 = r1[1 + a(t2 - 75)]
-            #a = 0.00323 for cu
-            a = 0.00323
-            r1 =  PVC_CU[self.size]
-            r2 = r1* (1 + a * (self.t - 75))
-            x = PVC_X[self.size]
-            z = math.sqrt(r2*r2+x*x)
-            return z
-
-class circuit():
-    def __init__(self):
-        pass
-    def r(self):
-        pass
 
 class conductor(object):
     def __init__(self, size, material,vd=0.0):
@@ -509,10 +459,6 @@ class conductor(object):
         return t + self.lastVD
     __radd__ = __add__
 
-#class conduit():
-#    def __init__(self,material):
-#        self.material = material
-
 def resistance(conductor, conduit, pf=None, temperature = 75):
     #Rewrite with PowerFactor
     if pf:
@@ -537,7 +483,6 @@ def resistance(conductor, conduit, pf=None, temperature = 75):
 def voltagedrop(*args, **kwargs):
     a = 0
     vdrop = 0
-    phase = 1
     for i in reversed(args):
         if hasattr(i, 'a'):
             a += i.a()
@@ -640,20 +585,12 @@ if __name__ == "__main__":
     #j1 = junction()
     #j1.append(a)
     #j1.append(b)
-    b1 = branch(cb(20),wire(181,"8"),engage(12,phase = 3 ))
-    b2 = branch(cb(20),wire(123,"6"),engage(24,phase = 3 ))
-    b3 = branch(cb(20),wire(90,"8"),engage(24,phase = 3 ))
-    b4 = branch(cb(20),wire(57,"8"),engage(24,phase = 3 ))
-    b5 = branch(cb(20),wire(181,"8"),engage(12,phase = 3 ))
-    j1 = junction(b1,b2)
     #print "Voltage Drop"
     #print voltagedrop(j1)
-    print j1.vd()
     #print "t"
 
     #print a.vd()
     #print b.vd()
-    #w1 = wire( 200, "2/0")
     #print a.a
     #print "Voltage Drop"
     #print voltagedrop(w1, w1, b)
