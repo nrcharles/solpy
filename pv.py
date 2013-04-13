@@ -179,7 +179,7 @@ class system(object):
 
     def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""
-        altitudeRise,azimuthRise = self.soltice(riseHour)
+        altitudeRise,azimuthRise = self.solstice(riseHour)
         shadowLength = delta / math.tan(math.radians(altitudeRise))
         minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRise))
 
@@ -191,7 +191,7 @@ class system(object):
 
     def minSetback(self, delta, riseHour=9, setHour=15):
         """East West Setback"""
-        altitudeRise,azimuthRise = self.soltice(riseHour)
+        altitudeRise,azimuthRise = self.solstice(riseHour)
         shadowLength = delta / math.tan(math.radians(altitudeRise))
         minimumSpaceRise = shadowLength * math.sin(math.radians(azimuthRise))
 
