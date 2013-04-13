@@ -31,6 +31,7 @@ import ee
 #def solve()
 #def vd(args, **kwargs):
 
+
 def incEGC(conductor,egc,ratio):
     if ratio > 0:
         increased = ee.CMIL[conductor.size]/ratio
@@ -40,7 +41,7 @@ def incEGC(conductor,egc,ratio):
     else: 
         return egc
 
-def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
+def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, tC = 75, percent=1, material='CU', c='PVC'):
     #a =  eval(args['current'])
     #l = eval(args['length'])
     #size = args['size']
@@ -61,8 +62,10 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
     if size:
         conductor = ee.conductor(size, material)
         conductor = ee.checkAmpacity(conductor, ocp)
+
+        t = conductor.temperature(a,tAmb)
         r = ee.resistance( conductor,c,pf, t)
-        vd = 2.0 * ee.resistance( conductor,c,pf, t) *a *l/1000.0
+        vd = 2.0 * r * a * l/1000.0
         print "Voltage drop: %sV" % vd
         vdp=(vd * 100/v)
         print "Percent drop: %s%%" % vdp
@@ -78,7 +81,7 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         sets = 1
         conductor = None
         while 1:
-            conductor = ee.findConductor((r*sets),material,c,pf,t)
+            conductor = ee.findConductor((r*sets),material,c,pf,tC)
             if conductor:
                 conductor.lastVD = vd
                 break
@@ -87,13 +90,13 @@ def vd(a,l,size= None,v = 240, pf=-1, t=75, percent=1, material='CU', c='PVC'):
         if sets > 1:
             print "WARNING: %s sets of conductors" % sets
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)
-            vd = 2.0 * ee.resistance( conductor,c,pf, t) *a *l/1000.0
+            vd = 2.0 * ee.resistance( conductor,c,pf, tC) *a *l/1000.0
             conductor.lastVD = vd
             return [conductor for i in range(sets)]
         else:
             print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets)
-            vd = 2.0 * ee.resistance( conductor,c,pf, t) *a *l/1000.0
+            vd = 2.0 * ee.resistance( conductor,c,pf, tC) *a *l/1000.0
             conductor.lastVD = vd
 
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)

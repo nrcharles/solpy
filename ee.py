@@ -446,13 +446,16 @@ class conductor(object):
         #return globals()[lt][self.size]
         return globals()["%s_%s" % (conduit,"X")][self.size]
 
-    def temperature(self,a):
-        pass
+    def temperature(self,Inew, Tanew = 30, Tcold = 75, Taold = 30):
+        Iold = self.ampacity()
+        return Tanew + (Inew*1.0/Iold)**2*(Tcold-Taold)
 
     def a(self):
         a = {"CU":0.00323,
                 "AL":0.00330}
         return a[self.material]
+    def ampacity(self):
+        return globals()["%s_AMPACITY_A30_75" % (self.material)][self.size]
     def __str__(self):
         return "%s %s" % (self.size, self.material)
     def __add__(self, t):
@@ -534,9 +537,9 @@ class engage():
         else:
             return (len(self.s1)+len(self.s2)) /1.732
 
-def findConductor(r, material = "CU",conduit = "PVC", pf = .778, temperature = 75):
+def findConductor(r, material = "CU",conduit = "PVC", pf =-1, tCond = 75):
     for s in CONDUCTOR_STANDARD_SIZES:
-        tr = resistance(conductor(s,material),conduit,pf,temperature)
+        tr = resistance(conductor(s,material),conduit,pf,tCond)
         if tr < r:
             return conductor(s,material)
 
