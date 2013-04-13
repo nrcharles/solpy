@@ -61,7 +61,7 @@ class system(object):
         return json.loads(urllib2.urlopen(url).read())
 
     def monthly_production(self, start_date):
-        url = apiurl + "%s/monthly_production?key=%s" % (self.system_id,apikey)
+        url = apiurl + "%s/monthly_production?key=%s&start=%s" % (self.system_id,apikey,start_date)
         return json.loads(urllib2.urlopen(url).read())
 
     def power_today(self):
