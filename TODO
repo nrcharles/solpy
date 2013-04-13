@@ -7,3 +7,4 @@ TODO
 * Recursive Voltage drop test/parametric wire selection
 * error tests - number of inverters/panels
 * voltage drop in pv Model
+* Sankey chart
