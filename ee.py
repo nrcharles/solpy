@@ -56,7 +56,7 @@ CU_AMPACITY_A30_75 = {"14":20,
         "600":420,
         "700":460,
         "750":475}
-AL_AMPACITY_A30_75 = {"14": None,
+AL_AMPACITY_A30_75 = {"14": .1,
         "12":20,
         "10":30,
         "8":40,
@@ -432,10 +432,10 @@ class m215():
             print "ERROR"
 
 class conductor(object):
-    def __init__(self, size, material,vd=0.0):
+    def __init__(self, size, material):
         self.material = material
         self.size = size
-        self.lastVD = vd
+        #voltagedrop in volts
 
     def r(self, conduit = ""):
         #print "%s_%s" % (conduit, self.material)
@@ -456,6 +456,13 @@ class conductor(object):
         return a[self.material]
     def ampacity(self):
         return globals()["%s_AMPACITY_A30_75" % (self.material)][self.size]
+
+    def vd(self, a, l ,v =240, pf = -1, tAmb = 30, c = 'STEEL' ):
+        t = self.temperature(a,tAmb)
+        r = resistance( self,c,pf, t)
+        vdrop = 2.0 * r * a * l/1000.0
+        return vdrop
+
     def __str__(self):
         return "%s %s" % (self.size, self.material)
     def __add__(self, t):
@@ -568,7 +575,7 @@ def checkAmpacity(c, oca):
     ampacity = globals()["%s_AMPACITY_A30_75" % (c.material)][c.size] 
     print "Ampacity", ampacity
     if ampacity < oca:
-        print "Warning: conductor appacity %s is exceeded by OCP rating: %s" % (ampacity,oca)
+        print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (ampacity,oca)
         for s in CONDUCTOR_STANDARD_SIZES:
             conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
             if conductor_oc > oca:

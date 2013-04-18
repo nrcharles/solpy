@@ -28,78 +28,54 @@ def usage():
 
 import ee
 
-#def solve()
-#def vd(args, **kwargs):
-
-
 def incEGC(conductor,egc,ratio):
     if ratio > 0:
         increased = ee.CMIL[conductor.size]/ratio
         for c in ee.CONDUCTOR_STANDARD_SIZES:
             if ee.CMIL[c] >= increased:
                 return c
-    else: 
+    else:
         return egc
 
-def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, tC = 75, percent=1, material='CU', c='PVC'):
-    #a =  eval(args['current'])
-    #l = eval(args['length'])
-    #size = args['size']
-    #v = args['voltage']
-    #pf = eval(args['powerfactor'])
-    #t = args['temp']
-    #c = args['conduit']
-    #percent = args['drop']
-    #material = 'CU'
+def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEEL'):
     oc = a * 1.25
     ocp = ee.findOCP(oc)
-    print "OCP Size: %s" % ocp
+    #print "OCP Size: %s" % ocp
     egc = ee.findEGC(ocp,material)
-    vd = v * percent/100.0
-    r = 0
-    #ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
+    vdrop = v * percent/100.0
     ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
     if size:
-        conductor = ee.conductor(size, material)
+        conductor  = ee.conductor(size,material)
         conductor = ee.checkAmpacity(conductor, ocp)
-
-        t = conductor.temperature(a,tAmb)
-        r = ee.resistance( conductor,c,pf, t)
-        vd = 2.0 * r * a * l/1000.0
-        print "Voltage drop: %sV" % vd
-        vdp=(vd * 100/v)
-        print "Percent drop: %s%%" % vdp
-        conductor.lastVD = vd
+        vdrop = conductor.vd(a,l, v = v, pf=pf, tAmb=tAmb,c=c)
+        vdp=(vdrop * 100/v)
+        print "Percent drop: %s%%" % round(vdp,2)
         print "EGC Size: %s" % incEGC(conductor,egc,ratio)
         return conductor
-
     else:
-        print "Allowed Voltage drop: %sV" % vd
-        #vd = 2*a*l*r/1000
-        r = (vd*1000)/(2.0 * a*l)
-        print "Resistance: %s" % r
-        sets = 1
+        print "Allowed Voltage drop: %sV" % vdrop
+        sets = 0
         conductor = None
-        while 1:
-            conductor = ee.findConductor((r*sets),material,c,pf,tC)
-            if conductor:
-                conductor.lastVD = vd
-                break
-            sets +=1
+        while conductor is None:
+            sets += 1
+            for s in ee.CONDUCTOR_STANDARD_SIZES:
+                #print s, material
+                conductor = ee.conductor(s,material)
+                #print conductor
+                if conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c) < vdrop:
+                    break
+                else:
+                    conductor = None
 
         if sets > 1:
-            print "WARNING: %s sets of conductors" % sets
+            print "%s sets of %s" % (sets, conductor)
             print "EGC Size: %s" % incEGC(conductor,egc,ratio)
-            vd = 2.0 * ee.resistance( conductor,c,pf, tC) *a *l/1000.0
-            conductor.lastVD = vd
             return [conductor for i in range(sets)]
         else:
             print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets)
-            vd = 2.0 * ee.resistance( conductor,c,pf, tC) *a *l/1000.0
-            conductor.lastVD = vd
-
-            print "EGC Size: %s" % incEGC(conductor,egc,ratio)
+            print "EGC Size: %s %s" % ( incEGC(conductor,egc,ratio),conductor.material)
+            print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c),2)
             return conductor
 
 if __name__ == "__main__":
@@ -131,7 +107,7 @@ if __name__ == "__main__":
         dc = 'DC'
         vd(eval(args['current']),eval(args['length']),args['size'],
                 args['voltage'],eval(args['powerfactor']),args['temp'],
-                args['drop'],material,args['conduit'])
+                args['drop'],material=material,c = args['conduit'])
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
