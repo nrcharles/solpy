@@ -44,9 +44,10 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEE
     egc = ee.findEGC(ocp,material)
     vdrop = v * percent/100.0
     ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
+    print tAmb
     if size:
         conductor  = ee.conductor(size,material)
-        conductor = ee.checkAmpacity(conductor, ocp)
+        conductor = ee.checkAmpacity(conductor, ocp, tAmb)
         vdrop = conductor.vd(a,l, v = v, pf=pf, tAmb=tAmb,c=c)
         vdp=(vdrop * 100/v)
         print "Percent drop: %s%%" % round(vdp,2)
@@ -73,7 +74,7 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEE
             return [conductor for i in range(sets)]
         else:
             print "Conductor %s" % conductor
-            conductor = ee.checkAmpacity(conductor, ocp/sets)
+            conductor = ee.checkAmpacity(conductor, ocp/sets, tAmb)
             print "EGC Size: %s %s" % ( incEGC(conductor,egc,ratio),conductor.material)
             print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c),2)
             return conductor
@@ -90,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--length',required=True,help="accepts basic math")#evaluated to allow command line math
     parser.add_argument('-p', '--conduit',type=str,default='PVC')
     parser.add_argument('-s', '--size',type=str,help="wire size")
-    parser.add_argument('-t', '--temp',type=float,help="actual conductor temp",default=75)
+    parser.add_argument('-t', '--temp',type=float,help="ambient",default=30)
     #parser.print_help()
     args = vars(parser.parse_args())
     material = 'CU'

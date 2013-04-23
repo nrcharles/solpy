@@ -455,8 +455,9 @@ class conductor(object):
         a = {"CU":0.00323,
                 "AL":0.00330}
         return a[self.material]
-    def ampacity(self):
-        return globals()["%s_AMPACITY_A30_75" % (self.material)][self.size]
+    def ampacity(self, Tanew = 30, Tcold = 75, Taold = 30):
+        derate = ((Tcold - Tanew)*1.0/(Tcold - Taold))**.5
+        return globals()["%s_AMPACITY_A30_75" % (self.material)][self.size] * derate
 
     def vd(self, a, l ,v =240, pf = -1, tAmb = 30, c = 'STEEL' ):
         t = self.temperature(a,tAmb)
@@ -572,13 +573,14 @@ def findConductorA(current,material):
         if globals()["%s_AMPACITY_A30_75" % (material)][s] >= current:
             return conductor(s,material)
 
-def checkAmpacity(c, oca):
-    ampacity = globals()["%s_AMPACITY_A30_75" % (c.material)][c.size] 
+def checkAmpacity(c, oca, ambient = 30):
+    ampacity = c.ampacity(ambient)
     print "Ampacity", ampacity
     if ampacity < oca:
-        print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (ampacity,oca)
+        print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (round(ampacity),oca)
         for s in CONDUCTOR_STANDARD_SIZES:
-            conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
+            #conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
+            conductor_oc = conductor(s,c.material).ampacity(ambient)
             if conductor_oc > oca:
                 print "Minimum size is %s %s" % (s, c.material)
                 return conductor(s,c.material)
