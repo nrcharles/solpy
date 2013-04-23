@@ -575,8 +575,8 @@ def findConductorA(current,material):
 
 def checkAmpacity(c, oca, ambient = 30):
     ampacity = c.ampacity(ambient)
-    print "Ampacity", ampacity
-    if ampacity < oca:
+    print "Ampacity", round(ampacity)
+    if oca > ampacity:
         print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (round(ampacity),oca)
         for s in CONDUCTOR_STANDARD_SIZES:
             #conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
