@@ -581,7 +581,7 @@ def checkAmpacity(c, oca, ambient = 30):
         for s in CONDUCTOR_STANDARD_SIZES:
             #conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
             conductor_oc = conductor(s,c.material).ampacity(ambient)
-            if conductor_oc > oca:
+            if conductor_oc >= oca:
                 print "Minimum size is %s %s" % (s, c.material)
                 return conductor(s,c.material)
     else:
