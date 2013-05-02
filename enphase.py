@@ -29,6 +29,7 @@ import urllib2
 import numpy as np
 import datetime
 import matplotlib
+import time
 matplotlib.use('Agg')
 
 apikey = ""
@@ -43,6 +44,10 @@ class resultSet(object):
         ax = fig.add_subplot(111)
         ax.plot(self.timeseries, self.values)
         return fig
+    def jsify(self):
+        return zip([ int(time.mktime(obj.timetuple())*1000 - 4*3600000 ) \
+                for obj in self.timeseries.tolist()],self.values.tolist())
+
 
 class system(object):
     def __init__(self, **sys_info):
@@ -61,7 +66,8 @@ class system(object):
         return json.loads(urllib2.urlopen(url).read())
 
     def monthly_production(self, start_date):
-        url = apiurl + "%s/monthly_production?key=%s&start=%s" % (self.system_id,apikey,start_date)
+        url = apiurl + "%s/monthly_production?key=%s&start=%s" % \
+                (self.system_id,apikey,start_date)
         return json.loads(urllib2.urlopen(url).read())
 
     def power_today(self):
