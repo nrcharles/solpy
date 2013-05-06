@@ -98,6 +98,7 @@ class system(object):
         self.phase = 1
         self.systemName = ""
         self.horizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
+        self.clip = 0
 
     def setZipcode(self,zipcode):
         self.zipcode = zipcode
@@ -134,13 +135,8 @@ class system(object):
 
         for timestamp,insolation,drybulb in insolationOutput:
             houlyTimeseries = np.append(houlyTimeseries,timestamp)
-            output = 0
-            for i in self.shape:
-                iOut = i.Pac(insolation)
-                output += iOut
-                hourlyInsolation = np.append(hourlyInsolation,output)
-                if iOut > .999 * i.Paco:
-                    clip += 1
+            output = self.Pac(insolation)
+            hourlyInsolation = np.append(hourlyInsolation,output)
 
             #should probably have a flag for this to output CSV file
             #print timestamp,',', output
@@ -166,6 +162,14 @@ class system(object):
         rs.annualOutput = (round(totalOutput/10)/100)
 
         return rs
+    def Pac(self, ins):
+        output = 0
+        for i in self.shape:
+            iOut = i.Pac(ins)
+            output += iOut
+            if iOut > .999 * i.Paco:
+                self.clip += 1
+        return output
 
     def solstice(self, hour):
         #position on winter soltice (Dec 21)
@@ -217,4 +221,37 @@ class system(object):
             else:
                 dp[i.array.panel.model]+=i.array.series*i.array.parallel
         return di,dp
+    def now(self):
+        #Preditive
+        import ephem
+        import irradiation
+        import datetime
+        import pysolar
+        t = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
+        o = ephem.Observer()
+        o.date = t #'2000/12/21 %s:00:00' % (hour - self.tz)
+        latitude, longitude = self.place
+        o.lat = math.radians(self.place[0])
+        o.lon = math.radians(self.place[1])
+        az = ephem.Sun(o).az
+        alt = ephem.Sun(o).alt
+        Bh = irradiation.directNormal(t,alt)
+        day = irradiation.dayOfYear(t)
+        Dh = irradiation.diffuseHorizontal(alt,Bh,day)
+        record = {}
+        record['utc_datetime'] = t
+        #print self.tilt
+        theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], self.tilt, self.azimuth)
+        Gh = irradiation.globalHorizontal(Bh,theta,day)
+        ETR = irradiation.apparentExtraterrestrialFlux(day)
+        #print Gh, Bh, Dh #, ETR
+
+        record['DNI (W/m^2)'] = Bh #8 Direct normal irradiance
+        record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
+        record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
+        record['ETR (W/m^2)'] = ETR
+        a = irradiation.irradiation(record, self.place, self.horizon, t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
+        #print "p9", a
+        #print "lj",irradiation.irradiation(record, self.place, self.horizon, t = self.tilt, array_azimuth = self.azimuth, model = 'lj')
+        return self.Pac(a)
 
