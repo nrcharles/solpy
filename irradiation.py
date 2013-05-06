@@ -23,8 +23,9 @@ from math import radians
 from math import degrees
 from math import fabs
 from math import pi
+from math import exp
 from numpy import sin, cos
-#import solar
+import datetime
 import pysolar
 global tilt
 global azimuth
@@ -65,7 +66,7 @@ def eBin(clearness):
         return 1
     return 0
 
-def perez(Xh,dni,hdi,etr,S,theta,zenith):
+def perez(dni,hdi,etr,S,theta,zenith):
     """Perez et al. 1990
     Diffuse irradiance and illuminance on tilted surfaces
     """
@@ -73,6 +74,8 @@ def perez(Xh,dni,hdi,etr,S,theta,zenith):
     #Xh = horizontal diffuse
     Z = zenith
     Dh = hdi
+    #Xh can be Illumanince if desired
+    Xh = Dh
 
     m = airmass(zenith)
 
@@ -135,7 +138,6 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
     Gh = int(record['GHI (W/m^2)'])
     Dh = int(record['DHI (W/m^2)'])
     Bh = int(record['DNI (W/m^2)'])
-    etr = int(record['ETR (W/m^2)'])
 
     #theta = incidence angle of the sun
     theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
@@ -164,7 +166,8 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
          rd = (1+cos(S))/2
          Dth = rd*Dh
     if model == "p9":
-         Dth = perez(Dh, Bh, Dh, etr, S, theta, Z)
+         etr = int(record['ETR (W/m^2)'])
+         Dth = perez(Bh, Dh, etr, S, theta, Z)
 
     #ground diffuse p = ground reflectivity
     p = 0.2
@@ -175,24 +178,64 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
     else:
         return Gh
 
+
+def airMassRatio(altitude):
+    #Masters, p. 412
+    return (1/sin(altitude))
+
+def apparentExtraterrestrialFlux(day):
+    #Masters, p. 412
+    return 1160 + (75 * sin(((2*pi)/365) * (day - 275)))
+
+def dayOfYear(utc_datetime):
+    start = datetime.datetime(utc_datetime.year, 1, 1, tzinfo=utc_datetime.tzinfo)
+    delta = (utc_datetime - start)
+    return delta.days
+
+def opticalDepth(day):
+    #Masters, p. 412
+    return 0.174 + (0.035 * sin((2*pi/365) * (day - 100)))
+
+def directNormal(utc_datetime, altitude):
+    #Masters, p. 413
+    if(altitude > 0):
+        day = dayOfYear(utc_datetime)
+        flux = apparentExtraterrestrialFlux(day)
+        optical_depth = opticalDepth(day)
+        air_mass_ratio = airMassRatio(altitude)
+        return flux * exp(-1 * optical_depth * air_mass_ratio)
+    else:
+        return 0.0
+
+def globalHorizontal(Ib,theta,n):
+    C = 0.095 + 0.04 * sin((2*pi/365*(n-100)))
+    print "theta",theta
+    hDirect = Ib*cos(theta)
+    return C* Ib + hDirect
+
+def diffuseHorizontal(altitude,Ib,n):
+    #Masters p. 416
+    C = 0.095 + 0.04 * sin((2.*pi/365*(n-100)))
+    return Ib *C
+
 if __name__ == "__main__":
-    #for i in range(-90,180):
-    #    print i,airmass(radians(i))
-    print "perez(0,0,0,0,0.558505360638,2.81089306448,2.79093661679)"
-    print perez(0,0,0,0,0.558505360638,2.81089306448,2.79093661679)
+    for i in range(-90,180):
+        print i,airmass(radians(i)),airMassRatio(radians(i))
+
+    print "perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)"
+    print perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)
     #print perez(60,786,60,540,0.558505360638,0.624040125833,1.14157618561)
     #print perez(66,782,66,618,0.558505360638,0.548264494026,1.10572704488)
     print "perez(124,672,124,630,0.558505360638,0.585437141297,1.12283464275)"
-    print perez(124,672,124,630,0.558505360638,0.585437141297,1.12283464275)
-    print perez(71,725,71,575,0.558505360638,0.71816314243,1.19054164885)
-    print perez(84,458,84,457,0.558505360638,0.905073340885,1.30063355891)
-    print perez(52,365,52,283,0.558505360638,1.11854235428,1.44247248195)
-    print perez(22,83,22,75,0.558505360638,1.33812695863,1.59866999006)
-    print perez(0,0,0,0,0.558505360638,1.58526434614,1.7938116797)
-    print perez(0,0,0,0,0.558505360638,1.82430194526,1.98580885248)
-    print perez(0,0,0,0,0.558505360638,2.0648085416,2.18380405772)
-    print perez(0,0,0,0,0.558505360638,2.30391057936,2.38276512577)
-    print perez(0,0,0,0,0.558505360638,2.5366580297,2.57519603892)
-    print perez(0,0,0,0,0.558505360638,2.74856500007,2.7436087649)
-    print perez(0,0,0,0,0.558505360638,2.87979696349,2.83820540821)
-
+    print perez(672,124,630,0.558505360638,0.585437141297,1.12283464275)
+    print perez(725,71,575,0.558505360638,0.71816314243,1.19054164885)
+    print perez(458,84,457,0.558505360638,0.905073340885,1.30063355891)
+    print perez(365,52,283,0.558505360638,1.11854235428,1.44247248195)
+    print perez(83,22,75,0.558505360638,1.33812695863,1.59866999006)
+    print perez(0,0,0,0.558505360638,1.58526434614,1.7938116797)
+    print perez(0,0,0,0.558505360638,1.82430194526,1.98580885248)
+    print perez(0,0,0,0.558505360638,2.0648085416,2.18380405772)
+    print perez(0,0,0,0.558505360638,2.30391057936,2.38276512577)
+    print perez(0,0,0,0.558505360638,2.5366580297,2.57519603892)
+    print perez(0,0,0,0.558505360638,2.74856500007,2.7436087649)
+    print perez(0,0,0,0.558505360638,2.87979696349,2.83820540821)
