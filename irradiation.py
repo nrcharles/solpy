@@ -24,9 +24,10 @@ from math import degrees
 from math import fabs
 from math import pi
 from math import exp
-from numpy import sin, cos
+from numpy import sin, cos, arccos
 import datetime
 import pysolar
+import ephem
 global tilt
 global azimuth
 global place
@@ -140,8 +141,22 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
     Bh = int(record['DNI (W/m^2)'])
 
     #theta = incidence angle of the sun
-    theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
-    nA = degrees(ta) % 360-180
+    #theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
+    o = ephem.Observer()
+    o.date =  record['utc_datetime']
+    o.lat = radians(latitude)
+    o.lon = radians(longitude)
+    az = ephem.Sun(o).az
+    alt = ephem.Sun(o).alt
+    slope = radians(t)
+    Z = pi/2-alt
+    aaz = radians(array_azimuth+180)
+    theta = arccos(cos(Z)*cos(slope) + sin(slope)*sin(Z)*cos(az - pi - aaz))
+    #theta, Z, az = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
+    #print degrees(az)%360,degrees(az1), az-az1
+    #
+
+    nA = degrees(az) % 360-180
     if horizon(nA) > degrees(theta):
         Bh = 0
         print "shaded", nA,degrees(theta),horizon(nA)
