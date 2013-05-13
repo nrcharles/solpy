@@ -139,9 +139,9 @@ def string_notes(system):
     notes.append("Array Azimuth: %s Degrees" % system.azimuth)
     notes.append("Array Tilt: %s Degrees" % system.tilt)
     notes.append("December 21 9:00 AM Sun Azimuth: %s Degrees" % \
-            int(round(540 -  system.solstice(9)[1],0)%360))
+            int(round(system.solstice(9)[1],0)))
     notes.append("December 21 3:00 PM Sun Azimuth: %s Degrees" % \
-            int(round(540 - system.solstice(15)[1],0)%360))
+            int(round(system.solstice(15)[1],0)))
     print "\n".join(notes)
     return notes
 

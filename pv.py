@@ -173,12 +173,15 @@ class system(object):
 
     def solstice(self, hour):
         #position on winter soltice (Dec 21)
-        import datetime
-        import pysolar
-        t = datetime.datetime(2000,12,22,hour-self.tz)
-        altitude = pysolar.Altitude(self.place[0],self.place[1],t)
-        azimuth = pysolar.Azimuth(self.place[0],self.place[1],t)
-        return altitude, azimuth
+        import ephem
+        o = ephem.Observer()
+        o.date = '2000/12/21 %s:00:00' % (hour - self.tz)
+        o.lat = math.radians(self.place[0])
+        o.lon = math.radians(self.place[1])
+        az = math.degrees(ephem.Sun(o).az)
+        alt = math.degrees(ephem.Sun(o).alt)
+
+        return alt, az
 
 
     def minRowSpace(self, delta, riseHour=9, setHour=15):
@@ -226,7 +229,6 @@ class system(object):
         import ephem
         import irradiation
         import datetime
-        import pysolar
         t = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
         o = ephem.Observer()
         o.date = t #'2000/12/21 %s:00:00' % (hour - self.tz)
@@ -240,8 +242,13 @@ class system(object):
         Dh = irradiation.diffuseHorizontal(alt,Bh,day)
         record = {}
         record['utc_datetime'] = t
-        #print self.tilt
-        theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], self.tilt, self.azimuth)
+        Z = math.pi/2-alt
+        aaz = math.radians(self.azimuth+180)
+        slope = math.radians(self.tilt)
+        #incidence
+        theta = np.arccos(np.cos(Z)*np.cos(slope) + \
+                np.sin(slope)*np.sin(Z)*np.cos(az - math.pi - aaz))
+
         Gh = irradiation.globalHorizontal(Bh,theta,day)
         ETR = irradiation.apparentExtraterrestrialFlux(day)
         #print Gh, Bh, Dh #, ETR
@@ -250,8 +257,6 @@ class system(object):
         record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
         record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
         record['ETR (W/m^2)'] = ETR
-        a = irradiation.irradiation(record, self.place, self.horizon, t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
-        #print "p9", a
-        #print "lj",irradiation.irradiation(record, self.place, self.horizon, t = self.tilt, array_azimuth = self.azimuth, model = 'lj')
+        a = irradiation.irradiation(record, self.place, self.horizon, \
+                t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
         return self.Pac(a)
-

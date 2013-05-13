@@ -14,7 +14,7 @@
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License along
-#    with Pysolar. If not, see <http://www.gnu.org/licenses/>.
+#    with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Calculate different kinds of radiation components via default values
 
@@ -26,7 +26,6 @@ from math import pi
 from math import exp
 from numpy import sin, cos, arccos
 import datetime
-import pysolar
 import ephem
 global tilt
 global azimuth
@@ -141,7 +140,6 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
     Bh = int(record['DNI (W/m^2)'])
 
     #theta = incidence angle of the sun
-    #theta, Z, ta = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
     o = ephem.Observer()
     o.date =  record['utc_datetime']
     o.lat = radians(latitude)
@@ -152,9 +150,6 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
     Z = pi/2-alt
     aaz = radians(array_azimuth+180)
     theta = arccos(cos(Z)*cos(slope) + sin(slope)*sin(Z)*cos(az - pi - aaz))
-    #theta, Z, az = pysolar.position(latitude, longitude, record['utc_datetime'], t, array_azimuth)
-    #print degrees(az)%360,degrees(az1), az-az1
-    #
 
     nA = degrees(az) % 360-180
     if horizon(nA) > degrees(theta):
