@@ -22,6 +22,7 @@ import modules
 import irradiation
 import json
 import math
+import datetime
 from scipy.interpolate import interp1d
 
 
@@ -183,7 +184,6 @@ class system(object):
 
         return alt, az
 
-
     def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""
         altitudeRise,azimuthRise = self.solstice(riseHour)
@@ -226,12 +226,12 @@ class system(object):
                 dp[i.array.panel.model]+=i.array.series*i.array.parallel
         return di,dp
 
-    def now(self):
+    def now(self, t = None):
         #Preditive
         import ephem
         import irradiation
-        import datetime
-        t = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
+        if t is None:
+            t = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
         o = ephem.Observer()
         o.date = t #'2000/12/21 %s:00:00' % (hour - self.tz)
         latitude, longitude = self.place
@@ -262,3 +262,21 @@ class system(object):
         a = irradiation.irradiation(record, self.place, self.horizon, \
                 t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
         return self.Pac(a)
+
+    def powerToday(self):
+        stime = datetime.datetime.today().timetuple()
+        initTime = datetime.datetime(stime[0],stime[1],stime[2]) -\
+                datetime.timedelta(hours=self.tz)
+        timeseries= []
+        values =[]
+        ts = initTime
+        while ts < datetime.datetime.now():
+            ts +=  datetime.timedelta(minutes=5)
+            currentPower = self.now(ts)
+            values.append(currentPower)
+            timeseries.append(ts)
+        rs = resultSet()
+        rs.values = values
+        rs.timeseries = timeseries
+        return rs
+

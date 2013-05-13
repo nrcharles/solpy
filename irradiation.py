@@ -219,7 +219,7 @@ def directNormal(utc_datetime, altitude):
 
 def globalHorizontal(Ib,theta,n):
     C = 0.095 + 0.04 * sin((2*pi/365*(n-100)))
-    print "theta",theta
+    #print "theta",theta
     hDirect = Ib*cos(theta)
     return C* Ib + hDirect
 
