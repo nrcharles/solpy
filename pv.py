@@ -178,8 +178,8 @@ class system(object):
         o.date = '2000/12/21 %s:00:00' % (hour - self.tz)
         o.lat = math.radians(self.place[0])
         o.lon = math.radians(self.place[1])
-        az = math.degrees(ephem.Sun(o).az)
-        alt = math.degrees(ephem.Sun(o).alt)
+        az = ephem.Sun(o).az
+        alt = ephem.Sun(o).alt
 
         return alt, az
 
@@ -187,24 +187,25 @@ class system(object):
     def minRowSpace(self, delta, riseHour=9, setHour=15):
         """Row Space Function"""
         altitudeRise,azimuthRise = self.solstice(riseHour)
-        shadowLength = delta / math.tan(math.radians(altitudeRise))
-        minimumSpaceRise = shadowLength * math.cos(math.radians(azimuthRise))
+        shadowLength = delta / math.tan(altitudeRise)
+        minimumSpaceRise = shadowLength * abs(math.cos(azimuthRise))
 
         altitudeSet,azimuthSet = self.solstice(setHour)
-        shadowLength = delta / math.tan(math.radians(altitudeSet))
-        minimumSpaceSet = shadowLength * math.cos(math.radians(azimuthSet))
+        shadowLength = delta / math.tan(altitudeSet)
+        #abs to deal with -cos
+        minimumSpaceSet = shadowLength * abs(math.cos(azimuthSet))
 
         return max(minimumSpaceRise,minimumSpaceSet)
 
     def minSetback(self, delta, riseHour=9, setHour=15):
         """East West Setback"""
         altitudeRise,azimuthRise = self.solstice(riseHour)
-        shadowLength = delta / math.tan(math.radians(altitudeRise))
-        minimumSpaceRise = shadowLength * math.sin(math.radians(azimuthRise))
+        shadowLength = delta / math.tan(altitudeRise)
+        minimumSpaceRise = shadowLength * math.sin(azimuthRise)
 
         altitudeSet,azimuthSet = self.solstice(setHour)
-        shadowLength = delta / math.tan(math.radians(altitudeSet))
-        minimumSpaceSet = shadowLength * math.sin(math.radians(azimuthSet))
+        shadowLength = delta / math.tan(altitudeSet)
+        minimumSpaceSet = shadowLength * math.sin(azimuthSet)
 
         return max(minimumSpaceRise,minimumSpaceSet)
 
@@ -224,6 +225,7 @@ class system(object):
             else:
                 dp[i.array.panel.model]+=i.array.series*i.array.parallel
         return di,dp
+
     def now(self):
         #Preditive
         import ephem

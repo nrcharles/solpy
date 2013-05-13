@@ -22,49 +22,7 @@ import geo
 import pv
 import ee
 import vd
-
-
-def micro_notes(system, Vnominal=240.0):
-    """page 5"""
-    stationClass = 3
-    name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
-    mintemp = epw.minimum(usaf)
-    twopercentTemp = epw.twopercent(usaf)
-    ac_rated = 0
-    dc_rated = 0
-    for i in system.shape:
-        dc_rated += i.array.Pmax
-        ac_rated += i.Paco
-    descrip = system.describe()
-    #print descrip
-    print "%s KW AC RATED" % round(ac_rated/1000.0,2)
-    print "%s KW DC RATED" % round(dc_rated/1000.0,2)
-    print ""
-    print "AC Output Current: %s A" % \
-            round(sum([i.Paco for i in system.shape])/Vnominal,2)
-    print "Nominal AC Voltage: %s V" % Vnominal
-    print "Weather Station: %s" % name
-    print "Minimum Temperature: %s C" % mintemp
-    print "2%% Max Temperature: %s C" % twopercentTemp
-    for i in set(system.shape):
-        print "PV Module Ratings @ STC"
-        print "Module Make: %s" % i.array.make
-        print "Module Model: %s" % i.array.model
-        print "Quantity: %s" % descrip[i.array.model]
-        print "Max Power-Point Current (Imp): %s A" % i.array.Impp
-        print "Max Power-Point Voltage (Vmp): %s V" % i.array.Vmpp
-        print "Open-Circuit Voltage (Voc): %s V" % i.array.Voc
-        print "Short-Circuit Current (Isc): %s A" % i.array.Isc
-        print "Maximum Power (Pmax): %s W" % i.array.Pmax
-        print "Module Rated Max Voltage: %s V" % i.array.Vrated
-        print ""
-        print "Inverter Make: %s" % i.make
-        print "Inverter Model: %s" % i.model
-        print "Quantity: %s" % descrip[i.model]
-        print "Max Power: %s W" % i.Paco
-        print "Max AC Current: %s A" % round(i.Paco/Vnominal,2)
-        #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/Vnominal*1.25)
-        print "Max System DC Voltage: %s V" %round(i.array.Vmax(mintemp),1)
+from math import degrees
 
 def string_notes(system):
     """page 5"""
@@ -139,9 +97,11 @@ def string_notes(system):
     notes.append("Array Azimuth: %s Degrees" % system.azimuth)
     notes.append("Array Tilt: %s Degrees" % system.tilt)
     notes.append("December 21 9:00 AM Sun Azimuth: %s Degrees" % \
-            int(round(system.solstice(9)[1],0)))
+            int(round(degrees(system.solstice(9)[1]),0)))
     notes.append("December 21 3:00 PM Sun Azimuth: %s Degrees" % \
-            int(round(system.solstice(15)[1],0)))
+            int(round(degrees(system.solstice(15)[1]),0)))
+    notes.append("Minumum Row space ratio: %s" % \
+            round(system.minRowSpace(1.0),2))
     print "\n".join(notes)
     return notes
 
