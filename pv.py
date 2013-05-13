@@ -263,14 +263,18 @@ class system(object):
                 t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
         return self.Pac(a)
 
-    def powerToday(self):
+    def powerToday(self, daylightSavings = False):
         stime = datetime.datetime.today().timetuple()
-        initTime = datetime.datetime(stime[0],stime[1],stime[2]) -\
-                datetime.timedelta(hours=self.tz)
+        tzOff = datetime.timedelta(hours=self.tz)
+        if daylightSavings:
+            tzOff += datetime.timedelta(hours=1)
+        else:
+            tzOff += datetime.timedelta(hours=0)
+        initTime = datetime.datetime(stime[0],stime[1],stime[2]) - tzOff
         timeseries= []
         values =[]
         ts = initTime
-        while ts < datetime.datetime.now():
+        while ts < datetime.datetime.now()-tzOff:
             ts +=  datetime.timedelta(minutes=5)
             currentPower = self.now(ts)
             values.append(currentPower)
