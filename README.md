@@ -1,6 +1,6 @@
 solpy
 -------
-Solpy is a python library to model solar system power performance similar to PVWatts or NREL's System Advisor Model(SAM).  I initially started writing this while working in Bangladesh as fairly crude calculator to go from a fisheye panorama to a csv of vectors for shading calculations, however there were several pieces that were added to make it a bit more useful.  Daniel Thomas did work adding the Tang evacuated glass tube model.  I cherry picked some pieces of Brandon Stafford's pysolar for solar positioning although made some changes for my purposes.  There is also a simple module for reading TMY3 data. This tool is very rudimentary, but functional. 
+Solpy is a python library to model solar system power performance similar to PVWatts or NREL's System Advisor Model(SAM).  I initially started writing this while working in Bangladesh as fairly crude calculator to go from a fisheye panorama to a csv of vectors for shading calculations, however there were several pieces that were added to make it a bit more useful.  Daniel Thomas did work adding the Tang evacuated glass tube model. Pyephem was added for solar positioning.  There is also a simple module for reading TMY3 data. This tool is rudimentary, but functional. 
 
 This is primarily a research and analysis tool and there is no guarantee on the calculations.
 

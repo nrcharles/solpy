@@ -14599,7 +14599,7 @@
 "inverter":"SMA America: SB8000US 240V",
 "cec":"CEC 2010",
 "ac_voltage":240,
-"paco":7600,
+"paco":7680,
 "pdco":7915.20453168622,
 "vdco":345.283833333333,
 "pso":29.201850112859,
