@@ -30,10 +30,19 @@ import numpy as np
 import datetime
 import matplotlib
 import time
+import os
+
 matplotlib.use('Agg')
 
-apikey = ""
 apiurl = "https://api.enphaseenergy.com/api/systems/"
+
+apikey = ""
+if os.environ['ENPHASE']:
+    apikey = os.environ['ENPHASE']
+
+if not apikey:
+    print "WARNING: forecast.io key not set."
+    print "Realtime weather data not availible."
 
 class resultSet(object):
     def __init__(self,ts,v):

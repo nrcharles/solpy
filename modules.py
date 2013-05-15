@@ -75,14 +75,18 @@ class module(object):
         self.Eff = self.Pmax/self.A/1000
         self.nameplate = 1.0
 
-    def output(self,Insolation):
-        return Insolation * self.A * self.Eff * self.nameplate
+    def output(self,Insolation, tCell = 25):
+        return (Insolation/1000.0) * self.Impp * self.Vdc(tCell)
+        #return Insolation * self.A * self.Eff * self.nameplate
+
     def Vmax(self,ashraeMin):
         return self.Voc + (ashraeMin-STC) * self.TkVoc
+
     def Vdc(self,t=25):
         #t adjusted for temp
         #todo fix
-        return self.Vmpp
+        return self.Vmpp - self.TkVmp * (25-t)
+        #return self.Vmpp
 
     def Vmin(self,ashrae2p,Tadd = 30):
         #Tadd
@@ -106,8 +110,8 @@ class pvArray(object):
         return self.panel.Vmax(ashraeMin) * self.series
     def Vmin(self,ashrae2p, Tadd = 30):
         return  self.panel.Vmin(ashrae2p, Tadd)* self.series
-    def output(self, Insolation):
-        return self.panel.output(Insolation)*self.series*self.parallel
+    def output(self, Insolation, tAmb=25):
+        return self.panel.output(Insolation,tAmb)*self.series*self.parallel
 
 def manufacturers():
     a =  [i['panel'].split(":")[0] for i in json.loads(open(SPATH + '/sp.json').read()) ]
@@ -115,7 +119,6 @@ def manufacturers():
     b = [i for i in set(a)]
     b.sort()
     return b
-
 
 def models(manufacturer = None):
     """returns list of available panel models"""
@@ -135,8 +138,6 @@ def model_search(parms):
         if all(re.search(sub,i) for sub in parms):
             res.append(i)
     return res
-
-
 
 class testModules(unittest.TestCase):
     """Unit Tests"""

@@ -63,8 +63,8 @@ class inverter(object):
         self.mppt_low = self.properties['mppt_low']
         self.make,self.model = self.inverter.split(":",2)
 
-    def Pac(self, Insolation):
-        Pdc = self.array.output(Insolation)
+    def Pac(self, Insolation, tCell = 25):
+        Pdc = self.array.output(Insolation, tCell)
         Vdc = self.array.Vdc()
         A = self.Pdco * (1 + self.C1 * (Vdc - self.Vdco))
         B = self.Pso * (1 + self.C2 * (Vdc - self.Vdco))

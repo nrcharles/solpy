@@ -23,8 +23,9 @@ import irradiation
 import json
 import math
 import datetime
-from scipy.interpolate import interp1d
+import forecast
 
+from scipy.interpolate import interp1d
 
 class resultSet(object):
     def _init_(self):
@@ -163,10 +164,10 @@ class system(object):
         rs.annualOutput = (round(totalOutput/10)/100)
 
         return rs
-    def Pac(self, ins):
+    def Pac(self, ins, tCell = 25):
         output = 0
         for i in self.shape:
-            iOut = i.Pac(ins)
+            iOut = i.Pac(ins, tCell)
             output += iOut
             if iOut > .999 * i.Paco:
                 self.clip += 1
@@ -226,28 +227,32 @@ class system(object):
                 dp[i.array.panel.model]+=i.array.series*i.array.parallel
         return di,dp
 
-    def now(self, t = None):
+    def now(self, timestamp = None, STC = True):
         #Preditive
         import ephem
         import irradiation
-        if t is None:
-            t = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
+        if timestamp is None:
+            timestamp = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
+        #SUN Position
         o = ephem.Observer()
-        o.date = t #'2000/12/21 %s:00:00' % (hour - self.tz)
+        o.date = timestamp #'2000/12/21 %s:00:00' % (hour - self.tz)
         latitude, longitude = self.place
         o.lat = math.radians(self.place[0])
         o.lon = math.radians(self.place[1])
         az = ephem.Sun(o).az
         alt = ephem.Sun(o).alt
-        Bh = irradiation.directNormal(t,alt)
-        day = irradiation.dayOfYear(t)
+
+        #Irradiance 
+        Bh = irradiation.directNormal(timestamp,alt)
+        day = irradiation.dayOfYear(timestamp)
         Dh = irradiation.diffuseHorizontal(alt,Bh,day)
         record = {}
-        record['utc_datetime'] = t
+        record['utc_datetime'] = timestamp
         Z = math.pi/2-alt
         aaz = math.radians(self.azimuth+180)
         slope = math.radians(self.tilt)
-        #incidence
+
+        #incidence angle
         theta = np.arccos(np.cos(Z)*np.cos(slope) + \
                 np.sin(slope)*np.sin(Z)*np.cos(az - math.pi - aaz))
 
@@ -259,9 +264,26 @@ class system(object):
         record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
         record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
         record['ETR (W/m^2)'] = ETR
-        a = irradiation.irradiation(record, self.place, self.horizon, \
+        irradiance =irradiation.irradiation(record, self.place, self.horizon,\
                 t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
-        return self.Pac(a)
+
+
+        if STC:
+            return self.Pac(irradiance)
+        else:
+            weatherData = forecast.data(self.zipcode)
+
+            #Module Temperature
+            #TamizhMani 2003
+            #tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
+
+            tAmb = (weatherData['currently']['temperature'] -32) * 5/9
+            windSpd = weatherData['currently']['windSpeed']
+            tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
+
+            #print tAmb,tModule
+
+            return self.Pac(irradiance, tModule)
 
     def powerToday(self, daylightSavings = False):
         stime = datetime.datetime.today().timetuple()
@@ -271,8 +293,8 @@ class system(object):
         else:
             tzOff += datetime.timedelta(hours=0)
         initTime = datetime.datetime(stime[0],stime[1],stime[2]) - tzOff
-        timeseries= []
-        values =[]
+        timeseries = []
+        values = []
         ts = initTime
         while ts < datetime.datetime.now()-tzOff:
             ts +=  datetime.timedelta(minutes=5)
