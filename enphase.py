@@ -36,10 +36,7 @@ matplotlib.use('Agg')
 
 apiurl = "https://api.enphaseenergy.com/api/systems/"
 
-apikey = ""
-if os.environ['ENPHASE']:
-    apikey = os.environ['ENPHASE']
-
+apikey = os.getenv('ENPHASE')
 if not apikey:
     print "WARNING: forecast.io key not set."
     print "Realtime weather data not availible."

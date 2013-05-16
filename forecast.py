@@ -3,8 +3,8 @@ import json
 import geo
 import urllib2
 import os
-apikey = os.environ['FORECASTIO']
 
+apikey = os.getenv('FORECASTIO')
 if not apikey:
     print "WARNING: forecast.io key not set."
     print "Realtime weather data not availible."
