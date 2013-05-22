@@ -47,6 +47,8 @@ class module(object):
     #r_sh_ref ;  shunt resistance
     #adjust =   
     #gamma_r = 
+    #gamma_r appears to be Pmp Temperature Coefficent and is emperically 
+    #found in %/C. SAM differs from datasheet
     #source=Mono-c-Si
     def __init__(self,model):
         self.properties = None
