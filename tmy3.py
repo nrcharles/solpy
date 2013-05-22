@@ -24,6 +24,14 @@ path = os.environ['HOME'] + "/tmy3/"
 
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
+try:
+    os.listdir(os.environ['HOME'] + '/tmy3')
+except OSError:
+    try:
+        os.mkdir(os.environ['HOME'] + '/tmy3')
+    except IOError:
+        pass
+
 def tmybasename(USAF):
     f = open(SPATH + '/tmy3urls.csv')
     for line in f.readlines():
