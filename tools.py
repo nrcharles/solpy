@@ -27,7 +27,8 @@ def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, Vma
             "Pole":20}
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(zipcode), stationClass)
     maxV = inverter.array.panel.Vmax(epw.minimum(usaf))
-    derate20 = .9
+    #NREL suggests that long term degradation is primarily current not voltage
+    derate20 = .97
     minV = inverter.array.panel.Vmin(epw.twopercent(usaf),tDerate[mount]) * derate20
     #print "MinV", minV
     if inverter.vdcmax != 0:
