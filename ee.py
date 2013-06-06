@@ -365,6 +365,93 @@ CMIL = {"18":1620,
         "1500":1500000,
         "2000":2000000}
 
+#Article 358
+#Total Area
+EMT = {"1/2":.304,
+        "3/4":.533,
+        "1":.864,
+        "1 1/4":1.496,
+        "1 1/2":2.036,
+        "2":3.356,
+        "2 1/2":5.858,
+        "3":8.846,
+        "3 1/2":11.545,
+        "4":14.753}
+
+EMT_TRADE_SIZES = ["1/2","3/4","1","1 1/4","1 1/2","2","2 1/2","3","3 1/2","4"]
+
+PVC40 ={"1/2":.217,
+        "3/4":.409,
+        "1":.688,
+        "1 1/4":1.237,
+        "1 1/2":1.711,
+        "2":2.874,
+        "2 1/2":4.119,
+        "3":6.442,
+        "3 1/2":8.688,
+        "4":11.258,
+        "5":17.855,
+        "6":25.598}
+
+PVC_TRADE_SIZES = ["1/2","3/4","1","1 1/4","1 1/2","2","2 1/2","3","3 1/2","4"\
+        ,"5","6"]
+#Chapter 9 Table 5
+THWN = {
+        "14":  0.111,
+        "12":  0.13,
+        "10":  0.164,
+        "8":   0.216,
+        "6":   0.254,
+        "4":   0.324,
+        "3":   0.352,
+        "2":   0.384,
+        "1":   0.446,
+        "1/0": 0.486,
+        "2/0": 0.532,
+        "3/0": 0.584,
+        "4/0": 0.642,
+        "250": 0.711,
+        "300": 0.766,
+        "350": 0.817,
+        "400": 0.864,
+        "500": 0.949,
+        "600": 1.051,
+        "700": 1.122,
+        "750": 1.156,
+        }
+#Chapter 9 Table 5
+XHHW = {"1": 0.442,
+        "1/0": 0.482,
+        "2/0": 0.528,
+        "3/0": 0.58,
+        "4/0": 0.638,
+        "250": 0.705,
+        "300": 0.76,
+        "350": 0.811,
+        "400": 0.858,
+        "500": 0.943,
+        "600": 1.053,
+        "700": 1.124,
+        "750": 1.158}
+
+
+MATERIAL_MAP = {'AL':'XHHW',
+                'CU':'THWN'}
+
+def conductorArea(harness):
+    A = 0
+    for cond in harness:
+        #print globals()[MATERIAL_MAP[cond.material]]
+        area = (globals()[MATERIAL_MAP[cond.material]][cond.size]/2.0)**2*math.pi
+        A += area
+    return A
+
+def findConduit(area,c='EMT',fill=.40):
+    for i in globals()['%s_TRADE_SIZES' % c]:
+        print i, globals()[c][i], area
+        if globals()[c][i]*fill > area:
+            return i
+
 def ocpSize(a):
     for i in OCP_STANDARD_SIZES:
         if i > a:
@@ -614,4 +701,7 @@ if __name__ == "__main__":
     t1 = transformer(1000000,8404,2143)
     print t1.output(0)
     print t1.output(500000)
+    bund=  [conductor("400","AL"),conductor("400","AL"),conductor("6","CU"),conductor("6","CU")]
+    print conductorArea(bund)
+    print findConduit(conductorArea(bund))
 
