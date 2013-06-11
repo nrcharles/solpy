@@ -420,7 +420,11 @@ THWN = {
         "750": 1.156,
         }
 #Chapter 9 Table 5
-XHHW = {"1": 0.442,
+XHHW = {"6":.29,  #Values estimated from various datasheets
+        "4":.33,
+        "3":.36,
+        "2":.4, 
+        "1": 0.442, #Table Starts Here
         "1/0": 0.482,
         "2/0": 0.528,
         "3/0": 0.58,
