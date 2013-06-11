@@ -448,7 +448,6 @@ def conductorArea(harness):
 
 def findConduit(area,c='EMT',fill=.40):
     for i in globals()['%s_TRADE_SIZES' % c]:
-        print i, globals()[c][i], area
         if globals()[c][i]*fill > area:
             return i
 
@@ -645,15 +644,25 @@ def findOCP(oc, material = "CU"):
             return s
     raise "CurrentTooGreat"
 
-def findEGC(ocp,material="CU"):
+def minEGC(ocp,material="CU"):
     inc = [s for s in iter(EGC_CU)]
     inc.sort()
     for s in inc:
         if s >= ocp:
             if material=="CU":
-                return EGC_CU[s]
+                return conductor(EGC_CU[s],material)
             else:
-                return EGC_AL[s]
+                return conductor(EGC_AL[s],material)
+
+def findEGC(cond, ocp,material="CU"):
+    minConductor = findConductorA(ocp,cond.material).size
+    minEGCSize = minEGC(ocp,material).size
+    ratio = CMIL[minConductor]*1.0 / CMIL[minEGCSize]
+    if ratio > 0:
+        increased = CMIL[cond.size]/ratio
+        for c in CONDUCTOR_STANDARD_SIZES:
+            if CMIL[c] >= increased:
+                return conductor(c,material)
 
 def findConductorA(current,material):
     for s in CONDUCTOR_STANDARD_SIZES:
@@ -704,4 +713,5 @@ if __name__ == "__main__":
     bund=  [conductor("400","AL"),conductor("400","AL"),conductor("6","CU"),conductor("6","CU")]
     print conductorArea(bund)
     print findConduit(conductorArea(bund))
-
+    print "CU EGC", incEGC(conductor("400",'AL'),100)
+    print "AL EGC", incEGC(conductor("400",'AL'),100,'AL')

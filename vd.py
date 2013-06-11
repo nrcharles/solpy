@@ -28,29 +28,20 @@ def usage():
 
 import ee
 
-def incEGC(conductor,egc,ratio):
-    if ratio > 0:
-        increased = ee.CMIL[conductor.size]/ratio
-        for c in ee.CONDUCTOR_STANDARD_SIZES:
-            if ee.CMIL[c] >= increased:
-                return c
-    else:
-        return egc
-
 def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEEL'):
     oc = a * 1.25
     ocp = ee.findOCP(oc)
     #print "OCP Size: %s" % ocp
-    egc = ee.findEGC(ocp,material)
+    #egc = ee.findEGC(ocp,material)
     vdrop = v * percent/100.0
-    ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
+    #ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
     if size:
         conductor  = ee.conductor(size,material)
         conductor = ee.checkAmpacity(conductor, ocp, tAmb)
         vdrop = conductor.vd(a,l, v = v, pf=pf, tAmb=tAmb,c=c)
         vdp=(vdrop * 100/v)
         print "Percent drop: %s%%" % round(vdp,2)
-        print "EGC Size: %s" % incEGC(conductor,egc,ratio)
+        #print "EGC Size: %s" % incEGC(conductor,egc,ratio)
         return conductor
     else:
         print "Allowed Voltage drop: %sV" % vdrop
@@ -69,12 +60,12 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEE
 
         if sets > 1:
             print "%s sets of %s" % (sets, conductor)
-            print "EGC Size: %s" % incEGC(conductor,egc,ratio)
+            #print "EGC Size: %s" % incEGC(conductor,egc,ratio)
             return [conductor for i in range(sets)]
         else:
             print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets, tAmb)
-            print "EGC Size: %s %s" % ( incEGC(conductor,egc,ratio),conductor.material)
+            #print "EGC Size: %s %s" % ( incEGC(conductor,egc,ratio),'CU'#conductor.material)
             print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c),2)
             return conductor
 
