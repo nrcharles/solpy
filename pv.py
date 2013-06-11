@@ -24,6 +24,7 @@ import json
 import math
 import datetime
 import forecast
+from geopy import geocoders
 
 from scipy.interpolate import interp1d
 
@@ -74,6 +75,16 @@ def jsonToSystem(jsonDescription):
                 i["series"],i["parallel"]))] * scale
     plant = system(jsonShape)
     plant.setZipcode(jsonDescription["zipcode"])
+    try:
+         address = jsonDescription["address"]
+         g = geocoders.GoogleV3()
+         place, (lat, lng) = g.geocode(address)
+         plant.place = lat,lng
+         print "Geolocation Found"
+    except:
+        print "Address not set, location defaulting to zipcode"
+        print plant.place
+        pass
     plant.tilt = jsonDescription["tilt"]
     plant.azimuth = jsonDescription["azimuth"]
     plant.phase = jsonDescription["phase"]
@@ -86,8 +97,7 @@ def _calc(record):
             irradiation.mname)
     year = 2000
     timestamp = tmy3.normalizeDate(record['datetime'],year)
-    drybulb = float(record['Dry-bulb (C)'])
-    return timestamp, insolation, drybulb
+    return timestamp, insolation, record
 
 class system(object):
     def __init__(self,shape):
@@ -135,9 +145,14 @@ class system(object):
         dailyMax = 0
         clip = 0
 
-        for timestamp,insolation,drybulb in insolationOutput:
+        for timestamp,insolation,record in insolationOutput:
             houlyTimeseries = np.append(houlyTimeseries,timestamp)
-            output = self.Pac(insolation)
+            tAmb = float(record['Dry-bulb (C)'])
+            windSpd = float(record['Wspd (m/s)'])
+            tModule = .945*tAmb +.028*insolation - 1.528*windSpd + 4.3
+
+            output = self.Pac(insolation,tModule)
+            #output = self.Pac(insolation)
             hourlyInsolation = np.append(hourlyInsolation,output)
 
             #should probably have a flag for this to output CSV file
