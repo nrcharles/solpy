@@ -72,7 +72,10 @@ class module(object):
         #Pmp W/C
         self.TkPmp = self.properties['gamma_r']*self.Pmax/100
         self.gamma = self.properties['gamma_r']
-        self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
+        #todo: beta or gamma?
+        #self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
+        self.TkVmp = self.properties['beta_oc']*self.Vmpp/100
+        self.TkIsc = self.properties['alpha_sc']*self.Isc/100
         self.A = self.properties['a_c']
         self.Eff = self.Pmax/self.A/1000
         self.nameplate = 1.0
@@ -90,6 +93,9 @@ class module(object):
         return self.Vmpp - self.TkVmp * (25-t)
         #return self.Vmpp
 
+    def Idc(self,t=25):
+        return self.Impp - self.Impp * (25-t)
+
     def Vmin(self,ashrae2p,Tadd = 30):
         #Tadd
         #Roof mount =30
@@ -97,7 +103,7 @@ class module(object):
         #Pole mount = 20
         return self.Vmpp + (Tadd+ashrae2p-STC) * self.TkVmp
 
-#this needs rewritten
+#todo: this needs rewritten
 class pvArray(object):
     """structure to aggregate panels into an array)"""
     def __init__(self,pname, series, parallel = 1):
