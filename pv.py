@@ -286,7 +286,7 @@ class system(object):
         if STC:
             return self.Pac(irradiance)
         else:
-            weatherData = forecast.data(self.zipcode)
+            weatherData = forecast.data(self.place)
 
             #Module Temperature
             #TamizhMani 2003
