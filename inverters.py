@@ -62,6 +62,9 @@ class inverter(object):
         self.mppt_hi = self.properties['mppt_hi']
         self.mppt_low = self.properties['mppt_low']
         self.make,self.model = self.inverter.split(":",2)
+        self.derate = self.mismatch * self.soiling * self.dc_wiring * self.connections \
+                * self.availability# * m.Tfactor #* m.NMPT
+        #self.derate = self.dc_wiring
 
     def Pac(self, Insolation, tCell = 25):
         Pdc = self.array.output(Insolation, tCell)
@@ -70,9 +73,9 @@ class inverter(object):
         B = self.Pso * (1 + self.C2 * (Vdc - self.Vdco))
         C = self.C0 * (1 + self.C3 * (Vdc - self.Vdco))
         Pac = ((self.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
-        derate = self.mismatch * self.soiling * self.dc_wiring * self.connections \
-                * self.availability# * m.Tfactor #* m.NMPT
-        return Pac * derate
+        #clip at Paco
+        return min(self.Paco,Pac * self.derate)
+
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
 
