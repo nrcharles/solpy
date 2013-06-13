@@ -74,7 +74,7 @@ class inverter(object):
         C = self.C0 * (1 + self.C3 * (Vdc - self.Vdco))
         Pac = ((self.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
         #clip at Paco
-        return min(self.Paco,Pac * self.derate)
+        return min(float(self.Paco),Pac * self.derate)
 
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
