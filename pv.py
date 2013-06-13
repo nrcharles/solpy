@@ -242,7 +242,7 @@ class system(object):
                 dp[i.array.panel.model]+=i.array.series*i.array.parallel
         return di,dp
 
-    def now(self, timestamp = None, STC = True):
+    def now(self, timestamp = None, weatherData = None, model = 'STC'):
         #Preditive
         import ephem
         import irradiation
@@ -283,17 +283,18 @@ class system(object):
                 t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
 
 
-        if STC:
+        if model == 'STC':
             return self.Pac(irradiance)
         else:
-            weatherData = forecast.data(self.place)
+            if weatherData is None:
+                weatherData = forecast.data(self.place)['currently']
 
             #Module Temperature
             #TamizhMani 2003
             #tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
 
-            tAmb = (weatherData['currently']['temperature'] -32) * 5/9
-            windSpd = weatherData['currently']['windSpeed']
+            tAmb = (weatherData['temperature'] - 32) * 5/9
+            windSpd = weatherData['windSpeed']
             tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
 
             #print tAmb,tModule
