@@ -283,9 +283,7 @@ class system(object):
                 t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
 
 
-        if model == 'STC':
-            return self.Pac(irradiance)
-        else:
+        if model == 'TC':
             if weatherData is None:
                 weatherData = forecast.data(self.place)['currently']
 
@@ -296,10 +294,27 @@ class system(object):
             tAmb = (weatherData['temperature'] - 32) * 5/9
             windSpd = weatherData['windSpeed']
             tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
-
-            #print tAmb,tModule
-
             return self.Pac(irradiance, tModule)
+        elif model == 'CC':
+            if weatherData is None:
+                weatherData = forecast.data(self.place)['currently']
+
+            #Module Temperature
+            #TamizhMani 2003
+            #tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
+            cloudCover=weatherData['cloudCover']
+
+            a=.25
+            b= .5
+            cs = 1 - (a*cloudCover + b*cloudCover**2)
+            irradianceAdj = irradiance * cs
+            tAmb = (weatherData['temperature'] - 32) * 5/9
+            windSpd = weatherData['windSpeed']
+            tModule = .945*tAmb +.028*irradianceAdj - 1.528*windSpd + 4.3
+
+            return self.Pac(irradianceAdj, tModule)
+        else:
+            return self.Pac(irradiance)
 
     def powerToday(self, daylightSavings = False):
         stime = datetime.datetime.today().timetuple()
