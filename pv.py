@@ -244,53 +244,18 @@ class system(object):
 
     def now(self, timestamp = None, weatherData = None, model = 'STC'):
         #Preditive
-        import ephem
         import irradiation
         if timestamp is None:
             timestamp = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
-        #SUN Position
-        o = ephem.Observer()
-        o.date = timestamp #'2000/12/21 %s:00:00' % (hour - self.tz)
-        latitude, longitude = self.place
-        o.lat = math.radians(self.place[0])
-        o.lon = math.radians(self.place[1])
-        az = ephem.Sun(o).az
-        alt = ephem.Sun(o).alt
 
-        #Irradiance 
-        Bh = irradiation.directNormal(timestamp,alt)
-        day = irradiation.dayOfYear(timestamp)
-        Dh = irradiation.diffuseHorizontal(alt,Bh,day)
-        record = {}
-        record['utc_datetime'] = timestamp
-        Z = math.pi/2-alt
-        aaz = math.radians(self.azimuth+180)
-        slope = math.radians(self.tilt)
-
-        #incidence angle
-        theta = np.arccos(np.cos(Z)*np.cos(slope) + \
-                np.sin(slope)*np.sin(Z)*np.cos(az - math.pi - aaz))
-
-        Gh = irradiation.globalHorizontal(Bh,theta,day)
-        ETR = irradiation.apparentExtraterrestrialFlux(day)
-        #print Gh, Bh, Dh #, ETR
-
-        record['DNI (W/m^2)'] = Bh #8 Direct normal irradiance
-        record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
-        record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
-        record['ETR (W/m^2)'] = ETR
-        irradiance =irradiation.irradiation(record, self.place, self.horizon,\
-                t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
-
+        irradiance = irradiation.blave(timestamp,self.place,self.tilt,
+                self.azimuth, self.horizon)
 
         if model == 'TC':
             if weatherData is None:
                 weatherData = forecast.data(self.place)['currently']
 
-            #Module Temperature
             #TamizhMani 2003
-            #tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
-
             tAmb = (weatherData['temperature'] - 32) * 5/9
             windSpd = weatherData['windSpeed']
             tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
@@ -299,15 +264,13 @@ class system(object):
             if weatherData is None:
                 weatherData = forecast.data(self.place)['currently']
 
-            #Module Temperature
-            #TamizhMani 2003
-            #tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
+            #Palescu 2013 (3.16)
             cloudCover=weatherData['cloudCover']
-
             a=.25
             b= .5
             cs = 1 - (a*cloudCover + b*cloudCover**2)
             irradianceAdj = irradiance * cs
+
             tAmb = (weatherData['temperature'] - 32) * 5/9
             windSpd = weatherData['windSpeed']
             tModule = .945*tAmb +.028*irradianceAdj - 1.528*windSpd + 4.3

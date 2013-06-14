@@ -228,6 +228,43 @@ def diffuseHorizontal(altitude,Ib,n):
     C = 0.095 + 0.04 * sin((2.*pi/365*(n-100)))
     return Ib *C
 
+def blave(timestamp,place,tilt,azimuth,horizon):
+    #synthetic irradiance
+    #SUN Position
+    o = ephem.Observer()
+    o.date = timestamp #'2000/12/21 %s:00:00' % (hour - self.tz)
+    latitude, longitude = place
+    o.lat = radians(latitude)
+    o.lon = radians(longitude)
+    az = ephem.Sun(o).az
+    alt = ephem.Sun(o).alt
+
+    #Irradiance
+    Bh = directNormal(timestamp,alt)
+    day = dayOfYear(timestamp)
+    Dh = diffuseHorizontal(alt,Bh,day)
+    record = {}
+    record['utc_datetime'] = timestamp
+    Z = pi/2-alt
+    aaz = radians(azimuth+180)
+    slope = radians(tilt)
+
+    #incidence angle
+    theta = arccos(cos(Z)*cos(slope) + \
+            sin(slope)*sin(Z)*cos(az - pi - aaz))
+
+    Gh = globalHorizontal(Bh,theta,day)
+    ETR = apparentExtraterrestrialFlux(day)
+    #print Gh, Bh, Dh #, ETR
+
+    record['DNI (W/m^2)'] = Bh #8 Direct normal irradiance
+    record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
+    record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
+    record['ETR (W/m^2)'] = ETR
+    irradiance =irradiation(record, place, horizon,\
+            t = tilt, array_azimuth = azimuth, model = 'p9')
+    return irradiance
+
 if __name__ == "__main__":
     for i in range(-90,180):
         print i,airmass(radians(i)),airMassRatio(radians(i))
