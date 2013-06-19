@@ -169,5 +169,62 @@ def power_week_i():
         b.append(a.values)
     return resultSet(ts,sum(b))
 
+#todo: determine relavence
+#Analytical models of enphase parts. 
+class m215():
+    def __init__(self, number, landscape = True, phase =1):
+        self.phase = phase
+        self.number = number
+        self.a = .896
+        self.v = 240
+        self.w = 215
+        self.wires = 4
+        if phase is not 1:
+            self.a = 1.0
+            self.v = 208
+            self.wires = 5
+    def vd(self):
+        n = self.number + 1
+        if self.phase is 1:
+            #1 phase theoretical
+            #vd = 0.00707n(n+1)al
+            l = 1.0
+            return n*(n+1)*.00707*self.a*l
+        elif self.phase is 3:
+            #3 phase emperical
+            #y = 0.0036x^2 + 0.0094x + 0.0209
+            return 0.0036 * n*n + 0.0094 * n + 0.0209
+        else:
+            print "ERROR"
+
+class engage():
+    def __init__(self, inverters, phase = 1, landscape = True, endfed = False):
+        self.endfed = endfed
+        self.landscape = landscape
+        self.phase = phase
+        self.s1 = []
+        self.s2 = []
+        if endfed is True:
+            self.s1 = [m215(i,self.landscape,self.phase) for i in range(0,inverters)]
+        else:
+            a = inverters/2
+            self.s1 = [m215(i,self.landscape,self.phase) for i in range(0,a)]
+            b = inverters - a 
+            self.s2 = [m215(i,self.landscape,self.phase) for i in range(0,b)]
+
+    def vd(self):
+        if self.endfed:
+            return self.s1[-1].vd()
+        else:
+            return max(self.s1[-1].vd(), self.s2[-1].vd())
+        #if self.phase is 1:
+        #    return self.a[0].a * (len(self.a) + len(self.b)) * self.distance
+    def a(self):
+        if self.phase is 1:
+            a = (len(self.s1)+len(self.s2)) * 0.895
+            return a
+        else:
+            return (len(self.s1)+len(self.s2)) /1.732
+
 if __name__ == "__main__":
     print index()

@@ -470,58 +470,6 @@ class transformer(object):
         total_loss = self.loss*percent_load**2+self.noload
         return pin - total_loss
 
-class junction(object):
-    """Takes tuples of wire and next junction"""
-    def __init__(self, *args, **kwargs):
-        self.children = []
-        self.rating = 100
-        self.phase = 1
-        for arg in args:
-            self.children.append(arg)
-            if arg.phase is not 1:
-                self.phase = 3
-
-    def vd(self):
-        return max([child.vd() for child in self.children])
-
-    def a(self):
-        t = 0
-        for child in self.children:
-            t += child.a()
-        return t
-
-    def i(self,Insolation):
-        t = 0
-        for child in self.children:
-            t += child.i(Insolation)
-        return t
-
-class m215():
-    def __init__(self, number, landscape = True, phase =1):
-        self.phase = phase
-        self.number = number
-        self.a = .896
-        self.v = 240
-        self.w = 215
-        self.wires = 4
-        if phase is not 1:
-            self.a = 1.0
-            self.v = 208
-            self.wires = 5
-    def vd(self):
-        n = self.number + 1
-        if self.phase is 1:
-            #1 phase theoretical
-            #vd = 0.00707n(n+1)al
-            l = 1.0
-            return n*(n+1)*.00707*self.a*l
-        elif self.phase is 3:
-            #3 phase emperical
-            #y = 0.0036x^2 + 0.0094x + 0.0209
-            return 0.0036 * n*n + 0.0094 * n + 0.0209
-        else:
-            print "ERROR"
-
 class conductor(object):
     def __init__(self, size, material):
         self.material = material
@@ -607,35 +555,6 @@ class source():
     def vd(self):
         return 0
 
-class engage():
-    def __init__(self, inverters, phase = 1, landscape = True, endfed = False):
-        self.endfed = endfed
-        self.landscape = landscape
-        self.phase = phase
-        self.s1 = []
-        self.s2 = []
-        if endfed is True:
-            self.s1 = [m215(i,self.landscape,self.phase) for i in range(0,inverters)]
-        else:
-            a = inverters/2
-            self.s1 = [m215(i,self.landscape,self.phase) for i in range(0,a)]
-            b = inverters - a 
-            self.s2 = [m215(i,self.landscape,self.phase) for i in range(0,b)]
-
-    def vd(self):
-        if self.endfed:
-            return self.s1[-1].vd()
-        else:
-            return max(self.s1[-1].vd(), self.s2[-1].vd())
-        #if self.phase is 1:
-        #    return self.a[0].a * (len(self.a) + len(self.b)) * self.distance
-    def a(self):
-        if self.phase is 1:
-            a = (len(self.s1)+len(self.s2)) * 0.895
-            return a
-        else:
-            return (len(self.s1)+len(self.s2)) /1.732
-
 def findConductor(r, material = "CU",conduit = "PVC", pf =-1, tCond = 75):
     for s in CONDUCTOR_STANDARD_SIZES:
         tr = resistance(conductor(s,material),conduit,pf,tCond)
@@ -659,14 +578,16 @@ def minEGC(ocp,material="CU"):
                 return conductor(EGC_AL[s],material)
 
 def findEGC(cond, ocp,material="CU"):
-    minConductor = findConductorA(ocp,cond.material).size
-    minEGCSize = minEGC(ocp,material).size
-    ratio = CMIL[minConductor]*1.0 / CMIL[minEGCSize]
-    if ratio > 0:
-        increased = CMIL[cond.size]/ratio
+    minConductor = findConductorA(ocp,cond.material)
+    EGC = minEGC(ocp,material)
+    ratio = CMIL[cond.size]*1.0 / CMIL[minConductor.size]
+    if ratio > 1.0:
+        increased = CMIL[EGC.size]*ratio
         for c in CONDUCTOR_STANDARD_SIZES:
             if CMIL[c] >= increased:
-                return conductor(c,material)
+                return conductor(min(c,cond.size),material)
+    else:
+        return EGC
 
 def findConductorA(current,material):
     for s in CONDUCTOR_STANDARD_SIZES:
@@ -717,5 +638,12 @@ if __name__ == "__main__":
     bund=  [conductor("400","AL"),conductor("400","AL"),conductor("6","CU"),conductor("6","CU")]
     print conductorArea(bund)
     print findConduit(conductorArea(bund))
-    print "CU EGC", incEGC(conductor("400",'AL'),100)
-    print "AL EGC", incEGC(conductor("400",'AL'),100,'AL')
+    print "CU EGC", findEGC(conductor("400",'AL'),100)
+    print "AL EGC", findEGC(conductor("400",'AL'),100,'AL')
+    print "AL EGC", findEGC(conductor("1/0",'AL'),40)
+    print "AL EGC", findEGC(conductor("1/0",'AL'),40,'AL')
+    print "AL EGC", findEGC(conductor("1",'AL'),100)
+    import vd
+    cond = vd.vd(18,250,material='AL')
+    print cond
+    print "EGC", findEGC(cond,18*1.25,'AL')
