@@ -438,7 +438,6 @@ XHHW = {"6":.29,  #Values estimated from various datasheets
         "700": 1.124,
         "750": 1.158}
 
-
 MATERIAL_MAP = {'AL':'XHHW',
                 'CU':'THWN'}
 
@@ -456,9 +455,11 @@ def findConduit(area,c='EMT',fill=.40):
             return i
 
 def ocpSize(a):
+    """Find standard size of Overcurrent protection"""
     for i in OCP_STANDARD_SIZES:
         if i > a:
             return i
+    raise "CurrentTooGreat"
 
 class transformer(object):
     def __init__(self, rating, loss, noload):
@@ -561,11 +562,6 @@ def findConductor(r, material = "CU",conduit = "PVC", pf =-1, tCond = 75):
         if tr < r:
             return conductor(s,material)
 
-def findOCP(oc, material = "CU"):
-    for s in OCP_STANDARD_SIZES:
-        if s > oc:
-            return s
-    raise "CurrentTooGreat"
 
 def minEGC(ocp,material="CU"):
     inc = [s for s in iter(EGC_CU)]
@@ -596,7 +592,6 @@ def findConductorA(current,material):
 
 def checkAmpacity(c, oca, ambient = 30):
     ampacity = c.ampacity(ambient)
-    print "Ampacity", round(ampacity)
     if oca > ampacity:
         print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (round(ampacity),oca)
         for s in CONDUCTOR_STANDARD_SIZES:
@@ -614,7 +609,6 @@ if __name__ == "__main__":
     #house.append(junction())
     #a = engage(17, 1, True, True)
     print findConductor(1.2)
-    b = engage(17)
     #print b.vd()
     #j1 = junction()
     #j1.append(a)
@@ -647,3 +641,8 @@ if __name__ == "__main__":
     cond = vd.vd(18,250,material='AL')
     print cond
     print "EGC", findEGC(cond,18*1.25,'AL')
+    print ocpSize(10.1)
+    print ocpSize(9)
+    print findConductor(.001)
+    print findConductorA(200,"CU")
+    print checkAmpacity(cond, 20, ambient = 30)
