@@ -30,7 +30,7 @@ import ee
 
 def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEEL'):
     oc = a * 1.25
-    ocp = ee.findOCP(oc)
+    ocp = ee.ocpSize(oc)
     #print "OCP Size: %s" % ocp
     #egc = ee.findEGC(ocp,material)
     vdrop = v * percent/100.0
