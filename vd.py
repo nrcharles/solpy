@@ -34,7 +34,7 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEE
     #print "OCP Size: %s" % ocp
     #egc = ee.findEGC(ocp,material)
     vdrop = v * percent/100.0
-    #ratio = ee.CMIL[ee.findConductorA(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
+    #ratio = ee.CMIL[ee.conductorAmpacity(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
     if size:
         conductor  = ee.conductor(size,material)
         conductor = ee.checkAmpacity(conductor, ocp, tAmb)

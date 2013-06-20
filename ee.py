@@ -574,18 +574,21 @@ def minEGC(ocp,material="CU"):
                 return conductor(EGC_AL[s],material)
 
 def findEGC(cond, ocp,material="CU"):
-    minConductor = findConductorA(ocp,cond.material)
+    minConductor = conductorAmpacity(ocp,cond.material)
     EGC = minEGC(ocp,material)
     ratio = CMIL[cond.size]*1.0 / CMIL[minConductor.size]
     if ratio > 1.0:
         increased = CMIL[EGC.size]*ratio
         for c in CONDUCTOR_STANDARD_SIZES:
             if CMIL[c] >= increased:
-                return conductor(min(c,cond.size),material)
+                if CMIL[c] > CMIL[cond.size]:
+                    return cond
+                else:
+                    return conductor(c,material)
     else:
         return EGC
 
-def findConductorA(current,material):
+def conductorAmpacity(current,material):
     for s in CONDUCTOR_STANDARD_SIZES:
         if globals()["%s_AMPACITY_A30_75" % (material)][s] >= current:
             return conductor(s,material)
@@ -639,10 +642,10 @@ if __name__ == "__main__":
     print "AL EGC", findEGC(conductor("1",'AL'),100)
     import vd
     cond = vd.vd(18,250,material='AL')
-    print cond
+    print "found",cond
     print "EGC", findEGC(cond,18*1.25,'AL')
     print ocpSize(10.1)
     print ocpSize(9)
     print findConductor(.001)
-    print findConductorA(200,"CU")
+    print conductorAmpacity(200,"CU")
     print checkAmpacity(cond, 20, ambient = 30)
