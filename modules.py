@@ -29,8 +29,6 @@ class module(object):
     nameplate = .95
     Vrated = 600
     #nameplate = 1
-    #beta Voc %/Tempunit
-    #gamma Pmax %/Tempunit
     #t_noct  ; NOCT
     #a_c ; Module Area
     #n_s  ; Number of Cells 
@@ -38,7 +36,7 @@ class module(object):
     #v_oc_ref ;  VOC
     #i_mp_ref ;  Imp
     #v_mp_ref ;  Vmp 
-    #alpha_sc ; Isc temperature cofficient A/C
+    #alpha_sc ; Isc temperature cofficient %/C
     #beta_oc ; Voc temperature cofficient V/C
     #a_ref ; ideality factor V
     #i_l_ref ; light current
@@ -72,9 +70,9 @@ class module(object):
         #Pmp W/C
         self.TkPmp = self.properties['gamma_r']*self.Pmax/100
         self.gamma = self.properties['gamma_r']
-        #todo: beta or gamma?
-        #self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
-        self.TkVmp = self.properties['beta_oc']
+        #todo: beta or gamma? go more conservative for now
+        self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
+        #self.TkVmp = self.properties['beta_oc']
         self.TkIsc = self.properties['alpha_sc']*self.Isc/100
         self.A = self.properties['a_c']
         self.Eff = self.Pmax/self.A/1000
