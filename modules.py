@@ -74,7 +74,7 @@ class module(object):
         self.gamma = self.properties['gamma_r']
         #todo: beta or gamma?
         #self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
-        self.TkVmp = self.properties['beta_oc']*self.Vmpp/100
+        self.TkVmp = self.properties['beta_oc']
         self.TkIsc = self.properties['alpha_sc']*self.Isc/100
         self.A = self.properties['a_c']
         self.Eff = self.Pmax/self.A/1000
