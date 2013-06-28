@@ -23,6 +23,7 @@ enphase.index()
 
 """
 
+TCP_TIMEOUT = 5.0
 
 import json
 import urllib2
@@ -61,24 +62,24 @@ class system(object):
 
     def summary(self, summary_date=None):
         url = apiurl + "%s/summary?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def alerts(self,level=None):
         url = apiurl + "%s/alerts?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def energy_lifetime(self):
         url = apiurl + "%s/energy_lifetime?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def monthly_production(self, start_date):
         url = apiurl + "%s/monthly_production?key=%s&start=%s" % \
                 (self.system_id,apikey,start_date)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def power_today(self):
         url = apiurl + "%s/power_today?key=%s" % (self.system_id,apikey)
-        a = json.loads(urllib2.urlopen(url).read())
+        a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         production = np.array(a["production"])
         begin = strToDatetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
@@ -89,7 +90,7 @@ class system(object):
 
     def power_week(self):
         url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
-        a = json.loads(urllib2.urlopen(url).read())
+        a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         production = np.array(a["production"])
         begin = strToDatetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
@@ -100,12 +101,12 @@ class system(object):
 
     def power_week_i(self):
         url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
-        a = json.loads(urllib2.urlopen(url).read())
+        a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         begin = strToDatetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
         timeseries = np.array([begin]) 
         url = apiurl + "%s/power_today?key=%s" % (self.system_id,apikey)
-        ai = json.loads(urllib2.urlopen(url).read())
+        ai = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         production_i = a["production"]+ai["production"]
         production = np.array(production_i)
         for i in range(1,len(production_i)):
@@ -114,15 +115,15 @@ class system(object):
 
     def rgm_stats(self, start_date=None,end_date=None):
         url = apiurl + "%s/rgm_stats?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def stats(self,start_date=None,end_date=None):
         url = apiurl + "%s/stats?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def envoys(self):
         url = apiurl + "%s/envoys?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url).read())
+        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def performance_factor(self, tilt=0):
         a = self.summary()
@@ -138,7 +139,7 @@ def strToDatetime(ts1):
 
 def index():
     url = "https://api.enphaseenergy.com/api/systems?key=%s" % apikey
-    a = json.loads(urllib2.urlopen(url).read())
+    a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
     return [system(**i) for i in a["systems"]]
 
 def power_today():
@@ -227,4 +228,6 @@ class engage():
             return (len(self.s1)+len(self.s2)) /1.732
 
 if __name__ == "__main__":
-    print index()
+    a = index()
+    print [i.system_name for i in a]
+    print a[0].power_week().jsify()
