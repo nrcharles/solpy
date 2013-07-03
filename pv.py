@@ -70,9 +70,12 @@ def jsonToSystem(jsonDescription):
         scale = 1
         if "scale" in i:
             scale = i["scale"]
-        jsonShape += [inverters.inverter(i["inverter"], \
+        block = inverters.inverter(i["inverter"], \
                 modules.pvArray(modules.module(i["panel"]),\
-                i["series"],i["parallel"]))] * scale
+                i["series"],i["parallel"]))
+        if "derate" in i:
+                block.derate = i["derate"]
+        jsonShape += [ block ] * scale
     plant = system(jsonShape)
     plant.setZipcode(jsonDescription["zipcode"])
     try:
@@ -272,10 +275,11 @@ class system(object):
             irradianceAdj = irradiance * cs
 
             tAmb = (weatherData['temperature'] - 32) * 5/9
+            print cs, tAmb, irradiance
             windSpd = weatherData['windSpeed']
             tModule = .945*tAmb +.028*irradianceAdj - 1.528*windSpd + 4.3
-
             return self.Pac(irradianceAdj, tModule)
+
         else:
             return self.Pac(irradiance)
 
