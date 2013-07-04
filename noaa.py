@@ -4,7 +4,6 @@ def forecast(place, forecast = True):
     lat,lon = place
     url = """http://graphical.weather.gov/xml/SOAP_server/ndfdXMLclient.php?whichClient=NDFDgen&lat=%s&lon=%s&Unit=e&temp=temp&wspd=wspd&sky=sky&wx=wx&rh=rh&Submit=Submit""" % (lat,lon)
     res =  urllib2.urlopen(url).read()
-    print res
     root = ET.fromstring(res)
     
     #knots to mph
