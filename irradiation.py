@@ -228,7 +228,7 @@ def diffuseHorizontal(altitude,Ib,n):
     C = 0.095 + 0.04 * sin((2.*pi/365*(n-100)))
     return Ib *C
 
-def blave(timestamp,place,tilt,azimuth,horizon):
+def blave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
     #synthetic irradiance
     #SUN Position
     o = ephem.Observer()
@@ -239,8 +239,13 @@ def blave(timestamp,place,tilt,azimuth,horizon):
     az = ephem.Sun(o).az
     alt = ephem.Sun(o).alt
 
+    #Palescu 2013 (3.16)
+    a=.25
+    b= .5
+    cs = 1 - (a*cloudCover + b*cloudCover**2)
+
     #Irradiance
-    Bh = directNormal(timestamp,alt)
+    Bh = directNormal(timestamp,alt) * cs
     day = dayOfYear(timestamp)
     Dh = diffuseHorizontal(alt,Bh,day)
     record = {}
@@ -261,9 +266,14 @@ def blave(timestamp,place,tilt,azimuth,horizon):
     record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
     record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
     record['ETR (W/m^2)'] = ETR
-    irradiance =irradiation(record, place, horizon,\
-            t = tilt, array_azimuth = azimuth, model = 'p9')
-    return irradiance
+    return record
+
+def moduleTemp(irradiance,weatherData):
+    #TamizhMani 2003
+    tAmb = (weatherData['temperature'] - 32) * 5/9
+    windSpd = weatherData['windSpeed']
+    tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
+    return tModule
 
 if __name__ == "__main__":
     for i in range(-90,180):
@@ -286,3 +296,16 @@ if __name__ == "__main__":
     print perez(0,0,0,0.558505360638,2.5366580297,2.57519603892)
     print perez(0,0,0,0.558505360638,2.74856500007,2.7436087649)
     print perez(0,0,0,0.558505360638,2.87979696349,2.83820540821)
+    from scipy.interpolate import interp1d
+    import numpy as np
+    import geo
+    thorizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
+    timestamp = datetime.datetime.now()
+    place = geo.zipToCoordinates('17603')
+    tilt = 1
+    azimuth = 180
+    print blave(timestamp,place,tilt,azimuth)
+    azimuth = 90
+    print blave(timestamp,place,tilt,azimuth)
+    azimuth = 270
+    print blave(timestamp,place,tilt,azimuth)

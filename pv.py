@@ -251,37 +251,24 @@ class system(object):
         if timestamp is None:
             timestamp = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
 
-        irradiance = irradiation.blave(timestamp,self.place,self.tilt,
-                self.azimuth, self.horizon)
-
-        if model == 'TC':
-            if weatherData is None:
+        if model != 'STC' and  weatherData == None:
                 weatherData = forecast.data(self.place)['currently']
 
-            #TamizhMani 2003
-            tAmb = (weatherData['temperature'] - 32) * 5/9
-            windSpd = weatherData['windSpeed']
-            tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
-            return self.Pac(irradiance, tModule)
-        elif model == 'CC':
-            if weatherData is None:
-                weatherData = forecast.data(self.place)['currently']
-
-            #Palescu 2013 (3.16)
-            cloudCover=weatherData['cloudCover']
-            a=.25
-            b= .5
-            cs = 1 - (a*cloudCover + b*cloudCover**2)
-            irradianceAdj = irradiance * cs
-
-            tAmb = (weatherData['temperature'] - 32) * 5/9
-            print cs, tAmb, irradiance
-            windSpd = weatherData['windSpeed']
-            tModule = .945*tAmb +.028*irradianceAdj - 1.528*windSpd + 4.3
-            return self.Pac(irradianceAdj, tModule)
-
+        if model == 'CC':
+            record = irradiation.blave(timestamp,self.place,self.tilt,
+                    self.azimuth, cloudCover=weatherData['cloudCover'])
         else:
+            record = irradiation.blave(timestamp,self.place,self.tilt,
+                    self.azimuth)
+
+        irradiance = irradiation.irradiation(record, self.place, self.horizon,\
+                t = self.tilt, array_azimuth = self.azimuth, model = 'p9')
+
+        if model == 'STC':
             return self.Pac(irradiance)
+        else:
+            tModule = irradiation.moduleTemp(irradiance, weatherData)
+            return self.Pac(irradiance, tModule)
 
     def powerToday(self, daylightSavings = False):
         stime = datetime.datetime.today().timetuple()
@@ -303,4 +290,3 @@ class system(object):
         rs.values = values
         rs.timeseries = timeseries
         return rs
-
