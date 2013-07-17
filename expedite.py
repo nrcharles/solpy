@@ -38,6 +38,18 @@ def string_notes(system):
     notes = []
     notes.append("%s KW AC RATED" % round(ac_rated/1000.0,2))
     notes.append("%s KW DC RATED" % round(dc_rated/1000.0,2))
+    #BUG: This doesn't work for 3 phase
+    if system.phase == 1:
+        notes.append( "System AC Output Current: %s A" % \
+                round(sum([i.Paco for i in system.shape])/i.ac_voltage,1))
+    else:
+        notes.append( "System AC Output Current: %s A" % \
+                round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1))
+
+    notes.append("Nominal AC Voltage: %s V" % i.ac_voltage)
+    notes.append("")
+    notes.append("Minimum Temperature: %s C" % mintemp)
+    notes.append("2 Percent Max Temperature: %s C" % twopercentTemp)
     notes.append("")
     di, dp = system.describe()
     aMax = 0
@@ -81,19 +93,6 @@ def string_notes(system):
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
             aMax = i.array.Vmax(mintemp)
-    #BUG: This doesn't work for 3 phase
-    if system.phase == 1:
-        notes.append( "System AC Output Current: %s A" % \
-                round(sum([i.Paco for i in system.shape])/i.ac_voltage,1))
-    else:
-        notes.append( "System AC Output Current: %s A" % \
-                round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1))
-
-    notes.append("Nominal AC Voltage: %s V" % i.ac_voltage)
-
-    notes.append("Minimum Temperature: %s C" % mintemp)
-    notes.append("2 Percent Max Temperature: %s C" % twopercentTemp)
-    notes.append("")
     notes.append("Array Azimuth: %s Degrees" % system.azimuth)
     notes.append("Array Tilt: %s Degrees" % system.tilt)
     notes.append("December 21 9:00 AM Sun Azimuth: %s Degrees" % \
@@ -178,7 +177,12 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     try:
         #start program
-        plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
+        jsonP = json.loads(open(args['file']).read())
+        try:
+            print jsonP["system_name"].upper(), "-", jsonP["address"],jsonP["zipcode"]
+        except:
+            pass
+        plant = pv.jsonToSystem(jsonP)
         string_notes(plant)
         #graph = plant.model()
         #graph.savefig('pv_output_%s.png' % plant.zipcode)
