@@ -257,7 +257,7 @@ def blave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
     #incidence angle
     theta = arccos(cos(Z)*cos(slope) + \
             sin(slope)*sin(Z)*cos(az - pi - aaz))
-
+    #todo: should this theta include tilt of collector?
     Gh = globalHorizontal(Bh,theta,day)
     ETR = apparentExtraterrestrialFlux(day)
     #print Gh, Bh, Dh #, ETR
@@ -269,6 +269,7 @@ def blave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
     return record
 
 def moduleTemp(irradiance,weatherData):
+    #todo: Maybe Sandia Module Temperature instead?
     #TamizhMani 2003
     tAmb = (weatherData['temperature'] - 32) * 5/9
     windSpd = weatherData['windSpeed']
