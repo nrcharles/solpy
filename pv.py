@@ -247,7 +247,6 @@ class system(object):
 
     def now(self, timestamp = None, weatherData = None, model = 'STC'):
         #Preditive
-        import irradiation
         if timestamp is None:
             timestamp = datetime.datetime.now() - datetime.timedelta(hours=self.tz)
 
