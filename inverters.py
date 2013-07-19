@@ -41,9 +41,13 @@ class inverter(object):
         self.properties = None
         inverters = json.loads(open(SPATH + '/si.json').read())
         for i in inverters:
-            if i['inverter']==model:
-                self.properties = i
-                break
+            try:
+                if i['inverter']==model:
+                    self.properties = i
+                    break
+            except:
+                print "Error on key with data",i
+                raise
         if self.properties == None:
             raise Exception("Inverter not found")
         self.ac_voltage = self.properties['ac_voltage']
