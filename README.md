@@ -1,6 +1,7 @@
 solpy
 -------
-Solpy is a python library to model solar system power performance similar to PVWatts or NREL's System Advisor Model(SAM).  I initially started writing this while working in Bangladesh as fairly crude calculator to go from a fisheye panorama to a csv of vectors for shading calculations, however there were several pieces that were added to make it a bit more useful.  Daniel Thomas did work adding the Tang evacuated glass tube model. Pyephem was added for solar positioning.  There is also a simple module for reading TMY3 data. This tool is rudimentary, but functional. 
+Solpy is a python library to model solar system power performance similar to PVWatts or NREL's System Advisor Model(SAM).  I initially started writing this while working in Bangladesh as fairly crude calculator to go from a fisheye panorama to a csv of vectors for shading calculations, however there were several pieces that were added to make it a bit more useful for both analyis and design.  
+Daniel Thomas did work adding the Tang evacuated glass tube model. Pyephem was added for solar positioning.  There is also a simple module for reading TMY3 data. This tool is rudimentary, but functional.  
 
 This is primarily a research and analysis tool and there is no guarantee on the calculations.
 
@@ -9,16 +10,19 @@ Features
 -Liu & Jordan diffuse irradiance model  
 -Perez et al. diffuse irradiance model  
 -Sandia Inverter model  
--Sandia Module model  
 -NEC voltage drop caculations  
 
 Files
 -----
--expedite.py - calculate information needed for the expedited permit process  
+-enphase.py - Enphase API wrapper  
 -epw.py - EPW weather data  
+-expedite.py - calculate information needed for the expedited permit process  
 -fisheye.py - fisheye image to shading vectors  
--tmy3.py - read tmy3 data  
+-forecast.py - forecast.io API wrapper  
+-noaa.py - NOAA weather data API wrapper  
 -pv.py - system performance prediction  
+-pvcli - cli interface to pv modeling--
+-tmy3.py - read tmy3 data  
 -vd.py - voltage drop  
 
 Usage
