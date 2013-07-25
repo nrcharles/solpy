@@ -99,7 +99,7 @@ def string_notes(system):
             int(round(degrees(system.solstice(9)[1]),0)))
     notes.append("December 21 3:00 PM Sun Azimuth: %s Degrees" % \
             int(round(degrees(system.solstice(15)[1]),0)))
-    notes.append("Minumum Row space ratio: %s" % \
+    notes.append("Minimum Row space ratio: %s" % \
             round(system.minRowSpace(1.0),2))
     print "\n".join(notes)
     return notes
