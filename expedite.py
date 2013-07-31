@@ -24,7 +24,7 @@ import ee
 import vd
 from math import degrees
 
-def string_notes(system):
+def string_notes(system, run=0.0):
     """page 5"""
     stationClass = 3
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
@@ -40,11 +40,10 @@ def string_notes(system):
     notes.append("%s KW DC RATED" % round(dc_rated/1000.0,2))
     #BUG: This doesn't work for 3 phase
     if system.phase == 1:
-        notes.append( "System AC Output Current: %s A" % \
-                round(sum([i.Paco for i in system.shape])/i.ac_voltage,1))
+        Aac = round(sum([i.Paco for i in system.shape])/i.ac_voltage,1)
     else:
-        notes.append( "System AC Output Current: %s A" % \
-                round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1))
+        Aac = round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1)
+    notes.append( "System AC Output Current: %s A" % Aac)
 
     notes.append("Nominal AC Voltage: %s V" % i.ac_voltage)
     notes.append("")
@@ -93,6 +92,7 @@ def string_notes(system):
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
             aMax = i.array.Vmax(mintemp)
+
     notes.append("Array Azimuth: %s Degrees" % system.azimuth)
     notes.append("Array Tilt: %s Degrees" % system.tilt)
     notes.append("December 21 9:00 AM Sun Azimuth: %s Degrees" % \
@@ -102,6 +102,15 @@ def string_notes(system):
     notes.append("Minimum Row space ratio: %s" % \
             round(system.minRowSpace(1.0),2))
     print "\n".join(notes)
+
+    print ""
+    print "Minimum Bundle"
+    minC = vd.vd(Aac,5)
+    ee.assemble(minC,Aac,conduit='STEEL')
+    if run > 0:
+        print "Long Run"
+        minC = vd.vd(Aac,run,v=i.ac_voltage,tAmb=15,pf=.95,material='AL')
+        ee.assemble(minC,Aac,conduit='PVC')
     return notes
 
 def micro_calcs(system,d,Vnominal=240):
@@ -179,11 +188,11 @@ if __name__ == "__main__":
         #start program
         jsonP = json.loads(open(args['file']).read())
         try:
+            plant = pv.jsonToSystem(jsonP)
             print jsonP["system_name"].upper(), "-", jsonP["address"],jsonP["zipcode"]
+            string_notes(plant,jsonP["run"])
         except:
-            pass
-        plant = pv.jsonToSystem(jsonP)
-        string_notes(plant)
+            string_notes(plant)
         #graph = plant.model()
         #graph.savefig('pv_output_%s.png' % plant.zipcode)
 

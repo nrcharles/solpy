@@ -28,7 +28,8 @@ def usage():
 
 import ee
 
-def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEEL'):
+def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
+        c='STEEL',verbose = False):
     oc = a * 1.25
     ocp = ee.ocpSize(oc)
     #print "OCP Size: %s" % ocp
@@ -40,11 +41,13 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEE
         conductor = ee.checkAmpacity(conductor, ocp, tAmb)
         vdrop = conductor.vd(a,l, v = v, pf=pf, tAmb=tAmb,c=c)
         vdp=(vdrop * 100/v)
-        print "Percent drop: %s%%" % round(vdp,2)
+        if verbose:
+            print "Percent drop: %s%%" % round(vdp,2)
         #print "EGC Size: %s" % incEGC(conductor,egc,ratio)
         return conductor
     else:
-        print "Allowed Voltage drop: %sV" % vdrop
+        if verbose:
+            print "Allowed Voltage drop: %sV" % vdrop
         sets = 0
         conductor = None
         while conductor is None:
@@ -63,10 +66,12 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', c='STEE
             #print "EGC Size: %s" % incEGC(conductor,egc,ratio)
             return [conductor for i in range(sets)]
         else:
-            print "Conductor %s" % conductor
+            if verbose:
+                print "Conductor %s" % conductor
             conductor = ee.checkAmpacity(conductor, ocp/sets, tAmb)
             #print "EGC Size: %s %s" % ( incEGC(conductor,egc,ratio),'CU'#conductor.material)
-            print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c),2)
+            if verbose:
+                print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c),2)
             return conductor
 
 if __name__ == "__main__":

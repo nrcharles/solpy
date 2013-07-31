@@ -441,6 +441,19 @@ XHHW = {"6":.29,  #Values estimated from various datasheets
 MATERIAL_MAP = {'AL':'XHHW',
                 'CU':'THWN'}
 
+SERVICE_TYPE = {"120":(120,2,1),
+    "120/208":(208,3,2),
+    "120/240":(240,2,2),
+    "240/3":(240,3,1),
+    "277/480":(480,3,2),
+    "480/3":(480,3,1),
+    "400":(400,2,1),
+    "700":(700,2,1)
+}
+
+CONDUIT_MAP = {"STEEL":"EMT",
+    "PVC":"PVC40"}
+
 def conductorArea(harness):
     A = 0
     for cond in harness:
@@ -596,15 +609,22 @@ def conductorAmpacity(current,material):
 def checkAmpacity(c, oca, ambient = 30):
     ampacity = c.ampacity(ambient)
     if oca > ampacity:
-        print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (round(ampacity),oca)
+        #print "Warning: conductor ampacity %s is exceeded by OCP rating: %s" % (round(ampacity),oca)
         for s in CONDUCTOR_STANDARD_SIZES:
             #conductor_oc = globals()["%s_AMPACITY_A30_75" % (c.material)][s] 
             conductor_oc = conductor(s,c.material).ampacity(ambient)
             if conductor_oc >= oca:
-                print "Minimum size is %s %s" % (s, c.material)
+                #print "Minimum size is %s %s" % (s, c.material)
                 return conductor(s,c.material)
     else:
         return c
+
+def assemble(conductor,current,service="120/240",conduit='PVC'):
+    v, conductorN, egcN = SERVICE_TYPE[service]
+    ocp = ocpSize(current*1.25)
+    egc = findEGC(conductor,ocp,material='CU')
+    conduitSize = findConduit(conductorArea([conductor]*conductorN+[egc]*egcN),CONDUIT_MAP[conduit])
+    print conductor,': EGC',egc,": %s\"" % conduitSize,CONDUIT_MAP[conduit]
 
 if __name__ == "__main__":
     #house = netlist()
