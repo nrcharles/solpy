@@ -63,7 +63,7 @@ def string_notes(system, run=0.0):
             notes.append("Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc)
             notes.append("Short-Circuit Current (Isc): %s A" % i.array.panel.Isc)
             notes.append("Maximum Power (Pmax): %s W" % round(i.array.panel.Pmax,1))
-            notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
+            #notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
 
             notes.append("")
             dp.pop(i.array.panel.model)
@@ -77,14 +77,15 @@ def string_notes(system, run=0.0):
                 notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage/3**.5,1))
             else:
                 notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
-            #print "Max AC OCPD Rating: %s A" % ee.ocpSize(i.Paco/i.ac_voltage*1.25)
-            if i.array.parallel > 1:
+            #greater than 1 in parallel
+            if len(i.array.shape) > 1:
                 pass
                 notes.append("DC Operating Current: %s A" % \
-                        round(i.array.panel.Impp*i.array.parallel,1))
+                        round(i.array.panel.Impp*len(i.array.shape),1))
                 notes.append("DC Short Circuit Current: %s A" % \
-                        round(i.array.panel.Isc*i.array.parallel,1))
-            if i.array.series > 1:
+                        round(i.array.panel.Isc*len(i.array.shape),1))
+            #greater than 1 in series
+            if max(i.array.shape)> 1:
                 notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
                 notes.append("System Max DC Voltage: %s V" % round(i.array.Vmax(mintemp),1))
                 notes.append("Pnom Ratio: %s" % round((i.array.Pmax/i.Paco),2))

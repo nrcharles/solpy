@@ -70,9 +70,19 @@ def jsonToSystem(jsonDescription):
         scale = 1
         if "scale" in i:
             scale = i["scale"]
+        if "shape" in i:
+            shape = []
+            for string in i["shape"]:
+                if "parallel" in string:
+                    shape +=[string["series"]]*string["parallel"]
+                else:
+                    shape.append(string["series"])
+        else:
+            shape = [i["series"]]*i["parallel"]
         block = inverters.inverter(i["inverter"], \
                 modules.pvArray(modules.module(i["panel"]),\
-                i["series"],i["parallel"]))
+                shape))
+                #i["series"],i["parallel"]))
         if "derate" in i:
                 block.derate = i["derate"]
         jsonShape += [ block ] * scale
@@ -242,7 +252,7 @@ class system(object):
             if hasattr(i.array,'model'):
                 dp[i.array.model]+=1
             else:
-                dp[i.array.panel.model]+=i.array.series*i.array.parallel
+                dp[i.array.panel.model]+=sum(i.array.shape)#.series*i.array.parallel
         return di,dp
 
     def now(self, timestamp = None, weatherData = None, model = 'STC'):

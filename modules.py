@@ -104,20 +104,21 @@ class module(object):
 #todo: this needs rewritten
 class pvArray(object):
     """structure to aggregate panels into an array)"""
-    def __init__(self,pname, series, parallel = 1):
+    def __init__(self,pname, shape):#series, parallel = 1):
+        self.shape = shape
         self.panel = pname
-        self.series = series
-        self.parallel = parallel
-        self.Pmax = pname.Pmax*series*parallel
+        #self.series = series
+        #self.parallel = parallel
+        self.Pmax = pname.Pmax*sum(self.shape)#pname.Pmax*series*parallel
 
     def Vdc(self, t = 25):
-        return self.panel.Vdc(t) * self.series
+        return self.panel.Vdc(t) * max(self.shape)#self.series
     def Vmax(self,ashraeMin):
-        return self.panel.Vmax(ashraeMin) * self.series
+        return self.panel.Vmax(ashraeMin) * max(self.shape)#self.series
     def Vmin(self,ashrae2p, Tadd = 30):
-        return  self.panel.Vmin(ashrae2p, Tadd)* self.series
+        return  self.panel.Vmin(ashrae2p, Tadd)* min(self.shape)#Dseries
     def output(self, Insolation, tAmb=25):
-        return self.panel.output(Insolation,tAmb)*self.series*self.parallel
+        return self.panel.output(Insolation,tAmb)*sum(self.shape)#self.series*self.parallel
 
 def manufacturers():
     a =  [i['panel'].split(":")[0] for i in json.loads(open(SPATH + '/sp.json').read()) ]
