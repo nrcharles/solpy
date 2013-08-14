@@ -623,6 +623,8 @@ def assemble(conductor,current,service="120/240",conduit='PVC'):
     v, conductorN, egcN = SERVICE_TYPE[service]
     ocp = ocpSize(current*1.25)
     egc = findEGC(conductor,ocp,material='CU')
+    if CMIL[egc.size] > CMIL['4']:
+        egc = findEGC(conductor,ocp,material='AL')
     conduitSize = findConduit(conductorArea([conductor]*conductorN+[egc]*egcN),CONDUIT_MAP[conduit])
     print conductor,': EGC',egc,": %s\"" % conduitSize,CONDUIT_MAP[conduit]
 
