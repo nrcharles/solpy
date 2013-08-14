@@ -276,10 +276,91 @@ def moduleTemp(irradiance,weatherData):
     tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
     return tModule
 
+#what are good default values?
+def bird(Z, P, tau38=0.05, tau5=0.05, rg=.2, Uw=0.0, Uo=0.32, Ba=0.84, K1 = 0.385):
+    """Bird clear sky model 1981
+    Solar Constant
+    Z = Zenith angle (radians, Bird uses degrees but I converted formulas) 
+    P = Surface Pressure(millibars)
+    rg = ground albedo
+    Uw = precipitable water vapor (cm)
+    Uo = total ozone (cm)
+    tau5,tau38 = trubidity at 0.5 and/or 0.38um
+    Ba = aerosol forward scattering ratio (0.84) recommended
+    """
+    #Extraterrestiral solar irradiance
+    Io = 1353.0
+    M = (cos(Z)+0.15*(93.885-degrees(Z))**-1.25)**-1
+    tau_A = 0.275*tau38*tau5
+    TA = exp(-tau_A**0.873*(1+tau_A-tau_A**0.7088)*M**0.9108)
+    TAA = 1-K1*(1-M+M**1.06)*(1-TA)
+    TAS = TA/TAA
+    Tas = TAS #???!!! Tas seems to be Watt Model but it's refed by Bird
+    rs = 0.0685+(1-Ba)*(1.0-Tas)
+    Mp = M*P/1013
+    Tr = exp(-0.0903*Mp**0.84*(1+Mp-Mp**1.01))
+    #print "Tr",Tr
+
+    Xo = Uo*M
+
+    To = 1-0.1611*Xo*(1+139.48*Xo)**-0.3035 \
+            -0.002715*Xo*(1+0.044*Xo+0.0003*Xo**2)**-1
+    #print "To",To
+    Tum = exp(-0.0127*Mp**0.26)
+    #print "Tum",Tum
+
+    Xw = Uw*M
+    Tw = 1-2.4959*Xw*((1+79.034*Xw)**0.6828+6.384*Xw)**-1
+    #print "Tw",Tw
+    Ta = exp(-tau_A**0.873*(1+tau_A - tau_A**0.7088)*M**0.9108)
+    #print "Ta",Ta
+    Taa = 1-K1*(1-M+M**1.06)*(1-tau_A)
+
+    #Direct Solar irradiance on horizontal surface
+    Id = Io * cos(Z)*0.9662*Tr*To*Tum*Tw*Ta
+    #Solar irradiance on horizontal surface from atomspheric scattering
+    Ias = Io* cos(Z)*0.79*To*Tw*Tum*Taa
+    #Total (global) solar irradiance on a horizonal surface
+    It = (Id+Ias)/(1-rg*rs)
+    return It, Id, Ias
+
+def bblave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
+    #SUN Position
+    o = ephem.Observer()
+    o.date = timestamp #'2000/12/21 %s:00:00' % (hour - self.tz)
+    latitude, longitude = place
+    o.lat = radians(latitude)
+    o.lon = radians(longitude)
+    az = ephem.Sun(o).az
+    alt = ephem.Sun(o).alt
+
+    #Irradiance
+    day = dayOfYear(timestamp)
+    record = {}
+    record['utc_datetime'] = timestamp
+    Z = pi/2-alt
+    aaz = radians(azimuth+180)
+    slope = radians(tilt)
+
+    #incidence angle
+    theta = arccos(cos(Z)*cos(slope) + \
+            sin(slope)*sin(Z)*cos(az - pi - aaz))
+    ETR = apparentExtraterrestrialFlux(day)
+    #pressure?
+    t,Bh,Gh =  bird(theta,1010.0)
+    Dh = diffuseHorizontal(alt,Bh,day)
+
+    record['DNI (W/m^2)'] = Bh #8 Direct normal irradiance
+    record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
+    record['DHI (W/m^2)'] = Dh #11 Diffuse horizontal irradiance
+    record['ETR (W/m^2)'] = ETR
+    return record
+
 if __name__ == "__main__":
     for i in range(-90,180):
         print i,airmass(radians(i)),airMassRatio(radians(i))
 
+    print airMassRatio(radians(30))
     print "perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)"
     print perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)
     #print perez(60,786,60,540,0.558505360638,0.624040125833,1.14157618561)
@@ -306,6 +387,8 @@ if __name__ == "__main__":
     tilt = 1
     azimuth = 180
     print blave(timestamp,place,tilt,azimuth)
+    print bblave(timestamp,place,tilt,azimuth)
+    print "Bird",bird(0.478253620172,1000.0)
     azimuth = 90
     print blave(timestamp,place,tilt,azimuth)
     azimuth = 270
