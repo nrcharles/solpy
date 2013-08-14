@@ -23,6 +23,11 @@ import pv
 import ee
 import vd
 from math import degrees
+import sys
+try:
+    import geomag
+except:
+    print "Warning: geomag not loaded.  Magnetic declination unavailible"
 
 def string_notes(system, run=0.0):
     """page 5"""
@@ -100,6 +105,9 @@ def string_notes(system, run=0.0):
             int(round(degrees(system.solstice(9)[1]),0)))
     notes.append("December 21 3:00 PM Sun Azimuth: %s Degrees" % \
             int(round(degrees(system.solstice(15)[1]),0)))
+    if sys.modules['geomag']:
+        notes.append("Magnetic declination: %s Degrees" % \
+                round(geomag.declination(dlat=system.place[0],dlon=system.place[1])))
     notes.append("Minimum Row space ratio: %s" % \
             round(system.minRowSpace(1.0),2))
     print "\n".join(notes)
