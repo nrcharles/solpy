@@ -36,8 +36,9 @@ class inverter(object):
     NMPT = .97
     Tfactor = .98
 
-    def __init__(self, model, array):
+    def __init__(self, model, array, orientation=[(180,0)]):
         self.array = array
+        self.orientation = orientation
         self.properties = None
         inverters = json.loads(open(SPATH + '/si.json').read())
         for i in inverters:

@@ -196,11 +196,13 @@ if __name__ == "__main__":
     try:
         #start program
         jsonP = json.loads(open(args['file']).read())
-        try:
-            plant = pv.jsonToSystem(jsonP)
+        plant = pv.jsonToSystem(jsonP)
+        if "run" in jsonP:
             print jsonP["system_name"].upper(), "-", jsonP["address"],jsonP["zipcode"]
             string_notes(plant,jsonP["run"])
-        except:
+            pass
+        else:
+
             string_notes(plant)
         #graph = plant.model()
         #graph.savefig('pv_output_%s.png' % plant.zipcode)

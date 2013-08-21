@@ -65,11 +65,16 @@ def fileToSystem(filename):
 
 def jsonToSystem(jsonDescription):
     """Load a system from a json description"""
+    #todo: this is getting unweildy should probably be refactored
     jsonShape = []
+    orientations = []
     for i in jsonDescription["array"]:
+        o = {}
         scale = 1
         if "scale" in i:
             scale = i["scale"]
+        if "quantity" in i:
+            scale = i["quantity"]
         if "shape" in i:
             shape = []
             for string in i["shape"]:
@@ -78,10 +83,30 @@ def jsonToSystem(jsonDescription):
                 else:
                     shape.append(string["series"])
         else:
-            shape = [i["series"]]*i["parallel"]
+            if "series" in i:
+                series = i["series"]
+            else:
+                series = 1
+            if "parallel" in i:
+                parallel = i["parallel"]
+            else:
+                parallel = 1
+
+            shape = [series]*parallel
+
+        if "tilt" in i:
+            o["tilt"] = i["tilt"]
+        else:
+            o["tilt"] = jsonDescription["tilt"]
+        if "azimuth" in i:
+            o["azimuth"] = i["azimuth"]
+        else:
+            o["azimuth"] = jsonDescription["azimuth"]
+        orientations.append(o)
+
         block = inverters.inverter(i["inverter"], \
                 modules.pvArray(modules.module(i["panel"]),\
-                shape))
+                shape),(o["azimuth"],o["tilt"]))
                 #i["series"],i["parallel"]))
         if "derate" in i:
                 block.derate = i["derate"]
@@ -98,8 +123,20 @@ def jsonToSystem(jsonDescription):
         print "Address not set, location defaulting to zipcode"
         print plant.place
         pass
-    plant.tilt = jsonDescription["tilt"]
-    plant.azimuth = jsonDescription["azimuth"]
+    print orientations
+    print set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])
+    if ("tilt" in jsonDescription and "azimuth" in jsonDescription):
+        plant.tilt = jsonDescription["tilt"]
+        plant.azimuth = jsonDescription["azimuth"]
+    elif len(set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])) > 1:
+        print "WARNING: multiple tilts not implimented"
+        plant.tilt = o[1]["tilt"]
+        plant.azimuth = o[1]["azimuth"]
+    else:
+        "maybe incomplete"
+        plant.tilt = orientations[1]["tilt"]
+        plant.azimuth = orientations[1]["azimuth"]
+
     plant.phase = jsonDescription["phase"]
     plant.systemName = jsonDescription["system_name"]
     return plant
