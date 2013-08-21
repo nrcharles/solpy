@@ -72,9 +72,9 @@ if __name__ == "__main__":
     #m = "Suntech Power : STP245-20-Wd"
     #m = "Mage Solar : Powertec Plus 285-6 PL"
     #m = "Mage Solar : Powertec Plus 245-6 PL *"
-    m = "Mage Solar : Powertec Plus 250-6 MNCS"
+    m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
     ms = modules.module(m)
-    system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,11,6))
+    system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,[11]*6))
     print fill(system,zc)
     system = inverters.inverter("Refusol: 24 kW 480V",modules.pvArray(ms,11,6))
     print fill(system,zc)
