@@ -130,12 +130,12 @@ def jsonToSystem(jsonDescription):
         plant.azimuth = jsonDescription["azimuth"]
     elif len(set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])) > 1:
         print "WARNING: multiple tilts not implimented"
-        plant.tilt = o[1]["tilt"]
-        plant.azimuth = o[1]["azimuth"]
+        plant.tilt = o[0]["tilt"]
+        plant.azimuth = o[0]["azimuth"]
     else:
         "maybe incomplete"
-        plant.tilt = orientations[1]["tilt"]
-        plant.azimuth = orientations[1]["azimuth"]
+        plant.tilt = orientations[0]["tilt"]
+        plant.azimuth = orientations[0]["azimuth"]
 
     plant.phase = jsonDescription["phase"]
     plant.systemName = jsonDescription["system_name"]
