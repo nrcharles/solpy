@@ -201,7 +201,6 @@ if __name__ == "__main__":
             print '%s - %s %s' % \
                 (jsonP['system_name'].upper(),jsonP['address'],jsonP['zipcode'])
         plant = pv.jsonToSystem(jsonP)
-        print plant.place
         if "run" in jsonP:
             string_notes(plant,jsonP["run"])
             pass

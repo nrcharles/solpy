@@ -114,24 +114,22 @@ def jsonToSystem(jsonDescription):
     plant = system(jsonShape)
     plant.setZipcode(jsonDescription["zipcode"])
     try:
-         address = jsonDescription["address"]
-         g = geocoders.GoogleV3()
-         place, (lat, lng) = g.geocode(address)
-         plant.place = lat,lng
-         print "Geolocation Found"
+        address = jsonDescription["address"]
+        g = geocoders.GoogleV3()
+        place, (lat, lng) = g.geocode(address)
+        plant.place = lat,lng
+        print "%s, %s Geolocated" % plant.place
     except:
-        print "Address not set, location defaulting to zipcode"
-        print plant.place
-        pass
-    print orientations
-    print set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])
-    if ("tilt" in jsonDescription and "azimuth" in jsonDescription):
-        plant.tilt = jsonDescription["tilt"]
-        plant.azimuth = jsonDescription["azimuth"]
-    elif len(set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])) > 1:
+        print "%s, %s location from zipcode" % plant.place
+    #print orientations
+    #print set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])
+    if len(set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])) > 1:
         print "WARNING: multiple tilts not implimented"
         plant.tilt = o[0]["tilt"]
         plant.azimuth = o[0]["azimuth"]
+    elif ("tilt" in jsonDescription and "azimuth" in jsonDescription):
+        plant.tilt = jsonDescription["tilt"]
+        plant.azimuth = jsonDescription["azimuth"]
     else:
         "maybe incomplete"
         plant.tilt = orientations[0]["tilt"]
