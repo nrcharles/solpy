@@ -33,21 +33,22 @@ def string_notes(system, run=0.0):
     """page 5"""
     stationClass = 3
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
+    print "Weather Source:", name, usaf
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
-    ac_rated = 0
-    dc_rated = 0
+    ac_rated = 0.0
+    dc_rated = 0.0
     for i in system.shape:
         dc_rated += i.array.Pmax
         ac_rated += i.Paco
     notes = []
     notes.append("%s KW AC RATED" % round(ac_rated/1000.0,2))
     notes.append("%s KW DC RATED" % round(dc_rated/1000.0,2))
-    #BUG: This doesn't work for 3 phase
+    #BUG: This doesn't work for unbalanced 3 phase
     if system.phase == 1:
-        Aac = round(sum([i.Paco for i in system.shape])/i.ac_voltage,1)
+        Aac = round(ac_rated/i.ac_voltage,1)
     else:
-        Aac = round(sum([i.Paco for i in system.shape])/i.ac_voltage/3**.5,1)
+        Aac = round(ac_rated/i.ac_voltage/3**.5,1)
     notes.append( "System AC Output Current: %s A" % Aac)
 
     notes.append("Nominal AC Voltage: %s V" % i.ac_voltage)
@@ -114,11 +115,11 @@ def string_notes(system, run=0.0):
 
     print ""
     print "Minimum Bundle"
-    minC = vd.vd(Aac,5)
+    minC = vd.vd(Aac,5,verbose=False)
     ee.assemble(minC,Aac,conduit='STEEL')
     if run > 0:
         print "Long Run"
-        minC = vd.vd(Aac,run,v=i.ac_voltage,tAmb=15,pf=.95,material='AL')
+        minC = vd.vd(Aac,run,v=i.ac_voltage,tAmb=15,pf=.95,material='AL',verbose=False)
         ee.assemble(minC,Aac,conduit='PVC')
     return notes
 
@@ -196,9 +197,12 @@ if __name__ == "__main__":
     try:
         #start program
         jsonP = json.loads(open(args['file']).read())
+        if 'address' in jsonP:
+            print '%s - %s %s' % \
+                (jsonP['system_name'].upper(),jsonP['address'],jsonP['zipcode'])
         plant = pv.jsonToSystem(jsonP)
+        print plant.place
         if "run" in jsonP:
-            print jsonP["system_name"].upper(), "-", jsonP["address"],jsonP["zipcode"]
             string_notes(plant,jsonP["run"])
             pass
         else:
