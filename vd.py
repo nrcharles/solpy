@@ -29,7 +29,7 @@ def usage():
 import ee
 
 def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
-        c='STEEL',verbose = False):
+        c='STEEL',verbose = True):
     oc = a * 1.25
     ocp = ee.ocpSize(oc)
     #print "OCP Size: %s" % ocp
