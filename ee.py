@@ -419,6 +419,22 @@ THWN = {
         "700": 1.122,
         "750": 1.156,
         }
+#Southwire
+PV = {
+        "14":  0.222,
+        "12":  0.237,
+        "10":  0.261,
+        "8":   0.312,
+        "6":   0.349,
+        "4":   0.396,
+        "2":   0.456,
+        "1":   0.531,
+        "1/0": 0.570,
+        "2/0": 0.614,
+        "3/0": 0.664,
+        "4/0": 0.720
+        }
+
 #Chapter 9 Table 5
 XHHW = {"6":.29,  #Values estimated from various datasheets
         "4":.33,
@@ -485,10 +501,13 @@ class transformer(object):
         return pin - total_loss
 
 class conductor(object):
-    def __init__(self, size, material):
+    def __init__(self, size, material, insulation = None):
         self.material = material
         self.size = size
-        #voltagedrop in volts
+        if insulation:
+            self.insulation = insulation
+        else:
+            self.insulation = MATERIAL_MAP[self.material]
 
     def r(self, conduit = ""):
         #print "%s_%s" % (conduit, self.material)
@@ -516,6 +535,9 @@ class conductor(object):
         r = resistance( self,c,pf, t)
         vdrop = 2.0 * r * a * l/1000.0
         return vdrop
+
+    def area(self):
+        return (globals()[self.insulation][self.size]/2.0)**2*math.pi
 
     def __str__(self):
         return "%s %s" % (self.size, self.material)
@@ -655,6 +677,11 @@ if __name__ == "__main__":
     print t1.output(0)
     print t1.output(500000)
     bund=  [conductor("400","AL"),conductor("400","AL"),conductor("6","CU"),conductor("6","CU")]
+    print conductor("8","CU","PV").area()
+    print "PV Concuit", findConduit(conductor("8","CU","PV").area()*12 + conductor("6","CU").area())
+    print "PV Concuit", findConduit(conductor("8","CU","PV").area()*4 + conductor("6","CU").area())
+    print 
+    print "conductor area", bund[0].area()
     print conductorArea(bund)
     print findConduit(conductorArea(bund))
     print "CU EGC", findEGC(conductor("400",'AL'),100)
