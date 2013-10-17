@@ -22,7 +22,6 @@ def string_notes(system, run=0.0):
     """page 5"""
     stationClass = 3
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
-    print "Weather Source:", name, usaf
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
     ac_rated = 0.0
@@ -44,6 +43,7 @@ def string_notes(system, run=0.0):
     notes.append("")
     notes.append("Minimum Temperature: %s C" % mintemp)
     notes.append("2 Percent Max Temperature: %s C" % twopercentTemp)
+    notes.append("Weather Source: %s %s" % (name, usaf))
     notes.append("")
     di, dp = system.describe()
     aMax = 0
@@ -83,7 +83,13 @@ def string_notes(system, run=0.0):
             if max(i.array.shape)> 1:
                 notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
                 notes.append("System Max DC Voltage: %s V" % round(i.array.Vmax(mintemp),1))
+                if i.array.Vmax(mintemp) > 600:
+                    print "WARNING: Array exceeds 600V DC"
                 notes.append("Pnom Ratio: %s" % round((i.array.Pmax/i.Paco),2))
+                if (i.array.Vdc(twopercentTemp) *.9) < i.mppt_low:
+                    print "WARNING: Array IV Knee drops out of Inverter range"
+                if (i.array.Pmax/i.Paco) < 1.1:
+                    print "WARNING: Array potentially undersized"
             notes.append("")
             di.pop(i.model)
         if i.array.Vmax(mintemp) > aMax:
@@ -91,10 +97,16 @@ def string_notes(system, run=0.0):
 
     notes.append("Array Azimuth: %s Degrees" % system.azimuth)
     notes.append("Array Tilt: %s Degrees" % system.tilt)
+    s9 = system.solstice(9)
+    s15 = system.solstice(15)
     notes.append("December 21 9:00 AM Sun Azimuth: %s Degrees" % \
-            int(round(degrees(system.solstice(9)[1]),0)))
+            (round(degrees(s9[1]),1)))
+    notes.append("December 21 9:00 AM Sun Altitude: %s Degrees" % \
+            (round(degrees(s9[0]),1)))
     notes.append("December 21 3:00 PM Sun Azimuth: %s Degrees" % \
-            int(round(degrees(system.solstice(15)[1]),0)))
+            (round(degrees(s15[1]),1)))
+    notes.append("December 21 3:00 PM Sun Altitude: %s Degrees" % \
+            (round(degrees(s9[0]),1)))
     if sys.modules['geomag']:
         notes.append("Magnetic declination: %s Degrees" % \
                 round(geomag.declination(dlat=system.place[0],dlon=system.place[1])))
