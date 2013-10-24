@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Copyright (C) 2013 Nathan Charles
 #
-# This program is free software terms see terms in LICENSE file.
+# This program is free software. See terms in LICENSE file.
 
 import tmy3
 import geo
