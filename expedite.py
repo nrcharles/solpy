@@ -107,7 +107,7 @@ def string_notes(system, run=0.0):
             (round(degrees(s15[1]),1)))
     notes.append("December 21 3:00 PM Sun Altitude: %s Degrees" % \
             (round(degrees(s9[0]),1)))
-    if sys.modules['geomag']:
+    if 'geomag' in sys.modules:
         notes.append("Magnetic declination: %s Degrees" % \
                 round(geomag.declination(dlat=system.place[0],dlon=system.place[1])))
     notes.append("Minimum Row space ratio: %s" % \
