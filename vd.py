@@ -16,6 +16,7 @@ def usage():
     """
 
 import ee
+import nec
 
 def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
         c='STEEL',verbose = True):
@@ -39,9 +40,10 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
             print "Allowed Voltage drop: %sV" % vdrop
         sets = 0
         conductor = None
+        #todo: refactor for recursive. should take away the need for nec import
         while conductor is None:
             sets += 1
-            for s in ee.CONDUCTOR_STANDARD_SIZES:
+            for s in nec.CONDUCTOR_STANDARD_SIZES:
                 #print s, material
                 conductor = ee.conductor(s,material)
                 #print conductor

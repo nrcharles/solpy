@@ -150,31 +150,31 @@ class source():
         return 0
 
 def findConductor(r, material = "CU",conduit = "PVC", pf =-1, tCond = 75):
-    for s in CONDUCTOR_STANDARD_SIZES:
+    for s in nec.CONDUCTOR_STANDARD_SIZES:
         tr = resistance(conductor(s,material),conduit,pf,tCond)
         if tr < r:
             return conductor(s,material)
 
 
 def minEGC(ocp,material="CU"):
-    inc = [s for s in iter(EGC_CU)]
+    inc = [s for s in iter(nec.EGC_CU)]
     inc.sort()
     for s in inc:
         if s >= ocp:
             if material=="CU":
-                return conductor(EGC_CU[s],material)
+                return conductor(nec.EGC_CU[s],material)
             else:
-                return conductor(EGC_AL[s],material)
+                return conductor(nec.EGC_AL[s],material)
 
 def findEGC(cond, ocp,material="CU"):
     minConductor = conductorAmpacity(ocp,cond.material)
     EGC = minEGC(ocp,material)
-    ratio = CMIL[cond.size]*1.0 / CMIL[minConductor.size]
+    ratio = nec.CMIL[cond.size]*1.0 / nec.CMIL[minConductor.size]
     if ratio > 1.0:
-        increased = CMIL[EGC.size]*ratio
-        for c in CONDUCTOR_STANDARD_SIZES:
-            if CMIL[c] >= increased:
-                if CMIL[c] > CMIL[cond.size]:
+        increased = nec.CMIL[EGC.size]*ratio
+        for c in nec.CONDUCTOR_STANDARD_SIZES:
+            if nec.CMIL[c] >= increased:
+                if nec.CMIL[c] > nec.CMIL[cond.size]:
                     return cond
                 else:
                     return conductor(c,material)
@@ -182,7 +182,7 @@ def findEGC(cond, ocp,material="CU"):
         return EGC
 
 def conductorAmpacity(current,material):
-    for s in CONDUCTOR_STANDARD_SIZES:
+    for s in nec.CONDUCTOR_STANDARD_SIZES:
         if getattr(nec,"%s_AMPACITY_A30_75" % (material))[s] >= current:
             return conductor(s,material)
 
