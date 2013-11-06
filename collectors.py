@@ -1,7 +1,11 @@
 #!/usr/bin/env python
-# collector.py
+# Copyright (C) 2013 Daniel Thomas
+#
+# This program is free software. See terms in LICENSE file.
+#
 #   This file contains solar thermal collector classes used by thermal.py
 #   Specifications for specific collectors are also here for now.
+
 pi = 3.141
 
 class tube(object):
