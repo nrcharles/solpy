@@ -2,6 +2,10 @@
 # Copyright (C) 2013 Nathan Charles
 #
 # This program is free software. See terms in LICENSE file.
+"""
+Photovoltaic System Performance Monitoring
+
+"""
 
 import tmy3
 import geo
@@ -45,6 +49,7 @@ class resultSet(object):
         print "Inverter hours clipping: %s" % self.clippingHours
 
 def fileToSystem(filename):
+    """Load a system from a json file"""
     try:
         return jsonToSystem(json.loads(open(filename).read()))
 
