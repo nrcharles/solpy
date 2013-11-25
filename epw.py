@@ -130,7 +130,6 @@ class data():
         for i in range(8):
             header +=  self.csvfile.readline()
         self.epw_data = csv.DictReader(self.csvfile,fieldnames=fieldnames)
-        print header
         #print self.latitude, self.longitude
     def __iter__(self):
         return self
@@ -145,6 +144,25 @@ class data():
 
     def __del__(self):
         self.csvfile.close()
+
+
+def hdd(USAF,base=18):
+    """Heating degree days in C"""
+    total = 0.0
+    for record in data(USAF):
+        delta = base - float(record['Drybulb (C)'])
+        if delta > 0:
+            total += delta
+    return round(total/24.0,1)
+
+def cdd(USAF,base=18):
+    """cooling degree days in C"""
+    total = 0.0
+    for record in data(USAF):
+        delta = float(record['Drybulb (C)']) - base
+        if delta > 0:
+            total += delta
+    return round(total/24.0,1)
 
 
 if __name__ == "__main__":
@@ -165,27 +183,30 @@ if __name__ == "__main__":
         maxVoltage = args['voltage']
         stationClass = 1
         name, usaf = geo.closestUSAF( geo.zipToCoordinates(zip), stationClass)
-        import modules
-        models = modules.model_search(args['mname'].split(' '))
-        m = None
-        if len(models) > 1:
-            for i in models:
-                print i
-            sys.exit(1)
-        elif len(models) == 1:
-            print models[0]
-            m = modules.module(models[0])
-        else:
-            print "Model not found"
-            sys.exit(1)
-
-        #= getattr(modules,args['mname'])()
         print "%s USAF: %s" %  (name, usaf)
         print "Minimum Temperature: %s C" % minimum(usaf)
-        print "Maximum: %sV" % m.Vmax(minimum(usaf))
-        print "Max in series", int(maxVoltage/m.Vmax(minimum(usaf)))
         print "2%% Max: %s C" % twopercent(usaf)
-        print "Minimum: %sV" % m.Vmin(twopercent(usaf))
+        print "Heating Degree days: %s" %  hdd(usaf)
+        print "Cooling Degree days: %s" %  cdd(usaf)
+        if args['mname']:
+            print ""
+            import modules
+            models = modules.model_search(args['mname'].split(' '))
+            m = None
+            if len(models) > 1:
+                for i in models:
+                    print i
+                sys.exit(1)
+            elif len(models) == 1:
+                print models[0]
+                m = modules.module(models[0])
+            else:
+                print "Model not found"
+                sys.exit(1)
+
+            print "Maximum: %sV" % m.Vmax(minimum(usaf))
+            print "Max in series", int(maxVoltage/m.Vmax(minimum(usaf)))
+            print "Minimum: %sV" % m.Vmin(twopercent(usaf))
 
 
     except (KeyboardInterrupt, SystemExit):
