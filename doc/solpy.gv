@@ -1,0 +1,40 @@
+digraph solpy {
+size="7,7";
+    {rank = same; Position "Tilt & Azimuth" "PV Nameplate" "Inverter Nameplate";}
+    {rank = same; "Cloud Index" "Wind Speed" "Ambiant Temperature";}
+    {rank = same; "Ground Diffuse" "Sky Diffuse" "Direct";}
+    {rank = same; "GHI" "ETR" "DHI" "DNI";}
+    "Latitude & Longitude" -> Ephem;
+    "Ephem" -> "Clear Sky";
+    "Ephem" -> "Altitude";
+    "Ephem" -> "Incident Angle";
+    "PV Nameplate" -> "PV Model";
+    "Tilt & Azimuth" -> "Ground Diffuse";
+    "Tilt & Azimuth" -> "Direct";
+    "Tilt & Azimuth" -> "Incident Angle";
+    "Tilt & Azimuth" -> "Altitude";
+    "Incident Angle" -> "Perez";
+    "Altitude" -> "Perez";
+    "Clear Sky" -> {GHI; DNI; ETR; DHI;}
+    "DNI" -> "Perez";
+    "ETR" -> "Perez";
+    "DHI" -> "Perez";
+    "DHI" -> "Direct";
+    "GHI" -> "Ground Diffuse";
+    "Perez" -> "Sky Diffuse";
+    "Sky Diffuse" -> "Cloud Shading Model";
+    "Ground Diffuse" -> "Cloud Shading Model";
+    "Direct" -> "Cloud Shading Model";
+    "Cloud Index" -> "Cloud Shading Model";
+    "Cloud Shading Model" -> "Irradiance";
+    "Irradiance" -> "PV Model";
+    "Ambiant Temperature" -> "Panel Temperature";
+    "Wind Speed" -> "Panel Temperature";
+    "Irradiance" -> "Panel Temperature";
+    "Panel Temperature" -> "PV Model";
+    "PV Model" -> "PV Array";
+    "PV Array" -> "Derates";
+    "Derates" -> "Sandia Inverter Model";
+    "Inverter Nameplate" -> "Sandia Inverter Model";
+    "Sandia Inverter Model" -> "AC Power";
+}
