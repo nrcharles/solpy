@@ -60,6 +60,19 @@ class inverter(object):
                 * self.availability# * m.Tfactor #* m.NMPT
         #self.derate = self.dc_wiring
 
+        #current corrections for TL inverters
+        if self.inverter.find('TL') is not -1:
+            tl = json.loads(open(SPATH + '/tl.json').read())
+            for i in tl:
+                try:
+                    if i['inverter']==model:
+                        self.current = i['current']
+                        self.phase = i['phase']
+                        break
+                except:
+                    print "TL error"
+                    raise
+
     def Pac(self, Insolation, tCell = 25):
         Pdc = self.array.output(Insolation, tCell)
         Vdc = self.array.Vdc()

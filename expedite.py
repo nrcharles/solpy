@@ -28,7 +28,14 @@ def string_notes(system, run=0.0):
     dc_rated = 0.0
     for i in system.shape:
         dc_rated += i.array.Pmax
-        ac_rated += i.Paco
+        try:
+            if i.phase == 1:
+                ac_rated += i.current * i.ac_voltage
+            else:
+                ac_rated += i.phase * i.current * i.ac_voltage/ 3**.5
+        except:
+            ac_rated += i.Paco
+            pass
     notes = []
     notes.append("%s KW AC RATED" % round(ac_rated/1000.0,2))
     notes.append("%s KW DC RATED" % round(dc_rated/1000.0,2))
@@ -68,7 +75,9 @@ def string_notes(system, run=0.0):
             notes.append("Quantity: %s" % di[i.model])
             notes.append("Max Power: %s KW" % round(i.Paco/1000.0,1))
             #this is hack... This should be calculated based upon power cores
-            if i.ac_voltage == 480:
+            if hasattr(i,'current'):
+                notes.append("Max AC Current: %s A" % round(i.current,1))
+            elif i.ac_voltage == 480:
                 notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage/3**.5,1))
             else:
                 notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
