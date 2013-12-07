@@ -24,9 +24,11 @@ import os
 
 matplotlib.use('Agg')
 
-apiurl = "https://api.enphaseenergy.com/api/systems/"
+apiurl = "https://api.enphaseenergy.com/api/systems"
+apiurl2 = "https://api.enphaseenergy.com/api/v2/systems"
 
 apikey = os.getenv('ENPHASE')
+
 if not apikey:
     print "WARNING: Enphase key not set."
     print "Realtime weather data not availible."
@@ -44,41 +46,54 @@ class resultSet(object):
         return zip([ int(time.mktime(obj.timetuple())*1000 - 4*3600000 ) \
                 for obj in self.timeseries.tolist()],self.values.tolist())
 
-
 class system(object):
     def __init__(self, **sys_info):
         self.__dict__.update(sys_info)
 
     def summary(self, summary_date=None):
-        url = apiurl + "%s/summary?key=%s" % (self.system_id,apikey)
+        url = apiurl + "/%s/summary?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def alerts(self,level=None):
-        url = apiurl + "%s/alerts?key=%s" % (self.system_id,apikey)
+        url = apiurl + "/%s/alerts?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def energy_lifetime(self):
-        url = apiurl + "%s/energy_lifetime?key=%s" % (self.system_id,apikey)
+        url = apiurl + "/%s/energy_lifetime?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def monthly_production(self, start_date):
-        url = apiurl + "%s/monthly_production?key=%s&start=%s" % \
+        url = apiurl + "/%s/monthly_production?key=%s&start=%s" % \
                 (self.system_id,apikey,start_date)
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def power_today(self):
-        url = apiurl + "%s/power_today?key=%s" % (self.system_id,apikey)
-        a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
-        production = np.array(a["production"])
-        begin = strToDatetime(a["first_interval_end_date"])
-        interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
-        timeseries = np.array([begin]) 
-        for i in range(1,len(a["production"])):
-            timeseries = np.append(timeseries,begin + interval * i)
-        return resultSet(timeseries,production)
+        start_at= int(time.mktime(datetime.date.today().timetuple()))
+        production = []
+        timeseries = []
+        for i in self.stats(start_at)['intervals']:
+            production.append(i['powr'])
+            timeseries.append(datetime.datetime.fromtimestamp(i['end_at']))
+        return resultSet(np.array(timeseries), np.array(production))
+
+    def power_2days(self):
+        """this function returns last two days to get at last 24 hours"""
+        production = []
+        timeseries = []
+        start_at= int(time.mktime(datetime.date.today().timetuple()) - 24*3600)
+        for i in self.stats(start_at)['intervals']:
+            production.append(i['powr'])
+            timeseries.append(datetime.datetime.fromtimestamp(i['end_at']))
+        start_at= int(time.mktime(datetime.date.today().timetuple()))
+
+        for i in self.stats(start_at)['intervals']:
+            production.append(i['powr'])
+            timeseries.append(datetime.datetime.fromtimestamp(i['end_at']))
+        return resultSet(np.array(timeseries), np.array(production))
 
     def power_week(self):
-        url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
+        #deprecated
+        url = apiurl + "/%s/power_week?key=%s" % (self.system_id,apikey)
         a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         production = np.array(a["production"])
         begin = strToDatetime(a["first_interval_end_date"])
@@ -89,12 +104,13 @@ class system(object):
         return resultSet(timeseries,production)
 
     def power_week_i(self):
-        url = apiurl + "%s/power_week?key=%s" % (self.system_id,apikey)
+        #deprecated
+        url = apiurl + "/%s/power_week?key=%s" % (self.system_id,apikey)
         a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         begin = strToDatetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
         timeseries = np.array([begin]) 
-        url = apiurl + "%s/power_today?key=%s" % (self.system_id,apikey)
+        url = apiurl + "/%s/power_today?key=%s" % (self.system_id,apikey)
         ai = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
         production_i = a["production"]+ai["production"]
         production = np.array(production_i)
@@ -103,15 +119,20 @@ class system(object):
         return resultSet(timeseries,production)
 
     def rgm_stats(self, start_date=None,end_date=None):
-        url = apiurl + "%s/rgm_stats?key=%s" % (self.system_id,apikey)
+        url = apiurl + "/%s/rgm_stats?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
-    def stats(self,start_date=None,end_date=None):
-        url = apiurl + "%s/stats?key=%s" % (self.system_id,apikey)
+    def stats(self,start_at=None,end_at=None):
+        """start_at and end_at are unix epoch"""
+        url = apiurl2 + "/%s/stats?key=%s" % (self.system_id,apikey)
+        if start_at:
+            url += "&start_at=%s" % start_at
+        if end_at:
+            url += "end_ad=%s"
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def envoys(self):
-        url = apiurl + "%s/envoys?key=%s" % (self.system_id,apikey)
+        url = apiurl + "/%s/envoys?key=%s" % (self.system_id,apikey)
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def performance_factor(self, tilt=0):
@@ -127,7 +148,9 @@ def strToDatetime(ts1):
     return datetime.datetime.strptime(ts1[0:19],tsformat)
 
 def index():
-    url = "https://api.enphaseenergy.com/api/systems?key=%s" % apikey
+    apiurl = "https://api.enphaseenergy.com/api/systems/"
+    #url = "https://api.enphaseenergy.com/api/systems?key=%s" % apikey
+    url = apiurl + "?key=%s" % apikey
     a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
     return [system(**i) for i in a["systems"]]
 
@@ -218,5 +241,7 @@ class engage():
 
 if __name__ == "__main__":
     a = index()
-    print [i.system_name for i in a]
-    print a[0].power_week().jsify()
+    #print [i.system_name for i in a]
+    print a[2].power_today().jsify()
+    print a[2].stats()
+    print a[2].power_2days().jsify()
