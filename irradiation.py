@@ -119,7 +119,7 @@ def perez(dni,hdi,etr,S,theta,zenith):
     return max(Xc,0.0)
 
 
-def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 'lj'):
+def irradiation(record, place, horizon = None, t = 0.0, array_azimuth = 180.0, model = 'lj'):
     latitude, longitude = place
 
     Gh = int(record['GHI (W/m^2)'])
@@ -139,9 +139,10 @@ def irradiation(record, place, horizon, t = 0.0, array_azimuth = 180.0, model = 
     theta = arccos(cos(Z)*cos(slope) + sin(slope)*sin(Z)*cos(az - pi - aaz))
 
     nA = degrees(az) % 360-180
-    if horizon(nA) > degrees(theta):
-        Bh = 0
-        print "shaded", nA,degrees(theta),horizon(nA)
+    if horizon:
+        if horizon(nA) > degrees(theta):
+            Bh = 0
+            print "shaded", nA,degrees(theta),horizon(nA)
     #Z = solar Zenith angle
     S = radians(t) #
 
@@ -365,10 +366,10 @@ if __name__ == "__main__":
     print perez(0,0,0,0.558505360638,2.5366580297,2.57519603892)
     print perez(0,0,0,0.558505360638,2.74856500007,2.7436087649)
     print perez(0,0,0,0.558505360638,2.87979696349,2.83820540821)
-    from scipy.interpolate import interp1d
-    import numpy as np
+    #from scipy.interpolate import interp1d
+    #import numpy as np
     import geo
-    thorizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
+    #thorizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
     timestamp = datetime.datetime.now()
     place = geo.zipToCoordinates('17603')
     tilt = 1
