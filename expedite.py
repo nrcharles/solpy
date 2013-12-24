@@ -126,11 +126,14 @@ def string_notes(system, run=0.0):
     print ""
     print "Minimum Bundle"
     minC = vd.vd(Aac,5,verbose=False)
-    ee.assemble(minC,Aac,conduit='STEEL')
-    if run > 0:
-        print "Long Run"
-        minC = vd.vd(Aac,run,v=i.ac_voltage,tAmb=15,pf=.95,material='AL',verbose=False)
-        ee.assemble(minC,Aac,conduit='PVC')
+    try:
+        ee.assemble(minC,Aac,conduit='STEEL')
+        if run > 0:
+            print "Long Run"
+            minC = vd.vd(Aac,run,v=i.ac_voltage,tAmb=15,pf=.95,material='AL',verbose=False)
+            ee.assemble(minC,Aac,conduit='PVC')
+    except:
+        print "Warning: Multiple sets of conductors"
     return notes
 
 def micro_calcs(system,d,Vnominal=240):
