@@ -14,3 +14,7 @@ def data(place):
 #url = apiurl + "%s/summary?key=%s" % (self.system_id,apikey)
     a = json.loads(urllib2.urlopen(url).read())
     return a
+if __name__ == '__main__':
+    lat,lon = (40. ,-78.0)
+    url = "https://api.forecast.io/forecast/%s/%s,%s" % (apikey, lat,lon)
+    print url
