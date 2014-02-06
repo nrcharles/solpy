@@ -40,6 +40,9 @@ def findConduit(harness,c='EMT',fill=.40):
         if getattr(nec,c)[i]*fill > area:
             return i
 
+def fillPercent(harness, conduit):
+    pass
+
 def ocpSize(a):
     """Find standard size of Overcurrent protection"""
     for i in nec.OCP_STANDARD_SIZES:
@@ -149,12 +152,21 @@ class source():
     def vd(self):
         return 0
 
+class conduit():
+    def __init__(self ,tradesize,material):
+        self.tradesize = 0
+        self.material = ""
+        self.length = 0
+        self.bundle = []
+    def addConductors(self,blah):
+        pass
+
+
 def findConductor(r, material = "CU",conduit = "PVC", pf =-1, tCond = 75):
     for s in nec.CONDUCTOR_STANDARD_SIZES:
         tr = resistance(conductor(s,material),conduit,pf,tCond)
         if tr < r:
             return conductor(s,material)
-
 
 def minEGC(ocp,material="CU"):
     inc = [s for s in iter(nec.EGC_CU)]
