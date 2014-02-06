@@ -5,4 +5,5 @@ setup(name='solpy',
       package_dir={'solpy': ''},
       package_data={'solpy': ['*.json','*.csv','data.fdf']},
       packages=['solpy'],
+      requires=['numpy','matplotlib','geopy']
       )
