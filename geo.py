@@ -1,6 +1,7 @@
 # Copyright (C) 2013 Nathan Charles
 #
 # This program is free software. See terms in LICENSE file.
+"""helper functions for geographical information"""
 
 import csv
 import math
@@ -8,6 +9,7 @@ import os
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 def closestUSAF(place, stationClass=3):
+    """Find closest USAF code of a given station class"""
     latitude,longitude = place
     index = open(SPATH + '/StationsMeta.csv')
     index_data = csv.DictReader(index)
@@ -15,7 +17,8 @@ def closestUSAF(place, stationClass=3):
     name = ''
     usaf = ''
     for i in index_data:
-        d2 = math.sqrt(math.pow((float(i['Latitude']) - latitude),2) +math.pow((float(i['Longitude']) - longitude),2))
+        d2 = math.sqrt(math.pow((float(i['Latitude']) - latitude),2) + \
+                math.pow((float(i['Longitude']) - longitude),2))
         uncertainty = len(i['Class'])
         if d2 < d1 and uncertainty <= stationClass:
             d1 = d2
@@ -25,7 +28,8 @@ def closestUSAF(place, stationClass=3):
     return name, usaf
 
 def zipToCoordinates(zipcode):
-    """takes string"""
+    """zipcode to latitude and longitude, takes a string because some zipcodes
+    start with 0"""
     index = open(SPATH + '/zipcode.csv')
     #read over license
     headerLen = 31
@@ -37,6 +41,7 @@ def zipToCoordinates(zipcode):
             return float(i['latitude']),float( i['longitude'])
 
 def zipToTZ(zipcode):
+    """find TZ for zipcode"""
     index = open(SPATH + '/zipcode.csv')
     #read over license
     headerLen = 31
