@@ -10,7 +10,7 @@ setup(
     author = "Nathan Charles",
     author_email = "ncharles@gmail.com",
     description = ("Solar Performance and Design library"),
-    license = "LPGL",
+    license = "LGPL",
     keywords = "solar pv",
     url = "https://github.com/nrcharles/solpy",
     packages=find_packages(),
