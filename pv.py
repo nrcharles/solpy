@@ -112,7 +112,7 @@ def jsonToSystem(jsonDescription):
         g = geocoders.GoogleV3()
         place, (lat, lng) = g.geocode(address)
         plant.place = lat,lng
-        print "%s, %s Geolocated" % plant.place
+        #print "%s, %s Geolocated" % plant.place
     except:
         print "%s, %s location from zipcode" % plant.place
     #print orientations
