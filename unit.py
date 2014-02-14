@@ -1,74 +1,41 @@
-from fisheye import * 
-filename = 'out2LR.png'
-gImage = cv.LoadImage(filename)
-if not gImage:
-    print "Error loading image '%s'" % filename
-    sys.exit(1)
+import modules
+import unittest
+import json
 
-m = model(gImage, 0)
-m.center = (337, 347)
-m.threshold = 20
-#m.cardinalOffset = 20
-m.cardinalOffset = 40
-m.radius = 302
+class TestModules(unittest.TestCase):
+    def test_module(self):
+        model = modules.model_search('Powertec 250 PL')[0]
+        p = modules.module(model)
+        self.assertAlmostEquals(p.Vmax(-10),42.3129)
+        self.assertAlmostEquals(p.Vdc(),31.28)
+        self.assertAlmostEquals(p.Idc(),8.01)
+        self.assertAlmostEquals(p.Vmin(40),24.931724)
+        self.assertAlmostEquals(p.output(900),225.49752)
 
-m.calculate()
+class TestInverters(unittest.TestCase):
+    def test_inverter(self):
+        pass
 
-cv.WaitKey (0)
-ofilename = os.path.basename(filename).split('.')[0]
-m.save(ofilename, True)
+class TestModeling(unittest.TestCase):
+    def test_annualOutput(self):
+        import pv
+        p1 = """{"system_name":"HAPPY CUSTOMER",
+        "address":"15013 Denver W Pkwy, Golden, CO",
+        "zipcode":"80401",
+        "phase":1,
+        "voltage":240,
+        "array":[
+            {"inverter":"Enphase Energy: M215-60-2LL-S2x-IG-NA (240 V) 240V",
+            "panel":"Mage Solar : Powertec Plus 250-6 PL",
+            "quantity":20,
+            "azimuth":180,
+            "tilt":25
+            }
+            ]}"""
+        plant = pv.jsonToSystem(json.loads(p1))
+        rs = plant.model()
+        self.assertAlmostEquals(rs.annualOutput,7262.12)
 
-import site_analysis as sa
-import numpy as np
 
-H = sa.load_horizon_array(magnitudeToTheta(m.polarArray,m.radius))
-fig1 = sa.calc_solarpath(H.L,H.gamma,H.alpha)
-fig1.savefig(ofilename+'-path.png')
-fig1.canvas.draw()
-# Now we can save it to a numpy array.
-data = np.fromstring(fig1.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-data = data.reshape(fig1.canvas.get_width_height()[::-1] + (3,))
-
-#ui.test(cv.fromarray(data))
-"""
-print "4,5 - 0 degrees", addVector((5,5),(0,1)) 
-print "? - 45 degrees", addVector((5,5),(45,2)) 
-print "5,7 - 90 degrees", addVector((5,5),(90,2)) 
-print "8,5 - 180 degrees", addVector((5,5),(180,3)) 
-print "5,1 - 270 degrees", addVector((5,5),(270,4)) 
-print "0,5 - 360 degrees", addVector((5,5),(360,5)) 
-
-#drawVector
-vectorA = []
-for i in range(0,360):
-    vectorA.append((i,i))
-for vector in vectorA:
-    print vector,addVector((360,360),vector)
-spiral = cv.CreateImage ((360*2,360*2), 8, 3)
-drawVectors(spiral,(360,360),vectorA)
-cv.Line(spiral,(0,0),(360,360),(255,255,255))
-cv.NamedWindow("spiral")
-cv.ShowImage("spiral",spiral)
-cv.WaitKey (0)
-
-render = cv.CreateImage((360*2,360*2), 8, 3)
-cv.Zero(render)
-for i in range(360):
-    cv.Line(render, addVector((360,360),(i-1,i+1)), addVector((360,360),(i,i+2)) ,(255,0,0),2)
-    #x,y = cv.GetSize(render)
-    #render[x-i-1,i] = (255,255,255)
-    #x,y = addVector((360,360),
-
-cv.ShowImage("spiral",render)
-cv.WaitKey (0)
-
-radius = 360
-cv.NamedWindow("temp")
-rArray = distanceToEdge(render,(360,358),radius)
-render = drawVectors(render,(360,358),rArray)
-print rArray
-cv.ShowImage("spiral",render)
-cv.WaitKey (0)
-
-#edgeTo...
-"""
+if __name__ == '__main__':
+    unittest.main()
