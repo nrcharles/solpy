@@ -7,6 +7,7 @@ import json
 import re
 STC = 25
 import os
+from collections import Counter
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 class module(object):
@@ -88,6 +89,9 @@ class module(object):
         #Ground mount = 25
         #Pole mount = 20
         return self.Vmpp + (Tadd+ashrae2p-STC) * self.TkVmp
+    def __str__(self):
+        return "%s : %s" % (self.make, self.model)
+
 
 #todo: this needs rewritten
 class pvArray(object):
@@ -107,6 +111,10 @@ class pvArray(object):
         return  self.panel.Vmin(ashrae2p, Tadd)* min(self.shape)#Dseries
     def output(self, Insolation, tAmb=25):
         return self.panel.output(Insolation,tAmb)*sum(self.shape)#self.series*self.parallel
+    def __str__(self):
+        a = Counter(self.shape)
+        s = ', '.join(['%sS x %sP' % (i,a[i]) for i in a.iterkeys()])
+        return "%s" % (s)
 
 def manufacturers():
     a =  [i['panel'].split(":")[0] for i in json.loads(open(SPATH + '/sp.json').read()) ]

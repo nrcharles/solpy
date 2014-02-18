@@ -86,6 +86,13 @@ class inverter(object):
     def I(self,Insolation,Vac):
         return self.Pac(Insolation)/Vac
 
+    def ratio(self):
+        return self.array.output(1000)/self.Pdco
+
+    def __str__(self):
+        return "%s :%s - %s" % (self.make, self.model, self.array)
+
+
 def manufacturers():
     a =  [i['inverter'].split(":")[0] for i in json.loads(open(SPATH + '/si.json').read()) ]
     a.sort()
@@ -103,7 +110,6 @@ def models(manufacturer = None):
             if i['inverter'].find(manufacturer) != -1:
                 a.append(i['inverter'])
         return a
-
 
 def insolationToA(ins, peakA):
     """scale current in response to insolation"""
