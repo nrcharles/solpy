@@ -5,6 +5,8 @@ import pv
 import tools
 import inverters
 
+
+#modules.py
 class TestModules(unittest.TestCase):
     def test_module(self):
         model = modules.model_search('Powertec 250 PL')[0]
@@ -15,12 +17,14 @@ class TestModules(unittest.TestCase):
         self.assertAlmostEquals(p.Vmin(40),24.931724)
         self.assertAlmostEquals(p.output(900),225.49752)
 
+#inverters.py
 class TestInverters(unittest.TestCase):
     def test_inverter(self):
         pass
-
+#pv.py
+#irradiation.py
 class TestModeling(unittest.TestCase):
-    def test_annualOutput(self):
+    def test_annualOutput1(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
         "address":"15013 Denver W Pkwy, Golden, CO",
         "zipcode":"80401",
@@ -38,9 +42,43 @@ class TestModeling(unittest.TestCase):
         rs = plant.model()
         self.assertAlmostEquals(rs.annualOutput,7262.12)
 
+    def test_annualOutput2(self):
+        p1 = """{"system_name":"HAPPY CUSTOMER",
+        "address":"15013 Denver W Pkwy, Golden, CO",
+        "zipcode":"80401",
+        "tilt":23,
+        "azimuth":180,
+        "phase":1,
+        "voltage":240,
+        "array":[
+            {"inverter":"SMA America: SB11000TL-US-12 (240V) 240V",
+            "panel":"Axitec : AC-250P-156-60S *",
+            "series":14,
+            "parallel":4,
+            "quantity":7
+            },
+            {"inverter":"SMA America: SB8000TL-US-12 (240V) 240V",
+            "panel":"Axitec : AC-250P-156-60S *",
+            "series":14,
+            "parallel":3,
+            "quantity":1
+            }
+            ]}
+            """
+        js1 = json.loads(p1)
+        plant1 = pv.jsonToSystem(js1)
+        rs1 = plant1.model()
+        js2 = json.loads(json.dumps(plant1.dump()))
+        plant2 = pv.jsonToSystem(js2)
+        js3 = json.loads(json.dumps(plant2.dump()))
+        rs2 = plant2.model()
+        self.assertDictEqual(js2,js3)
+        self.assertAlmostEquals(rs1.annualOutput,rs2.annualOutput)
+
+#design.py
+#tools.py
 class TestDesign(unittest.TestCase):
     def test_tools_fill(self):
-        import tools
         m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
         ms = modules.module(m)
         zc = '27713'
@@ -54,6 +92,26 @@ class TestDesign(unittest.TestCase):
                 '7014.0W : 14S x 2P : ratio 1.0 : 338.0 - 595.0 V',
                 '10521.0W : 14S x 3P : ratio 1.5 : 338.0 - 595.0 V']
         self.assertAlmostEquals(ans,sols)
+
+#modules that still need unit tests
+#ee.py
+#vd.py
+#geo.py
+#expedite.py
+#forecast.py
+#enphase.py
+#noaa.py
+#setup.py
+#thermal.py
+#collectors.py
+#pathfinder.py
+#tmy3.py
+#epw.py
+#epw_thermal.py
+#fisheye.py
+#nec.py
+#site_analysis.py
+#solar_fun.py
 
 if __name__ == '__main__':
     unittest.main()

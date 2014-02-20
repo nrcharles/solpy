@@ -17,6 +17,7 @@ import json
 import math
 import datetime
 import forecast
+from collections import Counter
 from geopy import geocoders
 
 from scipy.interpolate import interp1d
@@ -107,10 +108,11 @@ def jsonToSystem(jsonDescription):
         jsonShape += [ block ] * scale
     plant = system(jsonShape)
     plant.setZipcode(jsonDescription["zipcode"])
+    if "address" in jsonDescription:
+        plant.address = jsonDescription["address"]
     try:
-        address = jsonDescription["address"]
         g = geocoders.GoogleV3()
-        place, (lat, lng) = g.geocode(address)
+        place, (lat, lng) = g.geocode(plant.address)
         plant.place = lat,lng
         #print "%s, %s Geolocated" % plant.place
     except:
@@ -130,6 +132,7 @@ def jsonToSystem(jsonDescription):
         plant.azimuth = orientations[0]["azimuth"]
 
     plant.phase = jsonDescription["phase"]
+    plant.voltage = jsonDescription["voltage"]
     plant.systemName = jsonDescription["system_name"]
     return plant
 
@@ -328,3 +331,23 @@ class system(object):
         rs.values = values
         rs.timeseries = timeseries
         return rs
+    def dump(self):
+        d = {}
+        #hack to simply
+        s = [str(i.dump()) for i in self.shape]
+        s = Counter(s)
+        shape = []
+        for i in s.iterkeys():
+            t = eval(i)
+            t['quantity'] = s[i]
+            shape.append(t)
+        d['array'] = shape
+        d['tilt'] = self.tilt
+        d['azimuth'] = self.azimuth
+        d['phase'] = self.phase
+        d['voltage'] = self.voltage
+        if hasattr(self,"address"):
+            d['address'] = self.address
+        d['zipcode'] = self.zipcode
+        d['system_name'] = self.systemName
+        return d

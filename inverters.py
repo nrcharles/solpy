@@ -89,9 +89,19 @@ class inverter(object):
     def ratio(self):
         return self.array.output(1000)/self.Pdco
 
-    def __str__(self):
-        return "%s :%s - %s" % (self.make, self.model, self.array)
+    def dump(self):
+        d = {}
+        d['panel'] = str(self.array.panel)
+        d['inverter'] = str(self)
+        shape = self.array.dump()
+        if len(shape) > 1:
+            d['shape'] = shape
+        else:
+            d.update(shape[0])
+        return d
 
+    def __str__(self):
+        return "%s:%s" % (self.make, self.model)
 
 def manufacturers():
     a =  [i['inverter'].split(":")[0] for i in json.loads(open(SPATH + '/si.json').read()) ]
@@ -119,9 +129,8 @@ if __name__=="__main__":
     from modules import *
 
     p = module('Mage Solar : Powertec Plus 245-6 PL *')
-    e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",p)
-    s = pvArray(p,14,2)
-    s = pvArray(p,14,20*8)
+    e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",pvArray(p,[1]))
+    print e.dump()
     #si = sb6000us(s)
 
     print e.Pac(950)

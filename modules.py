@@ -2,7 +2,6 @@
 #
 # This program is free software. See terms in LICENSE file.
 
-import unittest
 import json
 import re
 STC = 25
@@ -111,6 +110,11 @@ class pvArray(object):
         return  self.panel.Vmin(ashrae2p, Tadd)* min(self.shape)#Dseries
     def output(self, Insolation, tAmb=25):
         return self.panel.output(Insolation,tAmb)*sum(self.shape)#self.series*self.parallel
+    def dump(self):
+        a = Counter(self.shape)
+        d = [{"series":i, "parallel": a[i]} for i in a.iterkeys()]
+        return d
+
     def __str__(self):
         a = Counter(self.shape)
         s = ', '.join(['%sS x %sP' % (i,a[i]) for i in a.iterkeys()])
@@ -142,19 +146,9 @@ def model_search(parms):
             res.append(i)
     return res
 
-class testModules(unittest.TestCase):
-    """Unit Tests"""
-    def setUp(self):
-        #self.mage250o = mage250().output(950)
-        pass
-
-    def testMageOutput(self):
-        #self.assertAlmostEqual(237.509, self.mage250o,3)
-        pass
-
 if __name__=="__main__":
     series = 14
-    p = module('Mage Solar : Powertec Plus 245-6 MNBS')
+    p = module('Mage Solar : USA Powertec Plus 245-6 MNBS')
     print ":%s:" %p.make
     print ":%s:" %p.model
     print p.Eff
@@ -163,10 +157,14 @@ if __name__=="__main__":
     print "Vmax:", p.Vmax(-13)*series
     print "Vmin:",p.Vmin(31,25) * series
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
+    a = pvArray(p,[11])
+    print a.dump()
+    a = pvArray(p,[11]*2)
+    print a.dump()
+    a = pvArray(p,[11,10])
+    print a.dump()
 
     #print p.output(950)
     #print a.Vmax(-20)
     #print a.Vmin(33)
     #print a.output(950)
-    suite = unittest.TestLoader().loadTestsFromTestCase(testModules)
-    unittest.TextTestRunner(verbosity=2).run(suite)
