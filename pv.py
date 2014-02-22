@@ -17,6 +17,7 @@ import json
 import math
 import datetime
 import forecast
+import noaa
 from collections import Counter
 from geopy import geocoders
 
@@ -311,26 +312,88 @@ class system(object):
             tModule = irradiation.moduleTemp(irradiance, weatherData)
             return self.Pac(irradiance, tModule)
 
-    def powerToday(self, daylightSavings = False):
-        stime = datetime.datetime.today().timetuple()
-        tzOff = datetime.timedelta(hours=self.tz)
-        if daylightSavings:
-            tzOff += datetime.timedelta(hours=1)
+    def powerToday(self, daylightSavings = False, source = None):
+        #default is forecast with solpy.blave 
+        #this is ugly code... sorry
+        if source == 'noaa':
+            wseries = noaa.herpDerpInterp(self.place)
+            ts = []
+            irr = []
+            d = datetime.date.today()
+            tomorrowMidnightUTC = datetime.datetime(d.year,d.month,d.day)\
+                        + datetime.timedelta(days=2,hours=-self.tz)
+            for i in wseries:
+                if i['utc_datetime'] > tomorrowMidnightUTC:
+                    break
+                rec = irradiation.blave(i['utc_datetime'],self.place, \
+                        self.tilt, self.azimuth, cloudCover = i['cloudCover'])
+                irr.append(self.Pac(irradiation.irradiation(rec,self.place,\
+                        t=self.tilt, array_azimuth=self.azimuth, model='p90')))
+                ts.append(i['utc_datetime'])
+            rs = resultSet()
+            rs.values = irr
+            rs.timeseries = ts
+            return rs
+
+        if source == 'forecast':
+            wseries = forecast.hourly(self.place)
+            ts = []
+            irr = []
+            d = datetime.date.today()
+            tomorrowMidnightUTC = datetime.datetime(d.year,d.month,d.day)\
+                        + datetime.timedelta(days=2,hours=-self.tz)
+            for i in wseries:
+                if i['utc_datetime'] > tomorrowMidnightUTC:
+                    break
+                irr.append(self.Pac(irradiation.irradiation(i,self.place,\
+                        t=self.tilt, array_azimuth=self.azimuth, model='p90')))
+                ts.append(i['utc_datetime'])
+            rs = resultSet()
+            rs.values = irr
+            rs.timeseries = ts
+            return rs
+
+        if source =='blave':
+            wseries = forecast.hourly(self.place)
+            ts = []
+            irr = []
+            d = datetime.date.today()
+            tomorrowMidnightUTC = datetime.datetime(d.year,d.month,d.day)\
+                        + datetime.timedelta(days=2,hours=-self.tz)
+            for i in wseries:
+                if i['utc_datetime'] > tomorrowMidnightUTC:
+                    break
+                rec = irradiation.blave(i['utc_datetime'],self.place, \
+                        self.tilt, self.azimuth, cloudCover = i['cloudCover'])
+                irr.append(self.Pac(irradiation.irradiation(rec,self.place,\
+                        t=self.tilt, array_azimuth=self.azimuth, model='p90')))
+                ts.append(i['utc_datetime'])
+            rs = resultSet()
+            rs.values = irr
+            rs.timeseries = ts
+            return rs
         else:
-            tzOff += datetime.timedelta(hours=0)
-        initTime = datetime.datetime(stime[0],stime[1],stime[2]) - tzOff
-        timeseries = []
-        values = []
-        ts = initTime
-        while ts < datetime.datetime.now()-tzOff:
-            ts +=  datetime.timedelta(minutes=5)
-            currentPower = self.now(ts)
-            values.append(currentPower)
-            timeseries.append(ts)
-        rs = resultSet()
-        rs.values = values
-        rs.timeseries = timeseries
-        return rs
+            #blave
+            stime = datetime.datetime.today().timetuple()
+            tzOff = datetime.timedelta(hours=self.tz)
+            if daylightSavings:
+                tzOff += datetime.timedelta(hours=1)
+            else:
+                tzOff += datetime.timedelta(hours=0)
+            initTime = datetime.datetime(stime[0],stime[1],stime[2]) - tzOff
+            timeseries = []
+            values = []
+            ts = initTime
+            while ts < datetime.datetime.now()-tzOff:
+                ts +=  datetime.timedelta(minutes=5)
+                currentPower = self.now(ts)
+                values.append(currentPower)
+                timeseries.append(ts)
+            rs = resultSet()
+            rs.values = values
+            rs.timeseries = timeseries
+            return rs
+
     def dump(self):
         d = {}
         #hack to simply
