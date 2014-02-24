@@ -327,9 +327,12 @@ class system(object):
                     break
                 rec = irradiation.blave(i['utc_datetime'],self.place, \
                         self.tilt, self.azimuth, cloudCover = i['cloudCover'])
-                irr.append(self.Pac(irradiation.irradiation(rec,self.place,\
-                        t=self.tilt, array_azimuth=self.azimuth, model='p90')))
+                irradiance = irradiation.irradiation(rec,self.place,\
+                        t=self.tilt, array_azimuth=self.azimuth, model='p90')
+                tModule = irradiation.moduleTemp(irradiance, i)
+                irr.append(self.Pac(irradiance,tModule))
                 ts.append(i['utc_datetime'])
+
             rs = resultSet()
             rs.values = irr
             rs.timeseries = ts
@@ -345,9 +348,12 @@ class system(object):
             for i in wseries:
                 if i['utc_datetime'] > tomorrowMidnightUTC:
                     break
-                irr.append(self.Pac(irradiation.irradiation(i,self.place,\
-                        t=self.tilt, array_azimuth=self.azimuth, model='p90')))
+                irradiance = irradiation.irradiation(rec,self.place,\
+                        t=self.tilt, array_azimuth=self.azimuth, model='p90')
+                tModule = irradiation.moduleTemp(irradiance, i)
+                irr.append(self.Pac(irradiance,tModule))
                 ts.append(i['utc_datetime'])
+
             rs = resultSet()
             rs.values = irr
             rs.timeseries = ts
@@ -365,9 +371,12 @@ class system(object):
                     break
                 rec = irradiation.blave(i['utc_datetime'],self.place, \
                         self.tilt, self.azimuth, cloudCover = i['cloudCover'])
-                irr.append(self.Pac(irradiation.irradiation(rec,self.place,\
-                        t=self.tilt, array_azimuth=self.azimuth, model='p90')))
+                irradiance = irradiation.irradiation(rec,self.place,\
+                        t=self.tilt, array_azimuth=self.azimuth, model='p90')
+                tModule = irradiation.moduleTemp(irradiance, i)
+                irr.append(self.Pac(irradiance,tModule))
                 ts.append(i['utc_datetime'])
+
             rs = resultSet()
             rs.values = irr
             rs.timeseries = ts
