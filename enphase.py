@@ -47,10 +47,11 @@ class resultSet(object):
                 for obj in self.timeseries.tolist()],self.values.tolist())
 
 class system(object):
-    def __init__(self,*sid, **sys_info):
+    """system(system_id) if called directly"""
+    def __init__(self,*system_id, **sys_info):
         #deal with direct load
-        if len(sid) > 0:
-            url = apiurl2 + "?key=%s&system_id=%s" % (apikey,sid[0])
+        if len(system_id) > 0:
+            url = apiurl2 + "?key=%s&system_id=%s" % (apikey,system_id[0])
             tsys = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
             self.__dict__.update(tsys['systems'][0])
 
