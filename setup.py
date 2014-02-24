@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name = "solpy",
-    version = "0.1.7",
+    version = "0.1.8",
     author = "Nathan Charles",
     author_email = "ncharles@gmail.com",
     description = ("Solar Performance and Design library"),
@@ -17,7 +17,7 @@ setup(
     url = "https://github.com/nrcharles/solpy",
     packages=find_packages(),
     long_description=read('README'),
-    install_requires = ['geopy','numpy','matplotlib'],
+    install_requires = ['geopy','numpy','matplotlib','scipy'],
     package_data={'': ['*.json','*.csv','data.fdf']},
     classifiers=[
         "Development Status :: 4 - Beta",
