@@ -348,7 +348,7 @@ class system(object):
             for i in wseries:
                 if i['utc_datetime'] > tomorrowMidnightUTC:
                     break
-                irradiance = irradiation.irradiation(rec,self.place,\
+                irradiance = irradiation.irradiation(i,self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
                 tModule = irradiation.moduleTemp(irradiance, i)
                 irr.append(self.Pac(irradiance,tModule))
