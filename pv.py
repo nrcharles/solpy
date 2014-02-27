@@ -18,6 +18,7 @@ import math
 import datetime
 import forecast
 import noaa
+import time
 from collections import Counter
 from geopy import geocoders
 
@@ -30,6 +31,11 @@ class resultSet(object):
         self.dailyAve = 0
         self.annualOutput = 0
         self.clippingHours = 0
+
+    def dump(self):
+        return (self.timeseries, self.values)
+    def dumps(self):
+        return ([int(time.mktime(i.timetuple())) for i in self.timeseries],self.values)
 
     def plot(self):
         import matplotlib.pyplot as plt

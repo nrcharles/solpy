@@ -43,7 +43,7 @@ class resultSet(object):
         ax.plot(self.timeseries, self.values)
         return fig
     def jsify(self):
-        return zip([ int(time.mktime(obj.timetuple())*1000 - 4*3600000 ) \
+        return zip([ int(time.mktime(obj.timetuple())*1000) \
                 for obj in self.timeseries.tolist()],self.values.tolist())
 
 class system(object):
@@ -80,7 +80,7 @@ class system(object):
         timeseries = []
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
-            timeseries.append(datetime.datetime.fromtimestamp(i['end_at']))
+            timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
         return resultSet(np.array(timeseries), np.array(production))
 
     def power_2days(self):
@@ -90,12 +90,12 @@ class system(object):
         start_at= int(time.mktime(datetime.date.today().timetuple()) - 24*3600)
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
-            timeseries.append(datetime.datetime.fromtimestamp(i['end_at']))
+            timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
         start_at= int(time.mktime(datetime.date.today().timetuple()))
 
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
-            timeseries.append(datetime.datetime.fromtimestamp(i['end_at']))
+            timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
         return resultSet(np.array(timeseries), np.array(production))
 
     def power_week(self):
