@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name = "solpy",
-    version = "0.1.8",
+    version = "0.1.9",
     author = "Nathan Charles",
     author_email = "ncharles@gmail.com",
     description = ("Solar Performance and Design library"),
