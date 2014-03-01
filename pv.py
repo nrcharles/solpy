@@ -318,18 +318,19 @@ class system(object):
             tModule = irradiation.moduleTemp(irradiance, weatherData)
             return self.Pac(irradiance, tModule)
 
-    def powerToday(self, daylightSavings = False, source = None):
+    def forecastOutput(self, daylightSavings = False, source = None, hours = 24):
+    #def powerToday(self, daylightSavings = False, source = None, hours = 24):
         #default is forecast with solpy.blave 
         #this is ugly code... sorry
+        d = datetime.date.today()
+        endTimeUTC = datetime.datetime(d.year,d.month,d.day)\
+                + datetime.timedelta(hours=hours-self.tz)
         if source == 'noaa':
             wseries = noaa.herpDerpInterp(self.place)
             ts = []
             irr = []
-            d = datetime.date.today()
-            tomorrowMidnightUTC = datetime.datetime(d.year,d.month,d.day)\
-                        + datetime.timedelta(days=2,hours=-self.tz)
             for i in wseries:
-                if i['utc_datetime'] > tomorrowMidnightUTC:
+                if i['utc_datetime'] > endTimeUTC:
                     break
                 rec = irradiation.blave(i['utc_datetime'],self.place, \
                         self.tilt, self.azimuth, cloudCover = i['cloudCover'])
@@ -348,11 +349,8 @@ class system(object):
             wseries = forecast.hourly(self.place)
             ts = []
             irr = []
-            d = datetime.date.today()
-            tomorrowMidnightUTC = datetime.datetime(d.year,d.month,d.day)\
-                        + datetime.timedelta(days=2,hours=-self.tz)
             for i in wseries:
-                if i['utc_datetime'] > tomorrowMidnightUTC:
+                if i['utc_datetime'] > endTimeUTC:
                     break
                 irradiance = irradiation.irradiation(i,self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
@@ -369,11 +367,8 @@ class system(object):
             wseries = forecast.hourly(self.place)
             ts = []
             irr = []
-            d = datetime.date.today()
-            tomorrowMidnightUTC = datetime.datetime(d.year,d.month,d.day)\
-                        + datetime.timedelta(days=2,hours=-self.tz)
             for i in wseries:
-                if i['utc_datetime'] > tomorrowMidnightUTC:
+                if i['utc_datetime'] > endTimeUTC:
                     break
                 rec = irradiation.blave(i['utc_datetime'],self.place, \
                         self.tilt, self.azimuth, cloudCover = i['cloudCover'])
