@@ -33,10 +33,13 @@ def strToTime(str):
     return datetime.datetime.strptime(str[0:19],fmt)
 
 def castFloat(d):
+    """returns utc timestamp"""
     if type(d) == str:
         fmt='%Y-%m-%dT%H:%M:00'
-        d = datetime.datetime.strptime(d[0:19],fmt)
-    return time.mktime(d.timetuple())
+        lt= d[0:19]
+        tz = eval(d[19:22])
+        d = datetime.datetime.strptime(lt,fmt) - datetime.timedelta(hours=tz)
+    return (d - datetime.datetime(1970,1,1)).total_seconds()
 
 def herpDerpInterp(place):
     lat,lon = place
@@ -58,14 +61,14 @@ def herpDerpInterp(place):
     ws = interp1d(timeSeries, windSpd, kind='cubic')
     cc = interp1d(timeSeries, cloudCover, kind='cubic')
     t  = interp1d(timeSeries, temperature, kind='cubic')
-    startD = datetime.datetime.fromtimestamp(timeSeries[0])
+    startD = datetime.datetime.utcfromtimestamp(timeSeries[0])
 
     series = []
     for i in range(48):
         try:
             temp_dict = {}
             b = startD + datetime.timedelta(hours=i)
-            temp_dict['utc_datetime'] = b + datetime.timedelta(hours=5)
+            temp_dict['utc_datetime'] = b
             temp_dict['windSpeed'] = ws(castFloat(b)).item()
             temp_dict['temperature'] = t(castFloat(b)).item()
             temp_dict['cloudCover'] = cc(castFloat(b)).item()
