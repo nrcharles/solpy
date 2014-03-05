@@ -8,6 +8,15 @@ import math
 import os
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
+def stationInfo(usaf):
+    index = open(SPATH + '/StationsMeta.csv')
+    index_data = csv.DictReader(index)
+    for i in index_data:
+        if usaf == i['USAF']:
+            index.close()
+            return i
+    raise Exception('Station not found')
+
 def closestUSAF(place, stationClass=3):
     """Find closest USAF code of a given station class"""
     latitude,longitude = place
