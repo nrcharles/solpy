@@ -73,6 +73,7 @@ class data():
         self.tmy_data = csv.DictReader(self.csvfile)
         self.latitude = float(header[4])
         self.longitude = float(header[5])
+        self.tz = float(header[3])
         #print header[1]
         #print self.latitude, self.longitude
     def __iter__(self):
@@ -81,8 +82,7 @@ class data():
     def next(self):
         t = self.tmy_data.next()
         sd = t['Date (MM/DD/YYYY)'] +' '+ t['Time (HH:MM)']
-        tz = -5
-        t['utc_datetime'] = strptime(sd,tz)
+        t['utc_datetime'] = strptime(sd,self.tz)
         t['datetime'] = strptime(sd)
         return t
 
