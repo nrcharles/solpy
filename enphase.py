@@ -29,6 +29,9 @@ apiurl2 = "https://api.enphaseenergy.com/api/v2/systems"
 
 apikey = os.getenv('ENPHASE')
 
+def toSeconds(dt):
+        return (dt - datetime.datetime(1970,1,1)).total_seconds()
+
 if not apikey:
     print "WARNING: Enphase key not set."
     print "Realtime weather data not availible."
@@ -43,7 +46,7 @@ class resultSet(object):
         ax.plot(self.timeseries, self.values)
         return fig
     def jsify(self):
-        return zip([ int(time.mktime(obj.timetuple())*1000) \
+        return zip([ int(toSeconds(obj)*1000) \
                 for obj in self.timeseries.tolist()],self.values.tolist())
 
 class system(object):
@@ -75,7 +78,9 @@ class system(object):
         return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
 
     def power_today(self):
-        start_at= int(time.mktime(datetime.date.today().timetuple()))
+        d = datetime.date.today()
+        midnight = datetime.datetime(d.year,d.month,d.day)
+        start_at= int(toSeconds(midnight))
         production = []
         timeseries = []
         for i in self.stats(start_at)['intervals']:
@@ -87,12 +92,16 @@ class system(object):
         """this function returns last two days to get at last 24 hours"""
         production = []
         timeseries = []
-        start_at= int(time.mktime(datetime.date.today().timetuple()) - 24*3600)
+
+        #yesterday
+        d = datetime.date.today()
+        midnight = datetime.datetime(d.year,d.month,d.day)
+        start_at= int(toSeconds(midnight-datetime.timedelta(days=1)))
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
             timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
-        start_at= int(time.mktime(datetime.date.today().timetuple()))
-
+        #today
+        midnight = datetime.datetime(d.year,d.month,d.day)
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
             timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
