@@ -18,6 +18,7 @@ import math
 import datetime
 import forecast
 import noaa
+import pathfinder
 from collections import Counter
 from geopy import geocoders
 
@@ -137,6 +138,8 @@ def jsonToSystem(jsonDescription):
         "maybe incomplete"
         plant.tilt = orientations[0]["tilt"]
         plant.azimuth = orientations[0]["azimuth"]
+    if 'shade' in jsonDescription:
+        plant.hourlyShade = pathfinder.hourly(jsonDescription['shade'])
 
     plant.phase = jsonDescription["phase"]
     plant.voltage = jsonDescription["voltage"]
@@ -202,7 +205,8 @@ class system(object):
             tAmb = float(record['Dry-bulb (C)'])
             windSpd = float(record['Wspd (m/s)'])
             tModule = .945*tAmb +.028*insolation - 1.528*windSpd + 4.3
-
+            if hasattr(self,'hourlyShade'):
+                insolation = insolation * self.hourlyShade.shade(timestamp)
             output = self.Pac(insolation,tModule)
             #output = self.Pac(insolation)
             hourlyInsolation = np.append(hourlyInsolation,output)
