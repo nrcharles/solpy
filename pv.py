@@ -22,8 +22,6 @@ import pathfinder
 from collections import Counter
 from geopy import geocoders
 
-from scipy.interpolate import interp1d
-
 class resultSet(object):
     def _init_(self):
         self.timeseries = None
@@ -124,7 +122,8 @@ def jsonToSystem(jsonDescription):
         plant.place = lat,lng
         #print "%s, %s Geolocated" % plant.place
     except:
-        print "%s, %s location from zipcode" % plant.place
+        pass
+        #print "%s, %s location from zipcode" % plant.place
     #print orientations
     #print set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])
     if len(set(["%s_%s" % (i['azimuth'],i['tilt']) for i in orientations])) > 1:
@@ -147,9 +146,11 @@ def jsonToSystem(jsonDescription):
     return plant
 
 def _calc(record):
-    insolation = irradiation.irradiation(record,irradiation.place, 
-            irradiation.horizon, irradiation.tilt, irradiation.azimuth,
-            irradiation.mname)
+    properties,record = record
+    horizon = None
+    insolation = irradiation.irradiation(record, properties['place'], \
+            horizon, properties['tilt'], properties['azimuth'], \
+            properties['modelName'])
     year = 2000
     timestamp = tmy3.normalizeDate(record['datetime'],year)
     return timestamp, insolation, record
@@ -164,7 +165,6 @@ class system(object):
         self.shape = shape
         self.phase = 1
         self.systemName = ""
-        self.horizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
         self.clip = 0
 
     def setZipcode(self,zipcode):
@@ -173,20 +173,22 @@ class system(object):
         self.tz = geo.zipToTZ(self.zipcode)
         self.name, self.usaf = geo.closestUSAF(self.place)
 
-    def model(self,mname = 'p9'):
+    def model(self,modelName = 'p9'):
         from multiprocessing import Pool
         from multiprocessing import cpu_count
 
         #hack for threading
         #probably should be abstracted some other way
-        irradiation.place = self.place
-        irradiation.tilt = self.tilt
-        irradiation.azimuth = self.azimuth
-        irradiation.mname = mname
-        irradiation.horizon = self.horizon
+        properties = {}
+        properties['place'] = self.place
+        properties['tilt'] = self.tilt
+        properties['azimuth'] = self.azimuth
+        properties['modelName'] = modelName
 
         pool = Pool(processes=cpu_count())
-        insolationOutput = pool.map(_calc,tmy3.data(self.usaf))
+        #still a hack
+        insolationOutput = pool.map(_calc,[(properties, i) for i in tmy3.data(self.usaf)])
+        pool.close()
 
         houlyTimeseries = np.array([])
         hourlyInsolation = np.array([])
