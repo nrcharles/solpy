@@ -2,6 +2,7 @@
 # Copyright (C) 2013 Nathan Charles
 #
 # This program is free software. See terms in LICENSE file.
+"""This module has some functions to deal with Solar pathfinder files"""
 
 import numpy as np
 import sys
@@ -42,6 +43,7 @@ class hourly(object):
     def __init__(self, shadeDict):
         self.month = shadeDict
     def shade(self, dt):
+        """return decimal of full sun fraction for a datetime"""
         hoffset = int(dt.hour * 2 + round(dt.minute/60.))
         moffset = str(dt.month - 1)
         return self.month[moffset][hoffset]
