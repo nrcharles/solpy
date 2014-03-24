@@ -1,3 +1,8 @@
+"""
+Parametric Design tools
+"""
+# This program is free software. See terms in LICENSE file.
+
 import copy
 import geo
 import epw
@@ -7,7 +12,7 @@ import json
 
 def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
         Vmax = 600, bipolar= True):
-    """maximize array"""
+    """String sizing"""
     tDerate = {"Roof":30,
             "Ground":25,
             "Pole":20}
