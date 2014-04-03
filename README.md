@@ -42,7 +42,7 @@ PV systems are descibed with json. For example:
         "voltage":240,
         "array":[
             {"inverter":"SMA America: SB6000US 240V",
-            "panel":"Mage Solar : Powertec Plus 250-6 MNCS",
+            "panel":"Mage Solar : USA Powertec Plus 250-6 MNCS",
             "series":14,
             "parallel":2}
             ]
