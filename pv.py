@@ -202,14 +202,20 @@ class system(object):
         dailyMax = 0
         clip = 0
 
+        #cache
+        NOLOAD = self.Pac(0)
+
         for timestamp,insolation,record in insolationOutput:
-            houlyTimeseries = np.append(houlyTimeseries,timestamp)
-            tAmb = float(record['Dry-bulb (C)'])
-            windSpd = float(record['Wspd (m/s)'])
-            tModule = .945*tAmb +.028*insolation - 1.528*windSpd + 4.3
-            if hasattr(self,'hourlyShade'):
-                insolation = insolation * self.hourlyShade.shade(timestamp)
-            output = self.Pac(insolation,tModule)
+            if insolation > 0:
+                houlyTimeseries = np.append(houlyTimeseries,timestamp)
+                tAmb = float(record['Dry-bulb (C)'])
+                windSpd = float(record['Wspd (m/s)'])
+                tModule = .945*tAmb +.028*insolation - 1.528*windSpd + 4.3
+                if hasattr(self,'hourlyShade'):
+                    insolation = insolation * self.hourlyShade.shade(timestamp)
+                output = self.Pac(insolation,tModule)
+            else:
+                output = NOLOAD
             #output = self.Pac(insolation)
             hourlyInsolation = np.append(hourlyInsolation,output)
 
