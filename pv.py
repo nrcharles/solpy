@@ -173,9 +173,7 @@ class system(object):
         self.tz = geo.zipToTZ(self.zipcode)
         self.name, self.usaf = geo.closestUSAF(self.place)
 
-    def model(self,modelName = 'p9'):
-        from multiprocessing import Pool
-        from multiprocessing import cpu_count
+    def model(self,modelName = 'p9',singleThread=False):
 
         #hack for threading
         #probably should be abstracted some other way
@@ -185,10 +183,15 @@ class system(object):
         properties['azimuth'] = self.azimuth
         properties['modelName'] = modelName
 
-        pool = Pool(processes=cpu_count())
-        #still a hack
-        insolationOutput = pool.map(_calc,[(properties, i) for i in tmy3.data(self.usaf)])
-        pool.close()
+        if singleThread:
+            insolationOutput = map(_calc,[(properties, i) for i in tmy3.data(self.usaf)])
+        else:
+            from multiprocessing import Pool
+            from multiprocessing import cpu_count
+            pool = Pool(processes=cpu_count())
+            #still a hack
+            insolationOutput = pool.map(_calc,[(properties, i) for i in tmy3.data(self.usaf)])
+            pool.close()
 
         houlyTimeseries = np.array([])
         hourlyInsolation = np.array([])
