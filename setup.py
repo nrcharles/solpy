@@ -18,7 +18,7 @@ setup(
     packages=find_packages(),
     long_description=read('README'),
     install_requires = ['geopy','numpy','matplotlib','scipy','pyephem'],
-    package_data={'': ['*.json','*.csv']},
+    package_data={'': ['*.json','*.csv','pvcli']},
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
