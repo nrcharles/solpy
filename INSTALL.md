@@ -10,6 +10,7 @@ Homebrew on Mac OS X
 apt-get on Ubuntu
 -------------------
     sudo apt-get install python-geopy python-numpy python-scipy python-matplotlib python-pip
+    sudo apt-get install gfortran libatlas-dev liblapack-dev #dev reqs
     sudo pip install solpy
 
 tmy3 data does needs to be downloaded from NREL, currently the default location is ~/tmy3/
