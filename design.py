@@ -8,7 +8,7 @@ import geo
 import epw
 import pv
 import json
-
+import pmodel
 
 def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
         Vmax = 600, bipolar= True):
@@ -16,13 +16,15 @@ def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
     tDerate = {"Roof":30,
             "Ground":25,
             "Pole":20}
+
+    #csv is performance hit
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(zipcode), stationClass)
     maxV = inverter.array.panel.Vmax(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
     minV = inverter.array.panel.Vmin(epw.twopercent(usaf),tDerate[mount]) * \
             derate20
-    #print "MinV", minV
+
     if inverter.vdcmax != 0:
          Vmax = inverter.vdcmax
     smax = int(Vmax/maxV)
@@ -53,8 +55,8 @@ def knapsack(items, maxweight):
     #http://codereview.stackexchange.com/questions/20569/dynamic-programming-solution-to-knapsack-problem
     bestvalues = [[0] * (maxweight + 1)
                   for i in xrange(len(items) + 1)]
-
     for i, (value, weight, systemDict) in enumerate(items):
+        print systemDict
         i += 1
         for capacity in xrange(maxweight + 1):
             if weight > capacity:
@@ -74,6 +76,7 @@ def knapsack(items, maxweight):
         i -= 1
 
     reconstruction.reverse()
+    [subA for v,w,subA in reconstruction]
 
     return bestvalues[len(items)][maxweight], reconstruction
 
@@ -88,54 +91,97 @@ def efficient(items, maxweight):
     result = [mostEff[2]]*scale
     return (mostEff[1]*scale, result)
 
+def combinations(a,b):
+    s = []
+    for i in a:
+        for j in b:
+            s.append((i,j))
+    return s
+
+def performanceModelPlant(jsonDef):
+    plant = pv.jsonToSystem(jsonDef)
+    yearone = plant.model()
+    PDC = sum([i.array.output(1000) for i in plant.shape])
+    plantDict = plant.dump()
+    plantDict['yearone'] = yearone.annualOutput
+    plantDict['DCnominal'] = int(PDC)
+    return plantDict
+
+def performanceModelSet(clist):
+    """wrapper for distributed performance modelling"""
+    CSTAT = celery_worker_status()
+    if not 'ERROR' in CSTAT:
+        from celery import group
+        print CSTAT
+        return group(pmodel.modelPlant.s(i) for i in clist)().get()
+    else:
+        return [performanceModelPlant(pJSON) for pJSON in clist]
+
 def design(reqsStr):
 #def design(DCsize, panellist, inverterlist, details):
     """parts selection algorithm"""
     #create all valid inverter panel combinations for location
     reqs = json.loads(reqsStr)
     validC = []
-    clean = []
+    optionSet = []
     zc = reqs['zipcode']
     #for inverterModel,inverterCost in inverterlist:
-    for inverterModel in reqs['inverter options']:
-        #for panelModel,panelPrice in panellist:
-        for panelModel in reqs['panel options']:
-            system = inverters.inverter(inverterModel,\
-                    modules.pvArray(modules.module(panelModel),[2]))
-            configs = fill(system,zc)
-            for config in configs:
-                validC.append(config)
-                print config, config.array, config.array.panel, \
-                        config.array.output(1000), config.ratio()
+    for inverterModel, panelModel in combinations(reqs['inverter options'], reqs['panel options']):
+        system = inverters.inverter(inverterModel,\
+                modules.pvArray(modules.module(panelModel),[2]))
+        configs = fill(system,zc)
+        for config in configs:
+            validC.append(config)
+            print config, config.array, config.array.panel, \
+                    config.array.output(1000), config.ratio()
 
-                reqs['array'] = [config.dump()]
-                plant = pv.jsonToSystem(reqs)
-                output = plant.model()
-                print "year 1 kwh", output.annualOutput
-                config.yearOne = output.annualOutput
+            reqs['array'] = [config.dump()]
+        optionSet.append(copy.deepcopy(reqs))
 
-                #value, weight, systemDict
-                option = [(int(config.yearOne), \
-                        int(config.array.output(1000)), config.dump())]
+    performanceResults= performanceModelSet(optionSet)
 
-                #hack to allow semetery
-                scale = int(reqs['desired size'] / config.array.output(1000))
-                clean += option * scale
+    configSet= []
+    for option in performanceResults:
+        #hack to expand for semetery
+        scale = reqs['desired size'] // option['DCnominal']
+
+        #set of inverter panel configs
+        configSet += [(option['yearone'],option['DCnominal'],option['array'][0])] * scale
+        #configSet += [(option[0],option[1],option[2]['array'][0])] * scale
 
     #knapsack problem weight is system DC size and value is annual output
     #this could be expanded with different constraints for different rankings
-    systemWeight, systemSet = knapsack(clean, reqs['desired size'])
+    systemWeight, systemSet = knapsack(configSet, reqs['desired size'])
 
     suggested = []
-    reqs['notes'] = 'Maximum size'
+    #s1 = [subA for v,w,subA in systemSet]
     reqs['array'] = [subA for v,w,subA in systemSet]
+    reqs['notes'] = 'Maximum size'
     suggested.append(copy.deepcopy(reqs))
 
-    systemWeight, systemSet= efficient(clean, reqs['desired size'])
-    reqs['notes'] = 'Maximum symetric efficiency'
+    systemWeight, systemSet= efficient(configSet, reqs['desired size'])
     reqs['array'] = systemSet
+    reqs['notes'] = 'Maximum symetric efficiency'
     suggested.append(copy.deepcopy(reqs))
     return suggested
+
+def celery_worker_status():
+    ERROR_KEY = "ERROR"
+    try:
+        from celery.task.control import inspect
+        insp = inspect()
+        d = insp.stats()
+        if not d:
+            d = { ERROR_KEY: 'No running Celery workers were found.' }
+    except IOError as e:
+        from errno import errorcode
+        msg = "Error connecting to the backend: " + str(e)
+        if len(e.args) > 0 and errorcode.get(e.args[0]) == 'ECONNREFUSED':
+            msg += ' Check that the RabbitMQ server is running.'
+        d = { ERROR_KEY: msg }
+    except ImportError as e:
+        d = { ERROR_KEY: str(e)}
+    return d
 
 if __name__ == "__main__":
     import inverters
