@@ -6,6 +6,7 @@
 import csv
 import math
 import os
+from tools import memoized
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 def stationInfo(usaf):
@@ -36,6 +37,7 @@ def closestUSAF(place, stationClass=3):
     index.close()
     return name, usaf
 
+@memoized
 def zipToCoordinates(zipcode):
     """zipcode to latitude and longitude, takes a string because some zipcodes
     start with 0"""
@@ -49,6 +51,7 @@ def zipToCoordinates(zipcode):
         if i['zip'] == zipcode:
             return float(i['latitude']),float( i['longitude'])
 
+@memoized
 def zipToTZ(zipcode):
     """find TZ for zipcode"""
     index = open(SPATH + '/zipcode.csv')
