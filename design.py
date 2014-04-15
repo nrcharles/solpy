@@ -8,7 +8,6 @@ import geo
 import epw
 import pv
 import json
-import pmodel
 
 def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
         Vmax = 600, bipolar= True):
@@ -111,7 +110,8 @@ def performanceModelSet(clist):
     CSTAT = celery_worker_status()
     if not 'ERROR' in CSTAT:
         from celery import group
-        print CSTAT
+        import pmodel
+        #print CSTAT
         return group(pmodel.modelPlant.s(i) for i in clist)().get()
     else:
         return [performanceModelPlant(pJSON) for pJSON in clist]
