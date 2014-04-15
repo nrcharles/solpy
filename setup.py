@@ -1,14 +1,18 @@
 import os
 from setuptools import setup,find_packages
+import datetime
 """setup.py and README must be copied to parent directory in order to build
 a valid setuptools package"""
+
+NOW = datetime.datetime.now()
+MAJOR = 0
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name = "solpy",
-    version = "0.2.4",
+    version = "%s.%s.%s.%s" % (MAJOR, NOW.month, NOW.day, NOW.hour),
     author = "Nathan Charles",
     author_email = "ncharles@gmail.com",
     description = ("Solar Performance and Design library"),
