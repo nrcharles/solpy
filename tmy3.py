@@ -11,7 +11,7 @@ import irradiation
 #default = ~/tmp3/
 path = os.environ['HOME'] + "/tmy3/"
 
-SPATH = os.path.dirname(os.path.abspath(__file__))
+SRC_PATH = os.path.dirname(os.path.abspath(__file__))
 
 try:
     os.listdir(os.environ['HOME'] + '/tmy3')
@@ -22,11 +22,10 @@ except OSError:
         pass
 
 def tmybasename(USAF):
-    f = open(SPATH + '/tmy3urls.csv')
+    f = open(SRC_PATH + '/tmy3urls.csv')
     for line in f.readlines():
         if line.find(USAF) is not -1:
             return line.rstrip().partition(',')[0]
-
 
 def downloadTMY(USAF):
     url = "http://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/data/tmy3/"
@@ -89,17 +88,25 @@ class data():
     def __del__(self):
         self.csvfile.close()
 
+def total(usaf, field='GHI (W/m^2)'):
+    t = 0
+    usafdata = data(usaf)
+    for r in usafdata:
+        t += float(r[field])
+    return t/1000
+
 if __name__ == "__main__":
     import geo
     tilt = 32.0
     #import matplotlib.pyplot as plt
-    #place = zipToCoordinates(17601) #Lancaster
-    place = geo.zipToCoordinates(19113) #Philadelphia
+    #place = zipToCoordinates('17601) #Lancaster
+    place = geo.zipToCoordinates('19113') #Philadelphia
     name, usaf = geo.closestUSAF(place)
     t = 0
     for r in data(usaf):
-        output = irradiation.irradiation(r,place,tilt)
+        output = irradiation.irradiation(r,place,t=tilt)
         t += output
 
     print t/1000
     print t/(1000*365.0)
+    print total(usaf)
