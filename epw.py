@@ -5,7 +5,6 @@
 
 import os
 import re
-import geo
 import csv
 #path to epw data
 #default = ~/epw/
@@ -168,6 +167,7 @@ def cdd(USAF,base=18):
 if __name__ == "__main__":
     import argparse
     import sys
+    import geo
     parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
     #import sys
     #opts, args = getopt.getopt(sys.argv[1:], 'f:h')

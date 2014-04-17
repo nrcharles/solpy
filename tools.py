@@ -4,7 +4,7 @@
 
 import collections
 import functools
-import design
+import os.path
 
 def factors(n):
     #http://stackoverflow.com/questions/6800193/
@@ -37,17 +37,17 @@ class memoized(object):
       '''Support instance methods.'''
       return functools.partial(self.__call__, obj)
 
-def format(inverter):
-    """'9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
-    DC = inverter.array.output(1000)
-    ratio = DC/inverter.Paco
-    return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
-            round(ratio,2), round(inverter.minV), round(inverter.maxV))
+def find_file(filename, search_path):
+    for path in search_path:
+        if os.path.exists(os.path.join(path, filename)):
+            return os.path.abspath(os.path.join(path,filename))
+    raise Exception('File %s not found in Path: %s' % \
+            (filename, ':'.join(search_path)))
 
-def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, Vmax = 600, bipolar= True):
-    return [format(i) for i in design.fill(**locals())]
+# fill has moved to design
 
 if __name__ == "__main__":
+    from design import tools_fill as fill
     import inverters
     import modules
     zc='44701'

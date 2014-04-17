@@ -4,13 +4,24 @@ Parametric Design tools
 # This program is free software. See terms in LICENSE file.
 
 import copy
-import geo
 import epw
 import pv
 import json
 
+def tools_fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, Vmax = 600, bipolar= True):
+    #deprecated legacy function
+    return [format(i) for i in fill(**locals())]
+
+def format(inverter):
+    """'9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
+    DC = inverter.array.output(1000)
+    ratio = DC/inverter.Paco
+    return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
+            round(ratio,2), round(inverter.minV), round(inverter.maxV))
+
 def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
         Vmax = 600, bipolar= True):
+    import geo
     """String sizing"""
     tDerate = {"Roof":30,
             "Ground":25,
