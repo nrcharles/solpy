@@ -127,6 +127,8 @@ def irradiation(record, place, horizon = None, t = 0.0, array_azimuth = 180.0, m
     Bh = int(record['DNI (W/m^2)'])
 
     #theta = incidence angle of the sun
+    #todo: SUNY uses average for time period. This is really and integration
+    #function and some error maybe introduced as is. This should be evaluated.
     o = ephem.Observer()
     o.date =  record['utc_datetime']
     o.lat = radians(latitude)
