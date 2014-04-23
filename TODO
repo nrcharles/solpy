@@ -7,3 +7,5 @@ TODO
 * error tests - number of inverters/panels
 * voltage drop in pv Model
 * Sankey chart
+* METSTAT model for clear sky/cloud shading
+* sub array modeling
