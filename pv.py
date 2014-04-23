@@ -246,6 +246,7 @@ class system(object):
         rs.annualOutput = (round(totalOutput/10)/100)
 
         return rs
+
     def Pac(self, ins, tCell = 25):
         output = 0
         for i in self.shape:
@@ -332,6 +333,28 @@ class system(object):
         else:
             tModule = irradiation.moduleTemp(irradiance, weatherData)
             return self.Pac(irradiance, tModule)
+
+    def virr(self, Pac, timestamp = None, weatherData = None):
+        girr = 1000.
+        gPac =  self.Pac(girr)
+        if Pac > gPac:
+            print "WARNING: Edge effect?"
+        iteration = 2
+        while round(Pac,-1) != round(gPac,-1):
+            #todo: improve non linear search routine
+            tModule = irradiation.moduleTemp(girr, weatherData)
+            gPac =  self.Pac(girr, tModule)
+            if gPac <= Pac:
+                girr = girr + 1000./(iteration**2)
+            else:
+                girr = girr - 1000./(iteration**2)
+            iteration += 1
+            if iteration > 25:
+                raise Exception('too many iterations')
+        solarAz, solarAlt = irradiation.ephemSun(self.place,timestamp)
+        irrRec = irradiation.irrGuess(timestamp,girr, solarAlt, solarAz, self.tilt, self.azimuth)
+        irrRec['girr'] = round(girr,0)
+        return irrRec
 
     def forecastOutput(self, daylightSavings = False, source = None, hours = 24):
     #def powerToday(self, daylightSavings = False, source = None, hours = 24):

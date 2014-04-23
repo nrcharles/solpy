@@ -116,7 +116,31 @@ class TestDesign(unittest.TestCase):
                 '10521.0W : 14S x 3P : ratio 1.5 : 338.0 - 595.0 V']
         self.assertAlmostEquals(ans,sols)
 
-#modules that still need unit tests
+class TestVirr(unittest.TestCase):
+    def test_virr1(self):
+        import datetime
+        p1 = """{"system_name":"HAPPY CUSTOMER",
+        "address":"15013 Denver W Pkwy, Golden, CO",
+        "zipcode":"80401",
+        "phase":1,
+        "voltage":240,
+        "array":[
+            {"inverter":"Enphase Energy: M215-60-2LL-S2x-IG-NA (240 V) 240V",
+            "panel":"Mage Solar : Powertec Plus 250-6 PL",
+            "quantity":20,
+            "azimuth":180,
+            "tilt":25
+            }
+            ]}"""
+        plant = pv.jsonToSystem(json.loads(p1))
+        ts =datetime.datetime(2000,9,22,19)
+        weatherData = {}
+        weatherData['temperature'] = 25
+        weatherData['windSpeed'] = 0
+        virrRec = plant.virr(2000,ts, weatherData)
+        self.assertAlmostEquals(virrRec['girr'],437.0)
+
+#todo: modules that still need unit tests
 #ee.py
 #vd.py
 #geo.py
