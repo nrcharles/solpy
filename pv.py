@@ -36,7 +36,7 @@ class resultSet(object):
         return ([int((i - datetime.datetime(1970,1,1)).total_seconds()) \
                 for i in self.timeseries],self.values)
 
-    def plot(self):
+    def plotd(self):
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         fig = plt.figure()
@@ -49,6 +49,30 @@ class resultSet(object):
         return fig
         #plt.ion()
         #plt.show()
+
+    def plot(self):
+        import matplotlib.pyplot as plt
+        total = self.hourlyValues
+        a = []
+        for i in range(0,len(self.hourlyValues),24):
+            a.append(self.hourlyValues[i:i+23])
+        data = np.array(a)
+        data = np.rot90(data)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)#plt.subplots()
+        ax.set_xlim([0,365])
+        ax.set_ylim([0,22])
+        ax.set_ylabel('Hour of Day')
+        ax.set_xlabel('Day of Year')
+        heatmap = ax.imshow(data,aspect='auto',cmap=plt.cm.OrRd)
+        txt =  "Year 1 Output: %s KWh" % round(sum(total)/1000,1)
+        cbar = fig.colorbar(heatmap) 
+        cbar.set_label('Output (Wh)')
+        ax.annotate(txt, xy=(10,3))
+        txt = "Year 1 Annual Output: %s kWh" % self.annualOutput
+        ax.annotate(txt, xy=(10,2))
+        plt.tight_layout()
+        return fig
 
     def summary(self):
         print "Year 1 Annual Output: %s kWh" % self.annualOutput
@@ -238,8 +262,8 @@ class system(object):
 
         rs.timeseries = dailyTimeseries
         rs.values = dailyInsolation
-        #rs.timeseries = houlyTimeseries
-        #rs.values = hourlyInsolation
+        rs.htimeseries = houlyTimeseries
+        rs.hourlyValues = hourlyInsolation
 
         rs.clippingHours = clip
         rs.dailyAve = (round(totalOutput/365/10)/100)
