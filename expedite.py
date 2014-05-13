@@ -18,9 +18,9 @@ try:
 except:
     print "Warning: geomag not loaded.  Magnetic declination unavailible"
 
-def string_notes(system, run=0.0):
+def string_notes(system, run=0.0, stationClass = 1):
     """page 5"""
-    stationClass = 3
+
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
@@ -203,7 +203,6 @@ def write_notes(system, Vnominal=240.0):
 if __name__ == "__main__":
     import argparse
     import json
-    import sys
     parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
     parser.add_argument('-f', '--file')
     args = vars(parser.parse_args())
