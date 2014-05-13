@@ -47,8 +47,6 @@ class resultSet(object):
         ax.xaxis.set_major_formatter(mFormat)
         ax.plot(self.timeseries, self.values)
         return fig
-        #plt.ion()
-        #plt.show()
 
     def plot(self):
         import matplotlib.pyplot as plt
@@ -67,10 +65,8 @@ class resultSet(object):
         heatmap = ax.imshow(data,aspect='auto',cmap=plt.cm.OrRd)
         txt =  "Year 1 Output: %s KWh" % round(sum(total)/1000,1)
         cbar = fig.colorbar(heatmap) 
-        cbar.set_label('Output (Wh)')
+        cbar.set_label('Output (W)')
         ax.annotate(txt, xy=(10,3))
-        txt = "Year 1 Annual Output: %s kWh" % self.annualOutput
-        ax.annotate(txt, xy=(10,2))
         plt.tight_layout()
         return fig
 
