@@ -276,6 +276,12 @@ class system(object):
                 self.clip += 1
         return output
 
+    def Pdc(self, ins, tCell = 25):
+        dc = 0
+        for i in self.shape:
+            dc += i.array.output(ins,tCell)
+        return dc
+
     def solstice(self, hour):
         #position on winter soltice (Dec 21)
         import ephem
