@@ -24,26 +24,29 @@ def string_notes(system, run=0.0, stationClass = 1):
     name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
-    ac_rated = 0.0
+    ac_kva_rated = 0.0
     dc_rated = 0.0
+    ac_kw = 0.0
     for i in system.shape:
         dc_rated += i.array.Pmax
         try:
             if i.phase == 1:
-                ac_rated += i.current * i.ac_voltage
+                ac_kva_rated += i.current * i.ac_voltage
             else:
-                ac_rated += i.phase * i.current * i.ac_voltage/ 3**.5
+                ac_kva_rated += i.phase * i.current * i.ac_voltage/ 3**.5
         except:
-            ac_rated += i.Paco
+            ac_kva_rated += i.Paco
             pass
+        ac_kw += i.Paco
     notes = []
-    notes.append("%s KW AC RATED" % round(ac_rated/1000.0,2))
+    notes.append("%s KVA AC RATED" % round(ac_kva_rated/1000.0,2))
+    notes.append("%s KW AC RATED" % round(ac_kw/1000.0,2))
     notes.append("%s KW DC RATED" % round(dc_rated/1000.0,2))
     #BUG: This doesn't work for unbalanced 3 phase
     if system.phase == 1:
-        Aac = round(ac_rated/i.ac_voltage,1)
+        Aac = round(ac_kva_rated/i.ac_voltage,1)
     else:
-        Aac = round(ac_rated/i.ac_voltage/3**.5,1)
+        Aac = round(ac_kva_rated/i.ac_voltage/3**.5,1)
     notes.append( "System AC Output Current: %s A" % Aac)
 
     notes.append("Nominal AC Voltage: %s V" % i.ac_voltage)
