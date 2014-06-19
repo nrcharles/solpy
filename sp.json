@@ -220329,6 +220329,25 @@
 "gamma_r": -0.44
 }, 
 {
+"i_mp_ref": 9.07, 
+"r_sh_ref": 369.66, 
+"a_ref": 1.7516, 
+"r_s": 0.122, 
+"beta_oc": -0.1185, 
+"n_s": 60, 
+"v_mp_ref": 31.2, 
+"adjust": 19.59, 
+"a_c": 1.61, 
+"t_noct": 46.4, 
+"i_l_ref": 9.083, 
+"i_sc_ref": 9.71, 
+"v_oc_ref": 39.5, 
+"gamma_r": -0.467, 
+"alpha_sc": 0.009619, 
+"i_o_ref": 2.555e-09, 
+"panel": "SolarWorld : SW280 Mono *"
+}, 
+{
 "i_mp_ref": 8.18, 
 "r_sh_ref": 1011.39, 
 "a_ref": 1.9185, 
