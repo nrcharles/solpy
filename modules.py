@@ -95,21 +95,24 @@ class module(object):
 #todo: this needs rewritten
 class pvArray(object):
     """structure to aggregate panels into an array)"""
-    def __init__(self,pname, shape):#series, parallel = 1):
-        self.shape = shape
+    def __init__(self,pname, shape):
+        self.shape = []
+        for string in shape:
+            if "parallel" in string:
+                self.shape +=[string["series"]]*string["parallel"]
+            else:
+                self.shape.append(string["series"])
         self.panel = pname
-        #self.series = series
-        #self.parallel = parallel
-        self.Pmax = pname.Pmax*sum(self.shape)#pname.Pmax*series*parallel
+        self.Pmax = pname.Pmax*sum(self.shape)
 
     def Vdc(self, t = 25):
-        return self.panel.Vdc(t) * max(self.shape)#self.series
+        return self.panel.Vdc(t) * max(self.shape)
     def Vmax(self,ashraeMin):
-        return self.panel.Vmax(ashraeMin) * max(self.shape)#self.series
+        return self.panel.Vmax(ashraeMin) * max(self.shape)
     def Vmin(self,ashrae2p, Tadd = 30):
-        return  self.panel.Vmin(ashrae2p, Tadd)* min(self.shape)#Dseries
+        return  self.panel.Vmin(ashrae2p, Tadd)* min(self.shape)
     def output(self, Insolation, tAmb=25):
-        return self.panel.output(Insolation,tAmb)*sum(self.shape)#self.series*self.parallel
+        return self.panel.output(Insolation,tAmb)*sum(self.shape)
     def dump(self):
         a = Counter(self.shape)
         d = [{"series":i, "parallel": a[i]} for i in a.iterkeys()]
@@ -119,6 +122,102 @@ class pvArray(object):
         a = Counter(self.shape)
         s = ', '.join(['%sS x %sP' % (i,a[i]) for i in a.iterkeys()])
         return "%s" % (s)
+
+class mppt(object):
+    """structure to aggregate panels into an array)"""
+    def __init__(self,moduleN, series, parallel = 1):#series, parallel = 1):
+        self.module = moduleN
+        self.series = series
+        self.parallel = parallel
+
+    def Pmax(self):
+        self.Pmax = self.module.Pmax * self.series * self.parallel
+
+    def Vdc(self, t = 25):
+        return self.module.Vdc(t) * self.series
+
+    def Vmax(self,ashraeMin):
+        return self.module.Vmax(ashraeMin) * self.series
+    def Vmin(self,ashrae2p, Tadd = 30):
+        return  self.module.Vmin(ashrae2p, Tadd)* self.series
+
+    def output(self, Insolation, tAmb=25):
+        return self.module.output(Insolation,tAmb) * self.series * self.parallel
+
+    def inc(self):
+        if (self.series+1) < self.maxlength:
+            self.series += 1
+        else:
+            self.parallel +=1
+            self.series = self.minlength
+
+    def dec(self):
+        if (self.series - 1) < self.minlength:
+            self.series -=1
+        elif self.parallel > 1:
+            self.parallel +=1
+            self.series = self.maxlength
+        else:
+            print 'Warning: minimum size reached'
+
+    def dump(self):
+        d = {"series":self.series, "parallel": self.parallel}
+        return d
+    def __repr__(self):
+        return '%sS x %sP' % (self.series, self.parallel)
+
+class array(object):
+    """rewrite of pvArray"""
+    def __init__(self,moduleN, shape):#series, parallel = 1):
+        self.channels = []
+        for c in shape:
+            if 'parallel' in c:
+                parallel = c['parallel']
+            else:
+                parallel = 1
+            self.channels.append(mppt(moduleN,c['series'],parallel))
+        print self.channels
+        self.Pmax = self.output(1000)
+
+    def output(self, Insolation, tAmb=25):
+        return sum([i.output(Insolation, tAmb) for i in self.channels])
+
+    def Vmax(self,ashraeMin):
+        return max([i.Vmax(ashraeMin) for i in self.channels])
+    def Vmin(self,ashrae2p, Tadd = 30):
+        return min([i.Vmin(ashrae2p, Tadd) for i in self.channels])
+
+    def inc(self):
+        #find channel with least panels
+        minP = self.channels[0].Pmax
+        minC = None
+        for i in self.channels:
+            if i.Pmax < minP:
+                minP = i.Pmax
+                minC = i
+        #incriment that channel
+        minC.inc()
+        self.Pax = self.output(1000)
+
+    def dec(self):
+        #find channel with most panels
+        maxP = self.channels[0].Pmax
+        maxC = None
+        for i in self.channels:
+            if i.Pmax > maxP:
+                maxP = i.Pmax
+                macC = i
+        #dccriment that channel
+        maxC.dec()
+        self.Pax = self.output(1000)
+
+    def dump(self):
+        return [i.dump() for i in self.channels]
+
+    def __repr__(self):
+        return '\n'.join(['channel %s: %s' % (i,c) for i,c in \
+                enumerate(self.channels)])
+
 
 def manufacturers():
     a =  [i['panel'].split(":")[0] for i in json.loads(open(SPATH + '/sp.json').read()) ]
@@ -157,14 +256,12 @@ if __name__=="__main__":
     print "Vmax:", p.Vmax(-13)*series
     print "Vmin:",p.Vmin(31,25) * series
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
-    a = pvArray(p,[11])
+    a = pvArray(p,[{'series':11}])
     print a.dump()
-    a = pvArray(p,[11]*2)
+    a = pvArray(p,[{'series':11,'parallel':2}])
     print a.dump()
-    a = pvArray(p,[11,10])
+    a = pvArray(p,[{'series':11},{'series':10}])
     print a.dump()
-
-    #print p.output(950)
-    #print a.Vmax(-20)
-    #print a.Vmin(33)
-    #print a.output(950)
+    a = array(p,[{'series':11},{'series':10}])
+    print a.dump()
+    print a

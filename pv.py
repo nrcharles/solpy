@@ -97,23 +97,12 @@ def jsonToSystem(jsonDescription):
         if "quantity" in i:
             scale = i["quantity"]
         if "shape" in i:
-            shape = []
-            for string in i["shape"]:
-                if "parallel" in string:
-                    shape +=[string["series"]]*string["parallel"]
-                else:
-                    shape.append(string["series"])
+            shape = i["shape"]
+        elif "series" in i:
+            shape = [{"series":i["series"],
+                    "parallel":i["parallel"] or 1}]
         else:
-            if "series" in i:
-                series = i["series"]
-            else:
-                series = 1
-            if "parallel" in i:
-                parallel = i["parallel"]
-            else:
-                parallel = 1
-
-            shape = [series]*parallel
+            shape = [{'series':1}]
 
         if "tilt" in i:
             o["tilt"] = i["tilt"]

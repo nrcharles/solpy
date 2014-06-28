@@ -105,7 +105,7 @@ class TestDesign(unittest.TestCase):
         m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
         ms = modules.module(m)
         zc = '27713'
-        system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,[14]*2))
+        system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,[{'series':14}]))
         sols = design.tools_fill(system,zc,mount="Roof")
         ans = ['8266.5W : 11S x 3P : ratio 1.18 : 265.0 - 467.0 V',
                 '6012.0W : 12S x 2P : ratio 0.86 : 290.0 - 510.0 V',
