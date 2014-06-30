@@ -116,7 +116,7 @@ class pvArray(object):
     def dump(self):
         a = Counter(self.shape)
         d = [{"series":i, "parallel": a[i]} for i in a.iterkeys()]
-        return d
+        return {'shape':d,'panel':str(self.panel)}
 
     def __str__(self):
         a = Counter(self.shape)
@@ -125,13 +125,13 @@ class pvArray(object):
 
 class mppt(object):
     """structure to aggregate panels into an array)"""
-    def __init__(self,moduleN, series, parallel = 1):#series, parallel = 1):
-        self.module = moduleN
+    def __init__(self,moduleO, series, parallel = 1):#series, parallel = 1):
+        self.module = moduleO
         self.series = series
         self.parallel = parallel
-
-    def Pmax(self):
-        self.Pmax = self.module.Pmax * self.series * self.parallel
+        self.minlength = 1
+        self.maxlength = 14
+        self.Pmax = self.output(1000)
 
     def Vdc(self, t = 25):
         return self.module.Vdc(t) * self.series
@@ -145,7 +145,7 @@ class mppt(object):
         return self.module.output(Insolation,tAmb) * self.series * self.parallel
 
     def inc(self):
-        if (self.series+1) < self.maxlength:
+        if (self.series+1) <= self.maxlength:
             self.series += 1
         else:
             self.parallel +=1
@@ -168,15 +168,14 @@ class mppt(object):
 
 class array(object):
     """rewrite of pvArray"""
-    def __init__(self,moduleN, shape):#series, parallel = 1):
+    def __init__(self,moduleO, shape):#series, parallel = 1):
         self.channels = []
         for c in shape:
             if 'parallel' in c:
                 parallel = c['parallel']
             else:
                 parallel = 1
-            self.channels.append(mppt(moduleN,c['series'],parallel))
-        print self.channels
+            self.channels.append(mppt(moduleO,c['series'],parallel))
         self.Pmax = self.output(1000)
 
     def output(self, Insolation, tAmb=25):
@@ -187,32 +186,41 @@ class array(object):
     def Vmin(self,ashrae2p, Tadd = 30):
         return min([i.Vmin(ashrae2p, Tadd) for i in self.channels])
 
+    def maxlength(self, maxl):
+        for i in self.channels:
+            i.maxlength = maxl
+
+    def minlength(self, minl):
+        for i in self.channels:
+            i.minlength = minl
+
     def inc(self):
         #find channel with least panels
-        minP = self.channels[0].Pmax
-        minC = None
-        for i in self.channels:
-            if i.Pmax < minP:
-                minP = i.Pmax
+        minP = self.channels[0].output(1000)
+        minC = self.channels[0]
+        for j,i in enumerate(self.channels):
+            if i.output(1000) < minP:
+                minP = i.output(1000)
                 minC = i
         #incriment that channel
         minC.inc()
-        self.Pax = self.output(1000)
+        self.Pmax = self.output(1000)
 
     def dec(self):
         #find channel with most panels
         maxP = self.channels[0].Pmax
-        maxC = None
+        maxC = self.channels[0]
         for i in self.channels:
             if i.Pmax > maxP:
                 maxP = i.Pmax
-                macC = i
+                maxC = i
         #dccriment that channel
         maxC.dec()
-        self.Pax = self.output(1000)
+        self.Pmax = self.output(1000)
 
     def dump(self):
-        return [i.dump() for i in self.channels]
+        return {'shape':[i.dump() for i in self.channels],
+                'panel':str(self.channels[0].module)}
 
     def __repr__(self):
         return '\n'.join(['channel %s: %s' % (i,c) for i,c in \

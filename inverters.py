@@ -25,7 +25,7 @@ class inverter(object):
     NMPT = .97
     Tfactor = .98
 
-    def __init__(self, model, array, orientation=[(180,0)]):
+    def __init__(self, model, array = None, orientation=[(180,0)]):
         self.array = array
         self.orientation = orientation
         self.properties = None
@@ -55,6 +55,7 @@ class inverter(object):
         self.idcmax = self.properties['idcmax']
         self.mppt_hi = self.properties['mppt_hi']
         self.mppt_low = self.properties['mppt_low']
+        self.mppt_channels = 1
         self.make,self.model = self.inverter.split(":",2)
         self.derate = self.mismatch * self.soiling * self.dc_wiring * self.connections \
                 * self.availability# * m.Tfactor #* m.NMPT
@@ -67,6 +68,8 @@ class inverter(object):
                 if i['inverter']==model:
                     self.current = i['current']
                     self.phase = i['phase']
+                    if 'mppt_channels' in i:
+                        self.mppt_channels = i['mppt_channels']
                     break
             except:
                 pass
@@ -89,14 +92,18 @@ class inverter(object):
 
     def dump(self):
         d = {}
-        d['panel'] = str(self.array.panel)
-        d['inverter'] = str(self)
         shape = self.array.dump()
+        d['panel'] = shape['panel']
+        del shape['panel']
+        d['inverter'] = str(self)
         if len(shape) > 1:
             d['shape'] = shape
         else:
-            d.update(shape[0])
+            d.update(shape)
         return d
+
+    def __repr__(self):
+        return json.dumps(self.dump())
 
     def __str__(self):
         return "%s:%s" % (self.make, self.model)

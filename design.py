@@ -61,6 +61,54 @@ def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
                             solutions.append(t)
     return solutions
 
+def generateOptions(inverterName,moduleName,zipcode, channels=1, acDcRatio = 1.2, \
+        mount="Roof", stationClass = 1, Vmax = 600, bipolar= True):
+    import geo
+    import inverters
+    import modules
+    module = modules.module(moduleName)
+    inverter = inverters.inverter(inverterName)
+    """String sizing"""
+    tempAdder = {"Roof":30,
+            "Ground":25,
+            "Pole":20}
+    #NREL suggests that long term degradation is primarily current not voltage
+    derate20 = .97
+
+    #csv is performance hit
+    name, usaf = geo.closestUSAF( geo.zipToCoordinates(zipcode), stationClass)
+    epw_min = epw.minimum(usaf)
+    moduleMaxVoltage = module.Vmax(epw_min)
+    epw2 = epw.twopercent(usaf)
+    moduleMinVoltage = module.Vmin(epw2,tempAdder[mount]) * derate20
+
+    if inverter.vdcmax != 0:
+         Vmax = inverter.vdcmax
+    maxlen = int(Vmax/moduleMaxVoltage)
+    minlen = int(inverter.mppt_low/moduleMinVoltage) + 1
+    inverter.array = modules.array(module,[{'series':minlen}]*inverter.mppt_channels)
+    inverter.array.minlength(minlen)
+    inverter.array.maxlength(maxlen)
+    #range to search
+    pTol = .30
+    inverterNominal = inverter.Paco
+    solutions = []
+    while (inverter.array.output(1000) < inverterNominal * (acDcRatio + pTol)):
+        inverter.array.inc()
+        print inverter.array
+        print inverter.array.output(1000),inverter.ratio()
+        t = copy.deepcopy(inverter)
+        t.maxV = t.array.Vmax(epw_min)
+        t.minV = t.array.Vmin(epw2,tempAdder[mount])
+        solutions.append(t)
+    return solutions
+
+    #Imax = max(inverter.idcmax,inverter.Pdco*1.0/inverter.mppt_low)
+    #stringMax = int(round(Imax/inverter.array.panel.Impp))+1
+
+    #Diophantine equation
+    return solutions
+
 def knapsack(items, maxweight):
     #http://codereview.stackexchange.com/questions/20569/dynamic-programming-solution-to-knapsack-problem
     bestvalues = [[0] * (maxweight + 1)
