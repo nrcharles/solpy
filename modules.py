@@ -94,7 +94,7 @@ class module(object):
 
 #todo: this needs rewritten
 class pvArray(object):
-    """structure to aggregate panels into an array)"""
+    """DEPRECATED structure to aggregate panels into an array"""
     def __init__(self,pname, shape):
         self.shape = []
         for string in shape:
@@ -141,6 +141,12 @@ class mppt(object):
     def Vmin(self,ashrae2p, Tadd = 30):
         return  self.module.Vmin(ashrae2p, Tadd)* self.series
 
+    def Isc(self):
+        return self.module.Isc*self.parallel
+
+    def Impp(self):
+        return self.module.Impp*self.parallel
+
     def output(self, Insolation, tAmb=25):
         return self.module.output(Insolation,tAmb) * self.series * self.parallel
 
@@ -178,6 +184,9 @@ class array(object):
             self.channels.append(mppt(moduleO,c['series'],parallel))
         self.Pmax = self.output(1000)
 
+    def mcount(self):
+        return sum([i.series*i.parallel for i in self.channels])
+
     def output(self, Insolation, tAmb=25):
         return sum([i.output(Insolation, tAmb) for i in self.channels])
 
@@ -185,6 +194,15 @@ class array(object):
         return max([i.Vmax(ashraeMin) for i in self.channels])
     def Vmin(self,ashrae2p, Tadd = 30):
         return min([i.Vmin(ashrae2p, Tadd) for i in self.channels])
+
+    def Vdc(self, t = 25):
+        return max([i.Vdc(t) for i in self.channels])
+
+    def Isc(self):
+        return sum([i.Isc() for i in self.channels])
+
+    def Impp(self):
+        return sum([i.Impp() for i in self.channels])
 
     def maxlength(self, maxl):
         for i in self.channels:
@@ -264,11 +282,11 @@ if __name__=="__main__":
     print "Vmax:", p.Vmax(-13)*series
     print "Vmin:",p.Vmin(31,25) * series
     print "Vmin 10%:",p.Vmin(31,25) * series*.90
-    a = pvArray(p,[{'series':11}])
+    a = array(p,[{'series':11}])
     print a.dump()
-    a = pvArray(p,[{'series':11,'parallel':2}])
+    a = array(p,[{'series':11,'parallel':2}])
     print a.dump()
-    a = pvArray(p,[{'series':11},{'series':10}])
+    a = array(p,[{'series':11},{'series':10}])
     print a.dump()
     a = array(p,[{'series':11},{'series':10}])
     print a.dump()

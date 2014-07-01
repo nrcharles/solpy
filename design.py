@@ -185,7 +185,7 @@ def design(reqsStr):
     for inverterModel, panelModel in combinations(reqs['inverter options'],\
             reqs['panel options']):
         system = inverters.inverter(inverterModel,\
-                modules.pvArray(modules.module(panelModel),[2]))
+                modules.pvArray(modules.module(panelModel),[{'series':2}]))
         configs = fill(system,zc)
         for config in configs:
             validC.append(config)

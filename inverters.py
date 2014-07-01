@@ -134,7 +134,7 @@ if __name__=="__main__":
     from modules import *
 
     p = module('Mage Solar : Powertec Plus 245-6 PL *')
-    e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",pvArray(p,[1]))
+    e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",array(p,[{'series':1}]))
     print e.dump()
     #si = sb6000us(s)
 

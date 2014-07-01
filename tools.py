@@ -48,6 +48,7 @@ def find_file(filename, search_path):
 
 if __name__ == "__main__":
     from design import tools_fill as fill
+    from design import generateOptions
     import inverters
     import modules
     zc='44701'
@@ -59,17 +60,6 @@ if __name__ == "__main__":
     #m = "Mage Solar : Powertec Plus 245-6 PL *"
     m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
     ms = modules.module(m)
-    system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,[11]*6))
-    print fill(system,zc)
-    #system = inverters.inverter("Refusol: 24 kW 480V",modules.pvArray(ms,11,6))
-    print fill(system,zc)
-    system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,[14]*2))
-    print fill(system,zc,mount="Roof")
-    system = inverters.inverter("SMA America: SB8000US-11 277V",modules.pvArray(ms,[14]*2))
-    print fill(system,zc)
-    #iname = "Shanghai Chint Power Systems: CPS SCE7KTL-O US (240V) 240V"
-    iname = "Refusol: 24 kW 480V"
-    #system = inverters.inverter(iname,modules.pvArray(m,1,1))
-    #system = inverters.inverter(iname,modules.pvArray(modules.module(m),1,1))
-    #fill(system,zc,1000)
-
+    system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,[{'series':11,'parallel':6}]))
+    #print fill(system,zc)
+    print generateOptions("Refusol: 20 kW 480V",m,zc)

@@ -115,7 +115,7 @@ def jsonToSystem(jsonDescription):
         orientations.append(o)
 
         block = inverters.inverter(i["inverter"], \
-                modules.pvArray(modules.module(i["panel"]),\
+                modules.array(modules.module(i["panel"]),\
                 shape),(o["azimuth"],o["tilt"]))
                 #i["series"],i["parallel"]))
         if "derate" in i:
@@ -309,20 +309,23 @@ class system(object):
         return max(minimumSpaceRise,minimumSpaceSet)
 
     def describe(self):
+        #todo: fix this garbage
         dp = {}
         di = {}
         for i in set(self.shape):
             di[i.model] = 0
+            idict = i.dump()
             if hasattr(i.array,'model'):
                 dp[i.array.model]=0
             else:
-                dp[i.array.panel.model]=0
+                dp[idict['panel']]=0
         for i in self.shape:
             di[i.model] += 1
+            idict = i.dump()
             if hasattr(i.array,'model'):
                 dp[i.array.model]+=1
             else:
-                dp[i.array.panel.model]+=sum(i.array.shape)#.series*i.array.parallel
+                dp[idict['panel']]+=i.array.mcount()
         return di,dp
 
     def now(self, timestamp = None, weatherData = None, model = 'STC'):

@@ -11,6 +11,7 @@ import geo
 import pv
 import ee
 import vd
+import modules
 from math import degrees
 import sys
 try:
@@ -58,20 +59,22 @@ def string_notes(system, run=0.0, stationClass = 1):
     di, dp = system.describe()
     aMax = 0
     for i in system.shape:
-        if dp.has_key(i.array.panel.model):
+        moduleN = i.array.dump()['panel']
+        if dp.has_key(moduleN):
+            m = modules.module(moduleN) 
             notes.append( "PV Module Ratings @ STC")
-            notes.append("Module Make: %s" % i.array.panel.make)
-            notes.append("Module Model: %s" % i.array.panel.model)
-            notes.append("Quantity: %s" % dp[i.array.panel.model])
-            notes.append("Max Power-Point Current (Imp): %s A" % i.array.panel.Impp)
-            notes.append("Max Power-Point Voltage (Vmp): %s V" % i.array.panel.Vmpp)
-            notes.append("Open-Circuit Voltage (Voc): %s V" % i.array.panel.Voc)
-            notes.append("Short-Circuit Current (Isc): %s A" % i.array.panel.Isc)
-            notes.append("Maximum Power (Pmax): %s W" % round(i.array.panel.Pmax,1))
+            notes.append("Module Make: %s" % m.make)
+            notes.append("Module Model: %s" % m.model)
+            notes.append("Quantity: %s" % dp[moduleN])
+            notes.append("Max Power-Point Current (Imp): %s A" % m.Impp)
+            notes.append("Max Power-Point Voltage (Vmp): %s V" % m.Vmpp)
+            notes.append("Open-Circuit Voltage (Voc): %s V" % m.Voc)
+            notes.append("Short-Circuit Current (Isc): %s A" % m.Isc)
+            notes.append("Maximum Power (Pmax): %s W" % round(m.Pmax,1))
             #notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
 
             notes.append("")
-            dp.pop(i.array.panel.model)
+            dp.pop(moduleN)
         if di.has_key(i.model):
             notes.append("Inverter Make: %s" % i.make)
             notes.append("Inverter Model: %s" % i.model)
@@ -85,14 +88,14 @@ def string_notes(system, run=0.0, stationClass = 1):
             else:
                 notes.append("Max AC Current: %s A" % round(i.Paco*1.0/i.ac_voltage,1))
             #greater than 1 in parallel
-            if len(i.array.shape) > 1:
+            if i.array.mcount() > 1:
                 pass
                 notes.append("DC Operating Current: %s A" % \
-                        round(i.array.panel.Impp*len(i.array.shape),1))
+                        round(i.array.Impp(),1))
                 notes.append("DC Short Circuit Current: %s A" % \
-                        round(i.array.panel.Isc*len(i.array.shape),1))
+                        round(i.array.Isc(),1))
             #greater than 1 in series
-            if max(i.array.shape)> 1:
+            if i.array.mcount() > 1:
                 notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
                 notes.append("System Max DC Voltage: %s V" % round(i.array.Vmax(mintemp),1))
                 if i.array.Vmax(mintemp) > 600:
