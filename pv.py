@@ -28,9 +28,9 @@ class ResultSet(object):
         """object inits with no data"""
         self.timeseries = None
         self.values = None
-        self.dailyAve = 0
-        self.annualOutput = 0
-        self.clippingHours = 0
+        self.daily_ave = 0
+        self.annual_output = 0
+        self.clipping_hours = 0
 
     def dump(self):
         """returns list of python datetime timestamps and values in Watts"""
@@ -48,20 +48,20 @@ class ResultSet(object):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         months = mdates.MonthLocator()
-        mFormat = mdates.DateFormatter('%b')
+        mformat = mdates.DateFormatter('%b')
         ax.xaxis.set_major_locator(months)
-        ax.xaxis.set_major_formatter(mFormat)
+        ax.xaxis.set_major_formatter(mformat)
         ax.plot(self.timeseries, self.values)
         return fig
 
     def plot(self):
         """plots heatmap of values"""
         import matplotlib.pyplot as plt
-        total = self.hourlyValues
-        a = []
-        for i in range(0, len(self.hourlyValues), 24):
-            a.append(self.hourlyValues[i:i+23])
-        data = np.array(a)
+        total = self.hourly_values
+        mangled_a = []
+        for i in range(0, len(self.hourly_values), 24):
+            mangled_a.append(self.hourly_values[i:i+23])
+        data = np.array(mangled_a)
         data = np.rot90(data)
         fig = plt.figure()
         ax = fig.add_subplot(111)#plt.subplots()
@@ -80,9 +80,9 @@ class ResultSet(object):
     def summary(self):
         """prints summary"""
         #todo: should get rid of print statements
-        print "Year 1 Annual Output: %s kWh" % self.annualOutput
-        print "Year 1 Daily Average: %s kWh" % self.dailyAve
-        print "Inverter hours clipping: %s" % self.clippingHours
+        print "Year 1 Annual Output: %s kWh" % self.annual_output
+        print "Year 1 Daily Average: %s kWh" % self.daily_ave
+        print "Inverter hours clipping: %s" % self.clipping_hours
 
 def fileToSystem(filename):
     """Load a system from a json file"""
@@ -153,7 +153,7 @@ def jsonToSystem(jsonDescription):
         plant.tilt = jsonDescription["tilt"]
         plant.azimuth = jsonDescription["azimuth"]
     else:
-        "maybe incomplete"
+        #"maybe incomplete"
         plant.tilt = orientations[0]["tilt"]
         plant.azimuth = orientations[0]["azimuth"]
     if 'shade' in jsonDescription:
@@ -165,6 +165,7 @@ def jsonToSystem(jsonDescription):
     return plant
 
 def _calc(record):
+    """internal fuction for multiprocessing hack"""
     properties, record = record
     horizon = None
     insolation = irradiation.irradiation(record, properties['place'], \
@@ -259,11 +260,11 @@ class system(object):
         rs.timeseries = dailyTimeseries
         rs.values = dailyInsolation
         rs.htimeseries = houlyTimeseries
-        rs.hourlyValues = hourlyInsolation
+        rs.hourly_values = hourlyInsolation
 
-        rs.clippingHours = clip
-        rs.dailyAve = (round(totalOutput/365/10)/100)
-        rs.annualOutput = (round(totalOutput/10)/100)
+        rs.clipping_hours = clip
+        rs.daily_ave = (round(totalOutput/365/10)/100)
+        rs.annual_output = (round(totalOutput/10)/100)
 
         return rs
 

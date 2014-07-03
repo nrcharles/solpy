@@ -163,7 +163,7 @@ def performanceModelPlant(jsonDef):
     yearone = plant.model()
     PDC = sum([i.array.output(1000) for i in plant.shape])
     plantDict = plant.dump()
-    plantDict['yearone'] = yearone.annualOutput
+    plantDict['yearone'] = yearone.annual_output
     plantDict['DCnominal'] = int(PDC)
     return plantDict
 

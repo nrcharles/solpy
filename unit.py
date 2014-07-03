@@ -25,7 +25,7 @@ class TestInverters(unittest.TestCase):
 #pv.py
 #irradiation.py
 class TestModeling(unittest.TestCase):
-    def test_annualOutput1(self):
+    def test_annual_output1(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
         "address":"15013 Denver W Pkwy, Golden, CO",
         "zipcode":"80401",
@@ -41,9 +41,9 @@ class TestModeling(unittest.TestCase):
             ]}"""
         plant = pv.jsonToSystem(json.loads(p1))
         rs = plant.model()
-        self.assertAlmostEquals(rs.annualOutput,7697.56)
+        self.assertAlmostEquals(rs.annual_output,7697.56)
 
-    def test_annualOutput2(self):
+    def test_annual_output2(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
         "address":"15013 Denver W Pkwy, Golden, CO",
         "zipcode":"80401",
@@ -74,7 +74,7 @@ class TestModeling(unittest.TestCase):
         js3 = json.loads(json.dumps(plant2.dump()))
         rs2 = plant2.model()
         self.assertDictEqual(js2,js3)
-        self.assertAlmostEquals(rs1.annualOutput,rs2.annualOutput)
+        self.assertAlmostEquals(rs1.annual_output,rs2.annual_output)
 
     def test_hourlyShading(self):
         p1 = """{"system_name":"Another Happy Customer",
@@ -96,7 +96,7 @@ class TestModeling(unittest.TestCase):
         js1 = json.loads(p1)
         plant1 = pv.jsonToSystem(js1)
         rs1 = plant1.model()
-        self.assertAlmostEquals(rs1.annualOutput,8600.66)
+        self.assertAlmostEquals(rs1.annual_output,8600.66)
 
 #design.py
 #tools.py
