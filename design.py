@@ -8,35 +8,36 @@ import epw
 import pv
 import json
 
-def tools_fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, Vmax = 600, bipolar= True):
-    #deprecated legacy function
-    return [format(i) for i in fill(**locals())]
+def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
+        stationClass=1, Vmax=600, bipolar=True):
+    """deprecated legacy function"""
+    return [str_format(i) for i in fill(**locals())]
 
-def format(inverter):
-    """'9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
+def str_format(inverter):
+    """format as str: '9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
     DC = inverter.array.output(1000)
     ratio = DC/inverter.Paco
     return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
-            round(ratio,2), round(inverter.minV), round(inverter.maxV))
+            round(ratio, 2), round(inverter.minV), round(inverter.maxV))
 
-def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
-        Vmax = 600, bipolar= True):
-    import geo
+def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
+        Vmax=600, bipolar=True):
     """String sizing"""
+    import geo
     tDerate = {"Roof":30,
             "Ground":25,
             "Pole":20}
 
     #csv is performance hit
-    name, usaf = geo.closestUSAF( geo.zipToCoordinates(zipcode), stationClass)
+    name, usaf = geo.closestUSAF(geo.zipToCoordinates(zipcode), stationClass)
     maxV = inverter.array.panel.Vmax(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
-    minV = inverter.array.panel.Vmin(epw.twopercent(usaf),tDerate[mount]) * \
+    minV = inverter.array.panel.Vmin(epw.twopercent(usaf), tDerate[mount]) * \
             derate20
 
     if inverter.vdcmax != 0:
-         Vmax = inverter.vdcmax
+        Vmax = inverter.vdcmax
     smax = int(Vmax/maxV)
     #range to search
     pTol = .30
@@ -44,7 +45,7 @@ def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
     psize = inverter.array.panel.Pmax
     solutions = []
 
-    Imax = max(inverter.idcmax,inverter.Pdco*1.0/inverter.mppt_low)
+    Imax = max(inverter.idcmax, inverter.Pdco*1.0/inverter.mppt_low)
     stringMax = int(round(Imax/inverter.array.panel.Impp))+1
 
     #Diophantine equation
@@ -52,17 +53,17 @@ def fill(inverter, zipcode, acDcRatio = 1.2, mount="Roof", stationClass = 1, \
         if (s*minV) >= inverter.mppt_low:
             for p in range(stringMax):
                 pRatio = p*s*psize*1.0/inverterNominal
-                if pRatio < (acDcRatio*(1+pTol)) and \
-                        pRatio > (acDcRatio*(1-pTol)):
-                            inverter.array.shape = [s]*p
-                            t = copy.deepcopy(inverter)
-                            t.minV = s*minV
-                            t.maxV = s*maxV
-                            solutions.append(t)
+                if pRatio < (ac_dc_ratio*(1+pTol)) and \
+                        pRatio > (ac_dc_ratio*(1-pTol)):
+                    inverter.array.shape = [s]*p
+                    t = copy.deepcopy(inverter)
+                    t.minV = s*minV
+                    t.maxV = s*maxV
+                    solutions.append(t)
     return solutions
 
-def generateOptions(inverterName,moduleName,zipcode, channels=1, acDcRatio = 1.2, \
-        mount="Roof", stationClass = 1, Vmax = 600, bipolar= True):
+def generateOptions(inverterName, moduleName, zipcode, \
+        ac_dc_ratio=1.2, mount="Roof", stationClass=1, Vmax=600, bipolar=True):
     import geo
     import inverters
     import modules
@@ -76,30 +77,31 @@ def generateOptions(inverterName,moduleName,zipcode, channels=1, acDcRatio = 1.2
     derate20 = .97
 
     #csv is performance hit
-    name, usaf = geo.closestUSAF( geo.zipToCoordinates(zipcode), stationClass)
+    name, usaf = geo.closestUSAF(geo.zipToCoordinates(zipcode), stationClass)
     epw_min = epw.minimum(usaf)
     moduleMaxVoltage = module.Vmax(epw_min)
     epw2 = epw.twopercent(usaf)
-    moduleMinVoltage = module.Vmin(epw2,tempAdder[mount]) * derate20
+    moduleMinVoltage = module.Vmin(epw2, tempAdder[mount]) * derate20
 
     if inverter.vdcmax != 0:
-         Vmax = inverter.vdcmax
+        Vmax = inverter.vdcmax
     maxlen = int(Vmax/moduleMaxVoltage)
     minlen = int(inverter.mppt_low/moduleMinVoltage) + 1
-    inverter.array = modules.array(module,[{'series':minlen}]*inverter.mppt_channels)
+    inverter.array = modules.array(module, \
+            [{'series':minlen}]*inverter.mppt_channels)
     inverter.array.minlength(minlen)
     inverter.array.maxlength(maxlen)
     #range to search
     pTol = .30
     inverterNominal = inverter.Paco
     solutions = []
-    while (inverter.array.output(1000) < inverterNominal * (acDcRatio + pTol)):
+    while inverter.array.output(1000) < inverterNominal * (ac_dc_ratio + pTol):
         inverter.array.inc()
         print inverter.array
-        print inverter.array.output(1000),inverter.ratio()
+        print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
         t.maxV = t.array.Vmax(epw_min)
-        t.minV = t.array.Vmin(epw2,tempAdder[mount])
+        t.minV = t.array.Vmin(epw2, tempAdder[mount])
         solutions.append(t)
     return solutions
 
@@ -110,7 +112,8 @@ def generateOptions(inverterName,moduleName,zipcode, channels=1, acDcRatio = 1.2
     return solutions
 
 def knapsack(items, maxweight):
-    #http://codereview.stackexchange.com/questions/20569/dynamic-programming-solution-to-knapsack-problem
+    #http://codereview.stackexchange.com/questions/20569/
+    #dynamic-programming-solution-to-knapsack-problem
     bestvalues = [[0] * (maxweight + 1)
                   for i in xrange(len(items) + 1)]
     for i, (value, weight, systemDict) in enumerate(items):
@@ -133,7 +136,7 @@ def knapsack(items, maxweight):
         i -= 1
 
     reconstruction.reverse()
-    systemSet = [subA for v,w,subA in reconstruction]
+    systemSet = [subA for v, w, subA in reconstruction]
 
     return bestvalues[len(items)][maxweight], systemSet
 
@@ -143,16 +146,16 @@ def efficient(items, maxweight):
     for (value, weight, systemDict) in items:
         eff = value/float(weight)
         if eff > mostEff[0]:
-            mostEff = [eff,weight,systemDict]
+            mostEff = [eff, weight, systemDict]
     scale = maxweight/mostEff[1]
     result = [mostEff[2]]*scale
     return (mostEff[1]*scale, result)
 
-def combinations(a,b):
+def combinations(a, b):
     s = []
     for i in a:
         for j in b:
-            s.append((i,j))
+            s.append((i, j))
     return s
 
 def performanceModelPlant(jsonDef):
@@ -185,8 +188,8 @@ def design(reqsStr):
     for inverterModel, panelModel in combinations(reqs['inverter options'],\
             reqs['panel options']):
         system = inverters.inverter(inverterModel,\
-                modules.pvArray(modules.module(panelModel),[{'series':2}]))
-        configs = fill(system,zc)
+                modules.pvArray(modules.module(panelModel), [{'series':2}]))
+        configs = fill(system, zc)
         for config in configs:
             validC.append(config)
             print config, config.array, config.array.panel, \
@@ -197,18 +200,18 @@ def design(reqsStr):
 
     performanceResults = performanceModelSet(optionSet)
 
-    configSet= []
+    configSet = []
     for o in performanceResults:
         #hack to expand for semetery
         scale = reqs['desired size'] // o['DCnominal']
-        configSet += [(o['yearone'],o['DCnominal'],o['array'][0])] * scale
+        configSet += [(o['yearone'], o['DCnominal'], o['array'][0])] * scale
 
     suggested = []
 
     #knapsack problem weight is system DC size and value is annual output
     #this could be expanded with different constraints for different rankings
     systemWeight, systemSet = knapsack(configSet, reqs['desired size'])
-    reqs['array'] = systemSet 
+    reqs['array'] = systemSet
     reqs['notes'] = 'Maximum size'
     suggested.append(copy.deepcopy(reqs))
 
@@ -226,15 +229,15 @@ def celery_worker_status():
         insp = inspect()
         d = insp.stats()
         if not d:
-            d = { ERROR_KEY: 'No running Celery workers were found.' }
+            d = {ERROR_KEY: 'No running Celery workers were found.'}
     except IOError as e:
         from errno import errorcode
         msg = "Error connecting to the backend: " + str(e)
         if len(e.args) > 0 and errorcode.get(e.args[0]) == 'ECONNREFUSED':
             msg += ' Check that the RabbitMQ server is running.'
-        d = { ERROR_KEY: msg }
+        d = {ERROR_KEY: msg}
     except ImportError as e:
-        d = { ERROR_KEY: str(e)}
+        d = {ERROR_KEY: str(e)}
     return d
 
 if __name__ == "__main__":
