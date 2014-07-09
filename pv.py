@@ -123,8 +123,8 @@ def jsonToSystem(jsonDescription):
             o["azimuth"] = jsonDescription["azimuth"]
         orientations.append(o)
 
-        block = inverters.inverter(i["inverter"], \
-                modules.array(modules.module(i["panel"]),\
+        block = inverters.Inverter(i["inverter"], \
+                modules.Array(modules.Module(i["panel"]),\
                 shape), (o["azimuth"], o["tilt"]))
                 #i["series"],i["parallel"]))
         if "derate" in i:

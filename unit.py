@@ -11,11 +11,11 @@ import inverters
 class TestModules(unittest.TestCase):
     def test_module(self):
         model = modules.model_search('Powertec 250 PL')[0]
-        p = modules.module(model)
-        self.assertAlmostEquals(p.Vmax(-10),42.3129)
-        self.assertAlmostEquals(p.Vdc(),31.28)
-        self.assertAlmostEquals(p.Idc(),8.01)
-        self.assertAlmostEquals(p.Vmin(40),24.931724)
+        p = modules.Module(model)
+        self.assertAlmostEquals(p.v_max(-10),42.3129)
+        self.assertAlmostEquals(p.v_dc(),31.28)
+        self.assertAlmostEquals(p.i_dc(),8.01)
+        self.assertAlmostEquals(p.v_min(40),24.931724)
         self.assertAlmostEquals(p.output(900),225.49752)
 
 #inverters.py
@@ -103,9 +103,9 @@ class TestModeling(unittest.TestCase):
 class TestDesign(unittest.TestCase):
     def test_tools_fill(self):
         m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
-        ms = modules.module(m)
+        ms = modules.Module(m)
         zc = '27713'
-        system = inverters.inverter("SMA America: SB7000US-11 277V",modules.pvArray(ms,[{'series':14}]))
+        system = inverters.Inverter("SMA America: SB7000US-11 277V",modules.PvArray(ms,[{'series':14}]))
         sols = design.tools_fill(system,zc,mount="Roof")
         ans = ['8266.5W : 11S x 3P : ratio 1.18 : 265.0 - 467.0 V',
                 '6012.0W : 12S x 2P : ratio 0.86 : 290.0 - 510.0 V',

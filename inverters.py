@@ -5,7 +5,7 @@
 import json
 import os
 SPATH = os.path.dirname(os.path.abspath(__file__))
-class inverter(object):
+class Inverter(object):
     """Sandia Model"""
     #Inverter Output = Array STC power * Irradiance * Negative Module Power Tolerance * Soiling * Temperature factor * Wiring efficiency * Inverter efficiency
     #PVWATTS Default
@@ -43,11 +43,11 @@ class inverter(object):
         self.ac_voltage = self.properties['ac_voltage']
         self.inverter = self.properties['inverter']
         self.vdcmax = self.properties['vdcmax']
-        self.Pdco = self.properties['pdco']
+        self.p_dco = self.properties['pdco']
         self.Paco = self.properties['paco']
         self.pnt = self.properties['pnt']
         self.Pso = self.properties['pso']
-        self.Vdco = self.properties['vdco']
+        self.v_dco = self.properties['vdco']
         self.C0 = self.properties['c0']
         self.C1 = self.properties['c1']
         self.C2 = self.properties['c2']
@@ -75,12 +75,12 @@ class inverter(object):
                 pass
 
     def Pac(self, Insolation, tCell = 25):
-        Pdc = self.array.output(Insolation, tCell)
-        Vdc = self.array.Vdc()
-        A = self.Pdco * (1 + self.C1 * (Vdc - self.Vdco))
-        B = self.Pso * (1 + self.C2 * (Vdc - self.Vdco))
-        C = self.C0 * (1 + self.C3 * (Vdc - self.Vdco))
-        Pac = ((self.Paco / (A - B)) - C*(A - B))*(Pdc- B) + C *(Pdc - B)**2
+        p_dc = self.array.output(Insolation, tCell)
+        v_dc = self.array.v_dc()
+        A = self.p_dco * (1 + self.C1 * (v_dc - self.v_dco))
+        B = self.Pso * (1 + self.C2 * (v_dc - self.v_dco))
+        C = self.C0 * (1 + self.C3 * (v_dc - self.v_dco))
+        Pac = ((self.Paco / (A - B)) - C*(A - B))*(p_dc- B) + C *(p_dc - B)**2
         #clip at Paco
         return min(float(self.Paco),Pac * self.derate)
 
@@ -88,7 +88,7 @@ class inverter(object):
         return self.Pac(Insolation)/Vac
 
     def ratio(self):
-        return self.array.output(1000)/self.Pdco
+        return self.array.output(1000)/self.p_dco
 
     def dump(self):
         d = {}
@@ -133,8 +133,8 @@ def insolationToA(ins, peakA):
 if __name__=="__main__":
     from modules import *
 
-    p = module('Mage Solar : Powertec Plus 245-6 PL *')
-    e = inverter("Enphase Energy: M215-60-SIE-S2x 240V",array(p,[{'series':1}]))
+    p = Module('Mage Solar : Powertec Plus 245-6 PL *')
+    e = Inverter("Enphase Energy: M215-60-SIE-S2x 240V",array(p,[{'series':1}]))
     print e.dump()
     #si = sb6000us(s)
 

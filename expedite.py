@@ -29,7 +29,7 @@ def string_notes(system, run=0.0, stationClass = 1):
     dc_rated = 0.0
     ac_kw = 0.0
     for i in system.shape:
-        dc_rated += i.array.Pmax
+        dc_rated += i.array.p_max
         try:
             if i.phase == 1:
                 ac_kva_rated += i.current * i.ac_voltage
@@ -61,16 +61,16 @@ def string_notes(system, run=0.0, stationClass = 1):
     for i in system.shape:
         moduleN = i.array.dump()['panel']
         if dp.has_key(moduleN):
-            m = modules.module(moduleN) 
+            m = modules.Module(moduleN) 
             notes.append( "PV Module Ratings @ STC")
             notes.append("Module Make: %s" % m.make)
             notes.append("Module Model: %s" % m.model)
             notes.append("Quantity: %s" % dp[moduleN])
-            notes.append("Max Power-Point Current (Imp): %s A" % m.Impp)
-            notes.append("Max Power-Point Voltage (Vmp): %s V" % m.Vmpp)
-            notes.append("Open-Circuit Voltage (Voc): %s V" % m.Voc)
-            notes.append("Short-Circuit Current (Isc): %s A" % m.Isc)
-            notes.append("Maximum Power (Pmax): %s W" % round(m.Pmax,1))
+            notes.append("Max Power-Point Current (Imp): %s A" % m.i_mpp)
+            notes.append("Max Power-Point Voltage (Vmp): %s V" % m.v_mpp)
+            notes.append("Open-Circuit Voltage (v_oc): %s V" % m.v_oc)
+            notes.append("Short-Circuit Current (i_sc): %s A" % m.i_sc)
+            notes.append("Maximum Power (p_max): %s W" % round(m.p_max,1))
             #notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
 
             notes.append("")
@@ -91,24 +91,24 @@ def string_notes(system, run=0.0, stationClass = 1):
             if i.array.mcount() > 1:
                 pass
                 notes.append("DC Operating Current: %s A" % \
-                        round(i.array.Impp(),1))
+                        round(i.array.i_mpp(),1))
                 notes.append("DC Short Circuit Current: %s A" % \
-                        round(i.array.Isc(),1))
+                        round(i.array.i_sc(),1))
             #greater than 1 in series
             if i.array.mcount() > 1:
-                notes.append("DC Operating Voltage: %s V" % round(i.array.Vdc(),1))
-                notes.append("System Max DC Voltage: %s V" % round(i.array.Vmax(mintemp),1))
-                if i.array.Vmax(mintemp) > 600:
+                notes.append("DC Operating Voltage: %s V" % round(i.array.v_dc(),1))
+                notes.append("System Max DC Voltage: %s V" % round(i.array.v_max(mintemp),1))
+                if i.array.v_max(mintemp) > 600:
                     print "WARNING: Array exceeds 600V DC"
-                notes.append("Pnom Ratio: %s" % round((i.array.Pmax/i.Paco),2))
-                if (i.array.Vdc(twopercentTemp) *.9) < i.mppt_low:
+                notes.append("Pnom Ratio: %s" % round((i.array.p_max/i.Paco),2))
+                if (i.array.v_dc(twopercentTemp) *.9) < i.mppt_low:
                     print "WARNING: Array IV Knee drops out of Inverter range"
-                if (i.array.Pmax/i.Paco) < 1.1:
+                if (i.array.p_max/i.Paco) < 1.1:
                     print "WARNING: Array potentially undersized"
             notes.append("")
             di.pop(i.model)
-        if i.array.Vmax(mintemp) > aMax:
-            aMax = i.array.Vmax(mintemp)
+        if i.array.v_max(mintemp) > aMax:
+            aMax = i.array.v_max(mintemp)
 
     notes.append("Array Azimuth: %s Degrees" % system.azimuth)
     notes.append("Array Tilt: %s Degrees" % system.tilt)
@@ -160,20 +160,20 @@ def write_notes(system, Vnominal=240.0):
         fields.append(('Text1ModuleMake',i.array.make))
         print "Module Model:", i.array.model
         fields.append(('Text1ModuleModel',i.array.model))
-        print "Max Power-Point Current (Imp):",i.array.Impp
-        fields.append(('MAX POWERPOINT CURRENT IMP',i.array.Impp))
-        print "Max Power-Point Voltage (Vmp):",i.array.Vmpp
-        fields.append(('MAX POWERPOINT VOLTAGE VMP',i.array.Vmpp))
-        print "Open-Circuit Voltage (Voc):",i.array.Voc
-        fields.append(('OPENCIRCUIT VOLTAGE VOC',i.array.Voc))
-        print "Short-Circuit Current (Isc):",i.array.Isc
-        fields.append(('SHORTCIRCUIT CURRENT ISC',i.array.Isc))
+        print "Max Power-Point Current (Imp):",i.array.i_mpp
+        fields.append(('MAX POWERPOINT CURRENT IMP',i.array.i_mpp))
+        print "Max Power-Point Voltage (Vmp):",i.array.v_mpp
+        fields.append(('MAX POWERPOINT VOLTAGE VMP',i.array.v_mpp))
+        print "Open-Circuit Voltage (v_oc):",i.array.v_oc
+        fields.append(('OPENCIRCUIT VOLTAGE VOC',i.array.v_oc))
+        print "Short-Circuit Current (i_sc):",i.array.i_sc
+        fields.append(('SHORTCIRCUIT CURRENT ISC',i.array.i_sc))
         fields.append(('MAX SERIES FUSE OCPD','15'))
-        print "Maximum Power (Pmax):",i.array.Pmax
-        fields.append(('MAXIMUM POWER PMAX',i.array.Pmax))
+        print "Maximum Power (p_max):",i.array.p_max
+        fields.append(('MAXIMUM POWER PMAX',i.array.p_max))
         print "Module Rated Max Voltage:",i.array.Vrated
         fields.append(('MAX VOLTAGE TYP 600VDC',i.array.Vrated))
-        fields.append(('VOC TEMP COEFF mVoC or oC',round(i.array.TkVoc,2)))
+        fields.append(('VOC TEMP COEFF mVoC or oC',round(i.array.tk_v_oc,2)))
         fields.append(('VOC TEMP COEFF mVoC','On'))
         print "Inverter Make:",i.make
         fields.append(('INVERTER MAKE',i.make))
@@ -186,7 +186,7 @@ def write_notes(system, Vnominal=240.0):
         fields.append(('MAX AC CURRENT', round(i.Paco/Vnominal,2)))
         fields.append(('MAX DC VOLT RATING',i.model))
         print "Max AC OCPD Rating: %s" % ee.ocpSize(i.Paco/Vnominal*1.25)
-        print "Max System Voltage:",round(i.array.Vmax(mintemp),1)
+        print "Max System Voltage:",round(i.array.v_max(mintemp),1)
     print "AC Output Current: %s" % \
             round(sum([i.Paco for i in system.shape])/Vnominal,2)
     fields.append(('AC OUTPUT CURRENT', \

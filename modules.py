@@ -10,7 +10,7 @@ import os
 from collections import Counter
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
-class module(object):
+class Module(object):
     """generic module class uses JSON defintion"""
     #PV module nameplate DC rating     0.80 - 1.05
     #SAM = 1
@@ -24,9 +24,9 @@ class module(object):
     #i_sc_ref  ; I Short Circuit
     #v_oc_ref ;  VOC
     #i_mp_ref ;  Imp
-    #v_mp_ref ;  Vmp
-    #alpha_sc ; Isc temperature cofficient %/C
-    #beta_oc ; Voc temperature cofficient V/C
+    #v_mp_ref ;  v_mp
+    #alpha_sc ; i_sc temperature cofficient %/C
+    #beta_oc ; v_oc temperature cofficient V/C
     #a_ref ; ideality factor V
     #i_l_ref ; light current
     #i_o_ref ; diode reverse saturation current
@@ -34,7 +34,7 @@ class module(object):
     #r_sh_ref ;  shunt resistance
     #adjust =
     #gamma_r =
-    #gamma_r appears to be Pmp Temperature Coefficent and is emperically
+    #gamma_r appears to be p_mp Temperature Coefficent and is emperically
     #found in %/C. SAM differs from datasheet
     #source=Mono-c-Si
     def __init__(self, model):
@@ -45,56 +45,60 @@ class module(object):
                 self.properties = i
                 break
         if self.properties == None:
-            raise Exception("Panel not found")
+            raise Exception("Module not found")
         self.make = model.split(':')[0].rstrip()
         self.model = model.split(':')[1].strip()
-        self.Vmpp = self.properties['v_mp_ref']
-        self.Impp = self.properties['i_mp_ref']
-        self.Pmax = self.Vmpp*self.Impp
-        self.Isc = self.properties['i_sc_ref']
-        self.Voc = self.properties['v_oc_ref']
-        #Voc V/C
-        self.TkVoc = self.properties['beta_oc']
+        self.v_mpp = self.properties['v_mp_ref']
+        self.i_mpp = self.properties['i_mp_ref']
+        self.p_max = self.v_mpp*self.i_mpp
+        self.i_sc = self.properties['i_sc_ref']
+        self.v_oc = self.properties['v_oc_ref']
+        #v_oc V/C
+        self.tk_v_oc = self.properties['beta_oc']
         #gamma_r is emperically found in %/C SAM differs from datasheet
-        #Pmp W/C
-        self.TkPmp = self.properties['gamma_r']*self.Pmax/100
+        #p_mp W/C
+        self.tk_p_mp = self.properties['gamma_r']*self.p_max/100
         self.gamma = self.properties['gamma_r']
         #todo: beta or gamma? go more conservative for now
-        self.TkVmp = self.properties['gamma_r']*self.Vmpp/100
-        #self.TkVmp = self.properties['beta_oc']
-        self.TkIsc = self.properties['alpha_sc']*self.Isc/100
-        self.A = self.properties['a_c']
-        self.Eff = self.Pmax/self.A/1000
+        self.tk_v_mp = self.properties['gamma_r']*self.v_mpp/100
+        #self.tk_v_mp = self.properties['beta_oc']
+        self.tk_i_sc = self.properties['alpha_sc']*self.i_sc/100
+        self.a_c = self.properties['a_c']
+        self.eff = self.p_max/self.a_c/1000
         self.nameplate = 1.0
 
-    def output(self, Insolation, tCell=25):
-        return (Insolation/1000.0) * self.Impp * self.Vdc(tCell)
-        #return Insolation * self.A * self.Eff * self.nameplate
+    def output(self, insolation, t_cell=25):
+        """Watts DC output"""
+        return (insolation/1000.0) * self.i_mpp * self.v_dc(t_cell)
 
-    def Vmax(self, ashraeMin):
-        return self.Voc + (ashraeMin-STC) * self.TkVoc
+    def v_max(self, ashrae_min):
+        """Max Voltage at minimum temperature"""
+        return self.v_oc + (ashrae_min-STC) * self.tk_v_oc
 
-    def Vdc(self, t=25):
+    def v_dc(self, t_cell=25):
+        """Voltage of module at cell tempture"""
         #t adjusted for temp
         #todo fix
-        return self.Vmpp - self.TkVmp * (25-t)
-        #return self.Vmpp
+        return self.v_mpp - self.tk_v_mp * (25-t_cell)
+        #return self.v_mpp
 
-    def Idc(self, t=25):
-        return self.Impp - self.Impp * (25-t)
+    def i_dc(self, t_cell=25):
+        """Current adjusted for temperature"""
+        return self.i_mpp - self.i_mpp * (25-t_cell)
 
-    def Vmin(self, ashrae2p, Tadd=30):
-        #Tadd
+    def v_min(self, ashrae2p, t_adder=30):
+        """Minimum voltage of module under load"""
+        #t_adder
         #Roof mount =30
         #Ground mount = 25
         #Pole mount = 20
-        return self.Vmpp + (Tadd+ashrae2p-STC) * self.TkVmp
+        return self.v_mpp + (t_adder+ashrae2p-STC) * self.tk_v_mp
     def __str__(self):
         return "%s : %s" % (self.make, self.model)
 
 
 #todo: this needs rewritten
-class pvArray(object):
+class PvArray(object):
     """DEPRECATED structure to aggregate panels into an array"""
     def __init__(self, pname, shape):
         self.shape = []
@@ -104,55 +108,68 @@ class pvArray(object):
             else:
                 self.shape.append(string["series"])
         self.panel = pname
-        self.Pmax = pname.Pmax*sum(self.shape)
+        self.p_max = pname.p_max*sum(self.shape)
 
-    def Vdc(self, t=25):
-        return self.panel.Vdc(t) * max(self.shape)
-    def Vmax(self, ashraeMin):
-        return self.panel.Vmax(ashraeMin) * max(self.shape)
-    def Vmin(self, ashrae2p, Tadd=30):
-        return  self.panel.Vmin(ashrae2p, Tadd)* min(self.shape)
-    def output(self, Insolation, tAmb=25):
-        return self.panel.output(Insolation, tAmb)*sum(self.shape)
+    def v_dc(self, t_cell=25):
+        """Array Voltage at tempature"""
+        return self.panel.v_dc(t_cell) * max(self.shape)
+    def v_max(self, ashrae_min):
+        """Maximum Array Voltage"""
+        return self.panel.v_max(ashrae_min) * max(self.shape)
+    def v_min(self, ashrae2p, t_adder=30):
+        """Minimum Array voltage under load"""
+        return  self.panel.v_min(ashrae2p, t_adder)* min(self.shape)
+    def output(self, insolation, t_ambient=25):
+        """Array output for insolation"""
+        return self.panel.output(insolation, t_ambient)*sum(self.shape)
     def dump(self):
-        a = Counter(self.shape)
-        d = [{"series":i, "parallel": a[i]} for i in a.iterkeys()]
-        return {'shape':d, 'panel':str(self.panel)}
+        """dump array to dict"""
+        count = Counter(self.shape)
+        temp = [{"series":i, "parallel": count[i]} for i in count.iterkeys()]
+        return {'shape':temp, 'panel':str(self.panel)}
 
     def __str__(self):
-        a = Counter(self.shape)
-        s = ', '.join(['%sS x %sP' % (i, a[i]) for i in a.iterkeys()])
-        return "%s" % (s)
+        count = Counter(self.shape)
+        temp = ', '.join(['%sS x %sP' % (i, count[i]) \
+                for i in count.iterkeys()])
+        return "%s" % (temp)
 
-class mppt(object):
+class Mppt(object):
     """structure to aggregate panels into an array)"""
-    def __init__(self, moduleO, series, parallel=1):
-        self.module = moduleO
+    def __init__(self, module, series, parallel=1):
+        self.module = module
         self.series = series
         self.parallel = parallel
         self.minlength = 1
         self.maxlength = 14
-        self.Pmax = self.output(1000)
+        self.p_max = self.output(1000)
 
-    def Vdc(self, t=25):
-        return self.module.Vdc(t) * self.series
+    def v_dc(self, t_cell=25):
+        """channel voltage at temperature"""
+        return self.module.v_dc(t_cell) * self.series
 
-    def Vmax(self, ashraeMin):
-        return self.module.Vmax(ashraeMin) * self.series
-    def Vmin(self, ashrae2p, Tadd=30):
-        return  self.module.Vmin(ashrae2p, Tadd)* self.series
+    def v_max(self, ashrae_min):
+        """max channel voltage at temperature"""
+        return self.module.v_max(ashrae_min) * self.series
+    def v_min(self, ashrae2p, t_adder=30):
+        """min channel voltage under load"""
+        return  self.module.v_min(ashrae2p, t_adder)* self.series
 
-    def Isc(self):
-        return self.module.Isc*self.parallel
+    def i_sc(self):
+        """short circuit current"""
+        return self.module.i_sc*self.parallel
 
-    def Impp(self):
-        return self.module.Impp*self.parallel
+    def i_mpp(self):
+        """mppt current"""
+        return self.module.i_mpp*self.parallel
 
-    def output(self, Insolation, tAmb=25):
-        return self.module.output(Insolation, tAmb) * self.series * \
+    def output(self, insolation, t_ambient=25):
+        """watts output of channel"""
+        return self.module.output(insolation, t_ambient) * self.series * \
                 self.parallel
 
     def inc(self):
+        """increase number of panels in channel"""
         if (self.series+1) <= self.maxlength:
             self.series += 1
         else:
@@ -160,6 +177,7 @@ class mppt(object):
             self.series = self.minlength
 
     def dec(self):
+        """decrease number of panels in channel"""
         if (self.series - 1) < self.minlength:
             self.series -= 1
         elif self.parallel > 1:
@@ -169,76 +187,89 @@ class mppt(object):
             print 'Warning: minimum size reached'
 
     def dump(self):
-        d = {"series":self.series, "parallel": self.parallel}
-        return d
+        """dump to dict"""
+        return {"series":self.series, "parallel": self.parallel}
+
     def __repr__(self):
         return '%sS x %sP' % (self.series, self.parallel)
 
-class array(object):
+class Array(object):
     """rewrite of pvArray"""
-    def __init__(self, moduleO, shape):#series, parallel = 1):
+    def __init__(self, module, shape):#series, parallel = 1):
         self.channels = []
-        for c in shape:
-            if 'parallel' in c:
-                parallel = c['parallel']
+        for i in shape:
+            if 'parallel' in i:
+                parallel = i['parallel']
             else:
                 parallel = 1
-            self.channels.append(mppt(moduleO, c['series'], parallel))
-        self.Pmax = self.output(1000)
+            self.channels.append(Mppt(module, i['series'], parallel))
+        self.p_max = self.output(1000)
 
     def mcount(self):
+        """module count"""
         return sum([i.series*i.parallel for i in self.channels])
 
-    def output(self, Insolation, tAmb=25):
-        return sum([i.output(Insolation, tAmb) for i in self.channels])
+    def output(self, insolation, t_ambient=25):
+        """total dc power output"""
+        return sum([i.output(insolation, t_ambient) for i in self.channels])
 
-    def Vmax(self, ashraeMin):
-        return max([i.Vmax(ashraeMin) for i in self.channels])
-    def Vmin(self, ashrae2p, Tadd=30):
-        return min([i.Vmin(ashrae2p, Tadd) for i in self.channels])
+    def v_max(self, ashrae_min):
+        """max voltage"""
+        return max([i.v_max(ashrae_min) for i in self.channels])
+    def v_min(self, ashrae2p, t_adder=30):
+        """min voltage under load"""
+        return min([i.v_min(ashrae2p, t_adder) for i in self.channels])
 
-    def Vdc(self, t=25):
-        return max([i.Vdc(t) for i in self.channels])
+    def v_dc(self, t_cell=25):
+        """todo:not sure what this should return"""
+        return max([i.v_dc(t_cell) for i in self.channels])
 
-    def Isc(self):
-        return sum([i.Isc() for i in self.channels])
+    def i_sc(self):
+        """total short circuit current"""
+        return sum([i.i_sc() for i in self.channels])
 
-    def Impp(self):
-        return sum([i.Impp() for i in self.channels])
+    def i_mpp(self):
+        """total mppt circuit current"""
+        return sum([i.i_mpp() for i in self.channels])
 
     def maxlength(self, maxl):
+        """max length of string. needs to be set before running"""
         for i in self.channels:
             i.maxlength = maxl
 
     def minlength(self, minl):
+        """min length of string. needs to be set before running"""
         for i in self.channels:
             i.minlength = minl
 
     def inc(self):
+        """increase channel with least panels"""
         #find channel with least panels
-        minP = self.channels[0].output(1000)
-        minC = self.channels[0]
-        for j, i in enumerate(self.channels):
-            if i.output(1000) < minP:
-                minP = i.output(1000)
-                minC = i
+        min_p = self.channels[0].output(1000)
+        min_c = self.channels[0]
+        for i in self.channels:
+            if i.output(1000) < min_p:
+                min_p = i.output(1000)
+                min_c = i
         #incriment that channel
-        minC.inc()
-        self.Pmax = self.output(1000)
+        min_c.inc()
+        self.p_max = self.output(1000)
 
     def dec(self):
+        """decrease channel with most panels"""
         #find channel with most panels
-        maxP = self.channels[0].Pmax
-        maxC = self.channels[0]
+        max_p = self.channels[0].p_max
+        max_c = self.channels[0]
         for i in self.channels:
-            if i.Pmax > maxP:
-                maxP = i.Pmax
-                maxC = i
+            if i.p_max > max_p:
+                max_p = i.p_max
+                max_c = i
         #dccriment that channel
-        maxC.dec()
-        self.Pmax = self.output(1000)
+        max_c.dec()
+        self.p_max = self.output(1000)
 
     def dump(self):
+        """dump to dict"""
         return {'shape':[i.dump() for i in self.channels],
                 'panel':str(self.channels[0].module)}
 
@@ -248,12 +279,13 @@ class array(object):
 
 
 def manufacturers():
-    a = [i['panel'].split(":")[0] for i in \
+    """return list of panel manufacturers"""
+    man_list = [i['panel'].split(":")[0] for i in \
             json.loads(open(SPATH + '/sp.json').read())]
-    a.sort()
-    b = [i for i in set(a)]
-    b.sort()
-    return b
+    man_list.sort()
+    uniq_list = [i for i in set(man_list)]
+    uniq_list.sort()
+    return uniq_list
 
 def models(manufacturer=None):
     """returns list of available panel models"""
@@ -262,13 +294,14 @@ def models(manufacturer=None):
         return [i['panel'] for i in \
                 json.loads(open(SPATH + '/sp.json').read())]
     else:
-        a = []
+        panel_list = []
         for i in json.loads(open(SPATH + '/sp.json').read()):
             if i['panel'].find(manufacturer) != -1:
-                a.append(i['panel'])
-        return a
+                panel_list.append(i['panel'])
+        return panel_list
 
 def model_search(parms):
+    """search for a module model"""
     res = []
     for i in models():
         if all(re.search(sub, i) for sub in parms):
@@ -276,22 +309,16 @@ def model_search(parms):
     return res
 
 if __name__ == "__main__":
-    series = 14
-    p = module('Mage Solar : USA Powertec Plus 245-6 MNBS')
-    print ":%s:" %p.make
-    print ":%s:" %p.model
-    print p.Eff
-    print p
+    SERIES = 14
+    PANEL = Module('Mage Solar : USA Powertec Plus 245-6 MNBS')
+    print ":%s:" % PANEL.make
+    print ":%s:" % PANEL.model
 
-    print "Vmax:", p.Vmax(-13)*series
-    print "Vmin:", p.Vmin(31, 25) * series
-    print "Vmin 10%:", p.Vmin(31, 25) * series*.90
-    a = array(p, [{'series':11}])
-    print a.dump()
-    a = array(p, [{'series':11, 'parallel':2}])
-    print a.dump()
-    a = array(p, [{'series':11}, {'series':10}])
-    print a.dump()
-    a = array(p, [{'series':11}, {'series':10}])
-    print a.dump()
-    print a
+    print "v_max:", PANEL.v_max(-13)*SERIES
+    print "v_min:", PANEL.v_min(31, 25) * SERIES
+    print "v_min 10%:", PANEL.v_min(31, 25) * SERIES*.90
+    TEMP = Array(PANEL, [{'series':11}])
+    print TEMP.dump()
+    TEMP = Array(PANEL, [{'series':11, 'parallel':2}])
+    print TEMP.dump()
+    print TEMP

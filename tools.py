@@ -60,6 +60,6 @@ if __name__ == "__main__":
     #m = "Mage Solar : Powertec Plus 245-6 PL *"
     m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
     ms = modules.module(m)
-    system = inverters.inverter("Refusol: 20 kW 480V",modules.pvArray(ms,[{'series':11,'parallel':6}]))
+    system = inverters.inverter("Refusol: 20 kW 480V",modules.PvArray(ms,[{'series':11,'parallel':6}]))
     #print fill(system,zc)
     print generateOptions("Refusol: 20 kW 480V",m,zc)

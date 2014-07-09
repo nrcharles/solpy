@@ -9,7 +9,7 @@ import pv
 import json
 
 def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
-        stationClass=1, Vmax=600, bipolar=True):
+        stationClass=1, v_max=600, bipolar=True):
     """deprecated legacy function"""
     return [str_format(i) for i in fill(**locals())]
 
@@ -21,7 +21,7 @@ def str_format(inverter):
             round(ratio, 2), round(inverter.minV), round(inverter.maxV))
 
 def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
-        Vmax=600, bipolar=True):
+        v_max=600, bipolar=True):
     """String sizing"""
     import geo
     tDerate = {"Roof":30,
@@ -30,23 +30,23 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
 
     #csv is performance hit
     name, usaf = geo.closestUSAF(geo.zipToCoordinates(zipcode), stationClass)
-    maxV = inverter.array.panel.Vmax(epw.minimum(usaf))
+    maxV = inverter.array.panel.v_max(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
-    minV = inverter.array.panel.Vmin(epw.twopercent(usaf), tDerate[mount]) * \
+    minV = inverter.array.panel.v_min(epw.twopercent(usaf), tDerate[mount]) * \
             derate20
 
     if inverter.vdcmax != 0:
-        Vmax = inverter.vdcmax
-    smax = int(Vmax/maxV)
+        v_max = inverter.vdcmax
+    smax = int(v_max/maxV)
     #range to search
     pTol = .30
     inverterNominal = inverter.Paco
-    psize = inverter.array.panel.Pmax
+    psize = inverter.array.panel.p_max
     solutions = []
 
-    Imax = max(inverter.idcmax, inverter.Pdco*1.0/inverter.mppt_low)
-    stringMax = int(round(Imax/inverter.array.panel.Impp))+1
+    i_max = max(inverter.idcmax, inverter.p_dco*1.0/inverter.mppt_low)
+    stringMax = int(round(i_max/inverter.array.panel.i_mpp))+1
 
     #Diophantine equation
     for s in range(smax+1):
@@ -63,11 +63,11 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
     return solutions
 
 def generateOptions(inverterName, moduleName, zipcode, \
-        ac_dc_ratio=1.2, mount="Roof", stationClass=1, Vmax=600, bipolar=True):
+        ac_dc_ratio=1.2, mount="Roof", stationClass=1, v_max=600, bipolar=True):
     import geo
     import inverters
     import modules
-    module = modules.module(moduleName)
+    module = modules.Module(moduleName)
     inverter = inverters.inverter(inverterName)
     """String sizing"""
     tempAdder = {"Roof":30,
@@ -79,13 +79,13 @@ def generateOptions(inverterName, moduleName, zipcode, \
     #csv is performance hit
     name, usaf = geo.closestUSAF(geo.zipToCoordinates(zipcode), stationClass)
     epw_min = epw.minimum(usaf)
-    moduleMaxVoltage = module.Vmax(epw_min)
+    moduleMaxVoltage = module.v_max(epw_min)
     epw2 = epw.twopercent(usaf)
-    moduleMinVoltage = module.Vmin(epw2, tempAdder[mount]) * derate20
+    moduleMinVoltage = module.v_min(epw2, tempAdder[mount]) * derate20
 
     if inverter.vdcmax != 0:
-        Vmax = inverter.vdcmax
-    maxlen = int(Vmax/moduleMaxVoltage)
+        v_max = inverter.vdcmax
+    maxlen = int(v_max/moduleMaxVoltage)
     minlen = int(inverter.mppt_low/moduleMinVoltage) + 1
     inverter.array = modules.array(module, \
             [{'series':minlen}]*inverter.mppt_channels)
@@ -100,13 +100,13 @@ def generateOptions(inverterName, moduleName, zipcode, \
         print inverter.array
         print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
-        t.maxV = t.array.Vmax(epw_min)
-        t.minV = t.array.Vmin(epw2, tempAdder[mount])
+        t.maxV = t.array.v_max(epw_min)
+        t.minV = t.array.v_min(epw2, tempAdder[mount])
         solutions.append(t)
     return solutions
 
-    #Imax = max(inverter.idcmax,inverter.Pdco*1.0/inverter.mppt_low)
-    #stringMax = int(round(Imax/inverter.array.panel.Impp))+1
+    #i_max = max(inverter.idcmax,inverter.p_dco*1.0/inverter.mppt_low)
+    #stringMax = int(round(i_max/inverter.array.panel.i_mpp))+1
 
     #Diophantine equation
     return solutions
@@ -188,7 +188,7 @@ def design(reqsStr):
     for inverterModel, panelModel in combinations(reqs['inverter options'],\
             reqs['panel options']):
         system = inverters.inverter(inverterModel,\
-                modules.pvArray(modules.module(panelModel), [{'series':2}]))
+                modules.PvArray(modules.module(panelModel), [{'series':2}]))
         configs = fill(system, zc)
         for config in configs:
             validC.append(config)
