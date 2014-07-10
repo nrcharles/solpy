@@ -231,7 +231,7 @@ class system(object):
         clip = 0
 
         #cache
-        NOLOAD = self.Pac(0)
+        NOLOAD = self.p_ac(0)
 
         for timestamp, insolation, record in insolationOutput:
             if insolation > 0:
@@ -241,10 +241,10 @@ class system(object):
                 tModule = .945 * tAmb +.028*insolation - 1.528*windSpd + 4.3
                 if hasattr(self, 'hourlyShade'):
                     insolation = insolation * self.hourlyShade.shade(timestamp)
-                output = self.Pac(insolation, tModule)
+                output = self.p_ac(insolation, tModule)
             else:
                 output = NOLOAD
-            #output = self.Pac(insolation)
+            #output = self.p_ac(insolation)
             hourlyInsolation = np.append(hourlyInsolation, output)
 
             #should probably have a flag for this to output CSV file
@@ -272,16 +272,16 @@ class system(object):
 
         return rs
 
-    def Pac(self, ins, tCell=25):
+    def p_ac(self, ins, tCell=25):
         output = 0
         for i in self.shape:
-            iOut = i.Pac(ins, tCell)
+            iOut = i.p_ac(ins, tCell)
             output += iOut
-            if iOut > .999 * i.Paco:
+            if iOut > .999 * i.p_aco:
                 self.clip += 1
         return output
 
-    def Pdc(self, ins, tCell=25):
+    def p_dc(self, ins, tCell=25):
         dc = 0
         for i in self.shape:
             dc += i.array.output(ins, tCell)
@@ -364,22 +364,22 @@ class system(object):
                 t=self.tilt, array_azimuth=self.azimuth, model='p9')
 
         if model == 'STC':
-            return self.Pac(irradiance)
+            return self.p_ac(irradiance)
         else:
             tModule = irradiation.moduleTemp(irradiance, weatherData)
-            return self.Pac(irradiance, tModule)
+            return self.p_ac(irradiance, tModule)
 
-    def virr(self, Pac, timestamp=None, weatherData=None):
+    def virr(self, p_ac, timestamp=None, weatherData=None):
         girr = 1000.
-        gPac = self.Pac(girr)
-        if Pac > gPac:
+        gp_ac = self.p_ac(girr)
+        if p_ac > gp_ac:
             print "WARNING: Edge effect?"
         iteration = 2
-        while round(Pac, -1) != round(gPac, -1):
+        while round(p_ac, -1) != round(gp_ac, -1):
             #todo: improve non linear search routine
             tModule = irradiation.moduleTemp(girr, weatherData)
-            gPac = self.Pac(girr, tModule)
-            if gPac <= Pac:
+            gp_ac = self.p_ac(girr, tModule)
+            if gp_ac <= p_ac:
                 girr = girr + 1000./(iteration**2)
             else:
                 girr = girr - 1000./(iteration**2)
@@ -411,7 +411,7 @@ class system(object):
                 irradiance = irradiation.irradiation(rec, self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
                 tModule = irradiation.moduleTemp(irradiance, i)
-                irr.append(self.Pac(irradiance, tModule))
+                irr.append(self.p_ac(irradiance, tModule))
                 ts.append(i['utc_datetime'])
 
             rs = ResultSet()
@@ -429,7 +429,7 @@ class system(object):
                 irradiance = irradiation.irradiation(i, self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
                 tModule = irradiation.moduleTemp(irradiance, i)
-                irr.append(self.Pac(irradiance, tModule))
+                irr.append(self.p_ac(irradiance, tModule))
                 ts.append(i['utc_datetime'])
 
             rs = ResultSet()
@@ -449,7 +449,7 @@ class system(object):
                 irradiance = irradiation.irradiation(rec, self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
                 tModule = irradiation.moduleTemp(irradiance, i)
-                irr.append(self.Pac(irradiance, tModule))
+                irr.append(self.p_ac(irradiance, tModule))
                 ts.append(i['utc_datetime'])
 
             rs = ResultSet()

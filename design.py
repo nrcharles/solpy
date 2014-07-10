@@ -16,7 +16,7 @@ def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
 def str_format(inverter):
     """format as str: '9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
     DC = inverter.array.output(1000)
-    ratio = DC/inverter.Paco
+    ratio = DC/inverter.p_aco
     return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
             round(ratio, 2), round(inverter.minV), round(inverter.maxV))
 
@@ -41,7 +41,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
     smax = int(v_max/maxV)
     #range to search
     pTol = .30
-    inverterNominal = inverter.Paco
+    inverter_nominal = inverter.p_aco
     psize = inverter.array.panel.p_max
     solutions = []
 
@@ -52,7 +52,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
     for s in range(smax+1):
         if (s*minV) >= inverter.mppt_low:
             for p in range(stringMax):
-                pRatio = p*s*psize*1.0/inverterNominal
+                pRatio = p*s*psize*1.0/inverter_nominal
                 if pRatio < (ac_dc_ratio*(1+pTol)) and \
                         pRatio > (ac_dc_ratio*(1-pTol)):
                     inverter.array.shape = [s]*p
@@ -68,7 +68,7 @@ def generateOptions(inverterName, moduleName, zipcode, \
     import inverters
     import modules
     module = modules.Module(moduleName)
-    inverter = inverters.inverter(inverterName)
+    inverter = inverters.Inverter(inverterName)
     """String sizing"""
     tempAdder = {"Roof":30,
             "Ground":25,
@@ -93,9 +93,9 @@ def generateOptions(inverterName, moduleName, zipcode, \
     inverter.array.maxlength(maxlen)
     #range to search
     pTol = .30
-    inverterNominal = inverter.Paco
+    inverter_nominal = inverter.p_aco
     solutions = []
-    while inverter.array.output(1000) < inverterNominal * (ac_dc_ratio + pTol):
+    while inverter.array.output(1000) < inverter_nominal * (ac_dc_ratio + pTol):
         inverter.array.inc()
         print inverter.array
         print inverter.array.output(1000), inverter.ratio()
@@ -187,8 +187,8 @@ def design(reqsStr):
 
     for inverterModel, panelModel in combinations(reqs['inverter options'],\
             reqs['panel options']):
-        system = inverters.inverter(inverterModel,\
-                modules.PvArray(modules.module(panelModel), [{'series':2}]))
+        system = inverters.Inverter(inverterModel,\
+                modules.PvArray(modules.Module(panelModel), [{'series':2}]))
         configs = fill(system, zc)
         for config in configs:
             validC.append(config)
