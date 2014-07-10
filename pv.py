@@ -108,8 +108,12 @@ def jsonToSystem(jsonDescription):
         if "shape" in i:
             shape = i["shape"]
         elif "series" in i:
+            if "parallel" in i:
+                parallel = i["parallel"]
+            else:
+                parallel = 1
             shape = [{"series":i["series"],
-                    "parallel":i["parallel"] or 1}]
+                    "parallel":parallel}]
         else:
             shape = [{'series':1}]
 
