@@ -19,10 +19,10 @@ try:
 except:
     print "Warning: geomag not loaded.  Magnetic declination unavailible"
 
-def string_notes(system, run=0.0, stationClass = 1):
+def string_notes(system, run=0.0, station_class = 1):
     """page 5"""
 
-    name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
+    name, usaf = geo.closest_usaf( geo.zip_coordinates(system.zipcode), station_class)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
     ac_kva_rated = 0.0
@@ -149,8 +149,8 @@ def micro_calcs(system,d,Vnominal=240):
     pass
 
 def write_notes(system, Vnominal=240.0):
-    stationClass = 1
-    name, usaf = geo.closestUSAF( geo.zipToCoordinates(system.zipcode), stationClass)
+    station_class = 1
+    name, usaf = geo.closest_usaf( geo.zip_coordinates(system.zipcode), station_class)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
     fields = []

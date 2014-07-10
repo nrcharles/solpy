@@ -9,7 +9,7 @@ import pv
 import json
 
 def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
-        stationClass=1, v_max=600, bipolar=True):
+        station_class=1, v_max=600, bipolar=True):
     """deprecated legacy function"""
     return [str_format(i) for i in fill(**locals())]
 
@@ -20,7 +20,7 @@ def str_format(inverter):
     return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
             round(ratio, 2), round(inverter.minV), round(inverter.maxV))
 
-def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
+def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         v_max=600, bipolar=True):
     """String sizing"""
     import geo
@@ -29,7 +29,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
             "Pole":20}
 
     #csv is performance hit
-    name, usaf = geo.closestUSAF(geo.zipToCoordinates(zipcode), stationClass)
+    name, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
     maxV = inverter.array.panel.v_max(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
@@ -63,7 +63,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", stationClass=1, \
     return solutions
 
 def generateOptions(inverterName, moduleName, zipcode, \
-        ac_dc_ratio=1.2, mount="Roof", stationClass=1, v_max=600, bipolar=True):
+        ac_dc_ratio=1.2, mount="Roof", station_class=1, v_max=600, bipolar=True):
     import geo
     import inverters
     import modules
@@ -77,7 +77,7 @@ def generateOptions(inverterName, moduleName, zipcode, \
     derate20 = .97
 
     #csv is performance hit
-    name, usaf = geo.closestUSAF(geo.zipToCoordinates(zipcode), stationClass)
+    name, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
     epw_min = epw.minimum(usaf)
     moduleMaxVoltage = module.v_max(epw_min)
     epw2 = epw.twopercent(usaf)

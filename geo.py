@@ -9,7 +9,8 @@ import os
 from tools import memoized
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
-def stationInfo(usaf):
+def station_info(usaf):
+    """station meta data"""
     index = open(SPATH + '/StationsMeta.csv')
     index_data = csv.DictReader(index)
     for i in index_data:
@@ -18,46 +19,46 @@ def stationInfo(usaf):
             return i
     raise Exception('Station not found')
 
-def closestUSAF(place, stationClass=3):
+def closest_usaf(place, station_class=3):
     """Find closest USAF code of a given station class"""
-    latitude,longitude = place
+    latitude, longitude = place
     index = open(SPATH + '/StationsMeta.csv')
     index_data = csv.DictReader(index)
-    d1 = 9999
+    min_dist = 9999
     name = ''
     usaf = ''
     for i in index_data:
-        d2 = math.sqrt(math.pow((float(i['Latitude']) - latitude),2) + \
-                math.pow((float(i['Longitude']) - longitude),2))
+        new_dist = math.sqrt(math.pow((float(i['Latitude']) - latitude), 2) + \
+                math.pow((float(i['Longitude']) - longitude), 2))
         uncertainty = len(i['Class'])
-        if d2 < d1 and uncertainty <= stationClass:
-            d1 = d2
+        if new_dist < min_dist and uncertainty <= station_class:
+            min_dist = new_dist
             name = i['Site Name']
             usaf = i['USAF']
     index.close()
     return name, usaf
 
 @memoized
-def zipToCoordinates(zipcode):
+def zip_coordinates(zipcode):
     """zipcode to latitude and longitude, takes a string because some zipcodes
     start with 0"""
     index = open(SPATH + '/zipcode.csv')
     #read over license
-    headerLen = 31
-    for i in range(headerLen):
+    header_len = 31
+    for i in range(header_len):
         index.readline()
     index_data = csv.DictReader(index)
     for i in index_data:
         if i['zip'] == zipcode:
-            return float(i['latitude']),float( i['longitude'])
+            return float(i['latitude']), float(i['longitude'])
 
 @memoized
-def zipToTZ(zipcode):
+def zip_tz(zipcode):
     """find TZ for zipcode"""
     index = open(SPATH + '/zipcode.csv')
     #read over license
-    headerLen = 31
-    for i in range(headerLen):
+    header_len = 31
+    for i in range(header_len):
         index.readline()
     index_data = csv.DictReader(index)
     for i in index_data:

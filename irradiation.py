@@ -409,7 +409,7 @@ if __name__ == "__main__":
     import geo
     #thorizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
     timestamp = datetime.datetime.now()
-    place = geo.zipToCoordinates('17603')
+    place = geo.zip_coordinates('17603')
     tilt = 1
     azimuth = 180
     print blave(timestamp,place,tilt,azimuth)

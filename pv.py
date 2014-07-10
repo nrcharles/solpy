@@ -193,9 +193,9 @@ class system(object):
 
     def setZipcode(self, zipcode):
         self.zipcode = zipcode
-        self.place = geo.zipToCoordinates(self.zipcode)
-        self.tz = geo.zipToTZ(self.zipcode)
-        self.name, self.usaf = geo.closestUSAF(self.place)
+        self.place = geo.zip_coordinates(self.zipcode)
+        self.tz = geo.zip_tz(self.zipcode)
+        self.name, self.usaf = geo.closest_usaf(self.place)
 
     def model(self, modelName='p9', singleThread=False):
         #hack for threading
