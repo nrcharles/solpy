@@ -159,7 +159,7 @@ def combinations(a, b):
     return s
 
 def performanceModelPlant(jsonDef):
-    plant = pv.jsonToSystem(jsonDef)
+    plant = pv.json_system(jsonDef)
     yearone = plant.model()
     PDC = sum([i.array.output(1000) for i in plant.shape])
     plantDict = plant.dump()
@@ -327,7 +327,7 @@ if __name__ == "__main__":
             testreqs = open(args['file']).read()
 
         for proposed in design(testreqs):
-            proposedPlant = pv.jsonToSystem(proposed)
+            proposedPlant = pv.json_system(proposed)
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
             print proposed['notes']

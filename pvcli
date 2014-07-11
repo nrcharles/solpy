@@ -20,10 +20,9 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     try:
         #start program
-        plant = pv.jsonToSystem(json.loads(open(args['file']).read()))
+        plant = pv.json_system(json.loads(open(args['file']).read()))
         if args['shade']:
             plant.horizon = pathfinder.horizon('example.hor')
-        
         expedite.string_notes(plant)
         print ""
         output  = plant.model()

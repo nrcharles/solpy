@@ -39,7 +39,7 @@ class TestModeling(unittest.TestCase):
             "tilt":25
             }
             ]}"""
-        plant = pv.jsonToSystem(json.loads(p1))
+        plant = pv.json_system(json.loads(p1))
         rs = plant.model()
         self.assertAlmostEquals(rs.annual_output,7697.56)
 
@@ -67,10 +67,10 @@ class TestModeling(unittest.TestCase):
             ]}
             """
         js1 = json.loads(p1)
-        plant1 = pv.jsonToSystem(js1)
+        plant1 = pv.json_system(js1)
         rs1 = plant1.model()
         js2 = json.loads(json.dumps(plant1.dump()))
-        plant2 = pv.jsonToSystem(js2)
+        plant2 = pv.json_system(js2)
         js3 = json.loads(json.dumps(plant2.dump()))
         rs2 = plant2.model()
         self.assertDictEqual(js2,js3)
@@ -94,7 +94,7 @@ class TestModeling(unittest.TestCase):
             }
             ]}"""
         js1 = json.loads(p1)
-        plant1 = pv.jsonToSystem(js1)
+        plant1 = pv.json_system(js1)
         rs1 = plant1.model()
         self.assertAlmostEquals(rs1.annual_output,8600.66)
 
@@ -132,7 +132,7 @@ class TestVirr(unittest.TestCase):
             "tilt":25
             }
             ]}"""
-        plant = pv.jsonToSystem(json.loads(p1))
+        plant = pv.json_system(json.loads(p1))
         ts =datetime.datetime(2000,9,22,19)
         weatherData = {}
         weatherData['temperature'] = 25

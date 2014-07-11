@@ -16,7 +16,7 @@ app.conf.update(
 
 @app.task
 def modelPlant(jsonDef):
-    plant = pv.jsonToSystem(jsonDef)
+    plant = pv.json_system(jsonDef)
     yearone = plant.model(singleThread = True)
     PDC = sum([i.array.output(1000) for i in plant.shape])
     plantDict = plant.dump()

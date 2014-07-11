@@ -46,12 +46,12 @@ class ResultSet(object):
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         fig = plt.figure()
-        ax = fig.add_subplot(111)
+        sub_plot = fig.add_subplot(111)
         months = mdates.MonthLocator()
         mformat = mdates.DateFormatter('%b')
-        ax.xaxis.set_major_locator(months)
-        ax.xaxis.set_major_formatter(mformat)
-        ax.plot(self.timeseries, self.values)
+        sub_plot.xaxis.set_major_locator(months)
+        sub_plot.xaxis.set_major_formatter(mformat)
+        sub_plot.plot(self.timeseries, self.values)
         return fig
 
     def plot(self):
@@ -64,41 +64,41 @@ class ResultSet(object):
         data = np.array(mangled_a)
         data = np.rot90(data)
         fig = plt.figure()
-        ax = fig.add_subplot(111)#plt.subplots()
-        ax.set_xlim([0, 365])
-        ax.set_ylim([0, 22])
-        ax.set_ylabel('Hour of Day')
-        ax.set_xlabel('Day of Year')
-        heatmap = ax.imshow(data, aspect='auto', cmap=plt.cm.OrRd)
-        txt = "Year 1 Output: %s KWh" % round(sum(total)/1000, 1)
+        sub_plot = fig.add_subplot(111)#plt.subplots()
+        sub_plot.set_xlim([0, 365])
+        sub_plot.set_ylim([0, 22])
+        sub_plot.set_ylabel('Hour of Day')
+        sub_plot.set_xlabel('Day of Year')
+        heatmap = sub_plot.imshow(data, aspect='auto', cmap=plt.cm.OrRd)
+        txt = "Year 1 _output: %s KWh" % round(sum(total)/1000, 1)
         cbar = fig.colorbar(heatmap)
-        cbar.set_label('Output (W)')
-        ax.annotate(txt, xy=(10, 3))
+        cbar.set_label('_output (W)')
+        sub_plot.annotate(txt, xy=(10, 3))
         plt.tight_layout()
         return fig
 
     def summary(self):
         """prints summary"""
         #todo: should get rid of print statements
-        print "Year 1 Annual Output: %s kWh" % self.annual_output
+        print "Year 1 Annual _output: %s kWh" % self.annual_output
         print "Year 1 Daily Average: %s kWh" % self.daily_ave
         print "Inverter hours clipping: %s" % self.clipping_hours
 
-def fileToSystem(filename):
+def load_system(filename):
     """Load a system from a json file"""
     try:
-        return jsonToSystem(json.loads(open(filename).read()))
+        return json_system(json.loads(open(filename).read()))
 
     except:
         print "Error: file corrupt or not found:"
 
 
-def jsonToSystem(jsonDescription):
+def json_system(json_description):
     """Load a system from a json description"""
     #todo: this is getting unweildy should probably be refactored
-    jsonShape = []
+    json_shape = []
     orientations = []
-    for i in jsonDescription["array"]:
+    for i in json_description["array"]:
         o = {}
         scale = 1
         if "scale" in i:
@@ -120,11 +120,11 @@ def jsonToSystem(jsonDescription):
         if "tilt" in i:
             o["tilt"] = i["tilt"]
         else:
-            o["tilt"] = jsonDescription["tilt"]
+            o["tilt"] = json_description["tilt"]
         if "azimuth" in i:
             o["azimuth"] = i["azimuth"]
         else:
-            o["azimuth"] = jsonDescription["azimuth"]
+            o["azimuth"] = json_description["azimuth"]
         orientations.append(o)
 
         block = inverters.Inverter(i["inverter"], \
@@ -133,16 +133,15 @@ def jsonToSystem(jsonDescription):
                 #i["series"],i["parallel"]))
         if "derate" in i:
             block.derate = i["derate"]
-        jsonShape += [block] * scale
-    plant = system(jsonShape)
-    plant.setZipcode(jsonDescription["zipcode"])
-    if "address" in jsonDescription:
-        plant.address = jsonDescription["address"]
+        json_shape += [block] * scale
+    plant = System(json_shape)
+    plant.set_zipcode(json_description["zipcode"])
+    if "address" in json_description:
+        plant.address = json_description["address"]
     try:
-        g = geocoders.GoogleV3()
-        place, (lat, lng) = g.geocode(plant.address)
+        geocoder = geocoders.GoogleV3()
+        place, (lat, lng) = geocoder.geocode(plant.address)
         plant.place = lat, lng
-        #print "%s, %s Geolocated" % plant.place
     except:
         pass
         #print "%s, %s location from zipcode" % plant.place
@@ -153,19 +152,19 @@ def jsonToSystem(jsonDescription):
         print "WARNING: multiple tilts not implimented"
         plant.tilt = o[0]["tilt"]
         plant.azimuth = o[0]["azimuth"]
-    elif "tilt" in jsonDescription and "azimuth" in jsonDescription:
-        plant.tilt = jsonDescription["tilt"]
-        plant.azimuth = jsonDescription["azimuth"]
+    elif "tilt" in json_description and "azimuth" in json_description:
+        plant.tilt = json_description["tilt"]
+        plant.azimuth = json_description["azimuth"]
     else:
         #"maybe incomplete"
         plant.tilt = orientations[0]["tilt"]
         plant.azimuth = orientations[0]["azimuth"]
-    if 'shade' in jsonDescription:
-        plant.hourlyShade = pathfinder.hourly(jsonDescription['shade'])
+    if 'shade' in json_description:
+        plant.hourly_shade = pathfinder.hourly(json_description['shade'])
 
-    plant.phase = jsonDescription["phase"]
-    plant.voltage = jsonDescription["voltage"]
-    plant.systemName = jsonDescription["system_name"]
+    plant.phase = json_description["phase"]
+    plant.voltage = json_description["voltage"]
+    plant.system_name = json_description["system_name"]
     return plant
 
 def _calc(record):
@@ -174,12 +173,13 @@ def _calc(record):
     horizon = None
     insolation = irradiation.irradiation(record, properties['place'], \
             horizon, properties['tilt'], properties['azimuth'], \
-            properties['modelName'])
+            properties['model_name'])
     year = 2000
     timestamp = tmy3.normalizeDate(record['datetime'], year)
     return timestamp, insolation, record
 
-class system(object):
+class System(object):
+    """PV System"""
     def __init__(self, shape):
         #shape is a list of inverters with attached arrays
         self.zipcode = None
@@ -188,107 +188,112 @@ class system(object):
         self.azimuth = 180
         self.shape = shape
         self.phase = 1
-        self.systemName = ""
+        self.system_name = ""
         self.clip = 0
 
-    def setZipcode(self, zipcode):
+    def set_zipcode(self, zipcode):
+        """update zipcode"""
         self.zipcode = zipcode
         self.place = geo.zip_coordinates(self.zipcode)
         self.tz = geo.zip_tz(self.zipcode)
         self.name, self.usaf = geo.closest_usaf(self.place)
 
-    def model(self, modelName='p9', singleThread=False):
+    def model(self, model_name='p9', single_thread=False):
+        """model pv system performance"""
         #hack for threading
         #probably should be abstracted some other way
         properties = {}
         properties['place'] = self.place
         properties['tilt'] = self.tilt
         properties['azimuth'] = self.azimuth
-        properties['modelName'] = modelName
+        properties['model_name'] = model_name
 
-        if singleThread:
-            insolationOutput = map(_calc, [(properties, i) \
+        if single_thread:
+            insolation_output = map(_calc, [(properties, i) \
                     for i in tmy3.data(self.usaf)])
         else:
             from multiprocessing import Pool
             from multiprocessing import cpu_count
             pool = Pool(processes=cpu_count())
             #still a hack
-            insolationOutput = pool.map(_calc, [(properties, i) \
+            insolation_output = pool.map(_calc, [(properties, i) \
                     for i in tmy3.data(self.usaf)])
             pool.close()
 
-        houlyTimeseries = np.array([])
-        hourlyInsolation = np.array([])
+        houly_timeseries = np.array([])
+        hourly_insolation = np.array([])
 
-        dailyTimeseries = np.array([])
-        dailyInsolation = np.array([])
+        daily_timeseries = np.array([])
+        daily_insolation = np.array([])
 
-        totalOutput = 0
+        total_output = 0
         day = 0
-        dailyOutput = 0
-        dailyMax = 0
+        daily_output = 0
+        daily_max = 0
         clip = 0
 
         #cache
-        NOLOAD = self.p_ac(0)
+        noload = self.p_ac(0)
 
-        for timestamp, insolation, record in insolationOutput:
+        for timestamp, insolation, record in insolation_output:
             if insolation > 0:
-                houlyTimeseries = np.append(houlyTimeseries, timestamp)
-                tAmb = float(record['Dry-bulb (C)'])
-                windSpd = float(record['Wspd (m/s)'])
-                tModule = .945 * tAmb +.028*insolation - 1.528*windSpd + 4.3
-                if hasattr(self, 'hourlyShade'):
-                    insolation = insolation * self.hourlyShade.shade(timestamp)
-                output = self.p_ac(insolation, tModule)
+                houly_timeseries = np.append(houly_timeseries, timestamp)
+                t_amb = float(record['Dry-bulb (C)'])
+                windspeed = float(record['Wspd (m/s)'])
+                t_cell = .945 * t_amb +.028*insolation - 1.528*windspeed + 4.3
+                if hasattr(self, 'hourly_shade'):
+                    insolation = insolation * self.hourly_shade.shade(timestamp)
+                output = self.p_ac(insolation, t_cell)
             else:
-                output = NOLOAD
+                output = noload
             #output = self.p_ac(insolation)
-            hourlyInsolation = np.append(hourlyInsolation, output)
+            hourly_insolation = np.append(hourly_insolation, output)
 
             #should probably have a flag for this to output CSV file
             #print timestamp,',', output
             if timestamp.day is day:
-                dailyOutput += output
+                daily_output += output
             else:
-                dailyMax = max(dailyMax, dailyOutput)
-                dailyTimeseries = np.append(dailyTimeseries, timestamp)
-                dailyInsolation = np.append(dailyInsolation, dailyOutput/1000)
-                dailyOutput = 0
-            totalOutput += output
+                daily_max = max(daily_max, daily_output)
+                daily_timeseries = np.append(daily_timeseries, timestamp)
+                daily_insolation = np.append(daily_insolation, \
+                        daily_output/1000)
+                daily_output = 0
+            total_output += output
             day = timestamp.day
 
-        rs = ResultSet()
+        resultset = ResultSet()
 
-        rs.timeseries = dailyTimeseries
-        rs.values = dailyInsolation
-        rs.htimeseries = houlyTimeseries
-        rs.hourly_values = hourlyInsolation
+        resultset.timeseries = daily_timeseries
+        resultset.values = daily_insolation
+        resultset.htimeseries = houly_timeseries
+        resultset.hourly_values = hourly_insolation
 
-        rs.clipping_hours = clip
-        rs.daily_ave = (round(totalOutput/365/10)/100)
-        rs.annual_output = (round(totalOutput/10)/100)
+        resultset.clipping_hours = clip
+        resultset.daily_ave = (round(total_output/365/10)/100)
+        resultset.annual_output = (round(total_output/10)/100)
 
-        return rs
+        return resultset
 
-    def p_ac(self, ins, tCell=25):
+    def p_ac(self, ins, t_cell=25):
+        """ac power output"""
         output = 0
         for i in self.shape:
-            iOut = i.p_ac(ins, tCell)
-            output += iOut
-            if iOut > .999 * i.p_aco:
+            inverter_output = i.p_ac(ins, t_cell)
+            output += inverter_output
+            if inverter_output > .999 * i.p_aco:
                 self.clip += 1
         return output
 
-    def p_dc(self, ins, tCell=25):
-        dc = 0
+    def p_dc(self, ins, t_cell=25):
+        """dc power output"""
+        total_dc = 0
         for i in self.shape:
-            dc += i.array.output(ins, tCell)
-        return dc
+            total_dc += i.array.output(ins, t_cell)
+        return total_dc
 
     def solstice(self, hour):
-        #position on winter soltice (Dec 21)
+        """position on winter soltice (Dec 21)"""
         import ephem
         o = ephem.Observer()
         o.date = '2000/12/21 %s:00:00' % (hour - self.tz)
@@ -299,32 +304,33 @@ class system(object):
 
         return alt, az
 
-    def minRowSpace(self, delta, riseHour=9, setHour=15):
+    def min_row_space(self, delta, rise_hour=9, set_hour=15):
         """Row Space Function"""
-        altitudeRise, azimuthRise = self.solstice(riseHour)
-        shadowLength = delta / math.tan(altitudeRise)
-        minimumSpaceRise = shadowLength * abs(math.cos(azimuthRise))
+        altitude_rise, azimuth_rise = self.solstice(rise_hour)
+        shadow_length = delta / math.tan(altitude_rise)
+        minimum_space_rise = shadow_length * abs(math.cos(azimuth_rise))
 
-        altitudeSet, azimuthSet = self.solstice(setHour)
-        shadowLength = delta / math.tan(altitudeSet)
+        altitude_set, azimuth_set = self.solstice(set_hour)
+        shadow_length = delta / math.tan(altitude_set)
         #abs to deal with -cos
-        minimumSpaceSet = shadowLength * abs(math.cos(azimuthSet))
+        minimum_space_set = shadow_length * abs(math.cos(azimuth_set))
 
-        return max(minimumSpaceRise, minimumSpaceSet)
+        return max(minimum_space_rise, minimum_space_set)
 
-    def minSetback(self, delta, riseHour=9, setHour=15):
-        """East West Setback"""
-        altitudeRise, azimuthRise = self.solstice(riseHour)
-        shadowLength = delta / math.tan(altitudeRise)
-        minimumSpaceRise = shadowLength * math.sin(azimuthRise)
+    def min_setback(self, delta, rise_hour=9, set_hour=15):
+        """East West _setback"""
+        altitude_rise, azimuth_rise = self.solstice(rise_hour)
+        shadow_length = delta / math.tan(altitude_rise)
+        minimum_space_rise = shadow_length * math.sin(azimuth_rise)
 
-        altitudeSet, azimuthSet = self.solstice(setHour)
-        shadowLength = delta / math.tan(altitudeSet)
-        minimumSpaceSet = shadowLength * math.sin(azimuthSet)
+        altitude_set, azimuth_set = self.solstice(set_hour)
+        shadow_length = delta / math.tan(altitude_set)
+        minimum_space_set = shadow_length * math.sin(azimuth_set)
 
-        return max(minimumSpaceRise, minimumSpaceSet)
+        return max(minimum_space_rise, minimum_space_set)
 
     def describe(self):
+        """describe system"""
         #todo: fix this garbage
         dp = {}
         di = {}
@@ -344,18 +350,18 @@ class system(object):
                 dp[idict['panel']] += i.array.mcount()
         return di, dp
 
-    def now(self, timestamp=None, weatherData=None, model='STC'):
-        #Preditive
+    def now(self, timestamp=None, weather_data=None, model='STC'):
+        """Preditive power output"""
         if timestamp is None:
             timestamp = datetime.datetime.now() - \
                     datetime.timedelta(hours=self.tz)
 
-        if model != 'STC' and  weatherData == None:
-            weatherData = forecast.data(self.place)['currently']
+        if model != 'STC' and  weather_data == None:
+            weather_data = forecast.data(self.place)['currently']
 
         if model == 'CC':
             record = irradiation.blave(timestamp, self.place, self.tilt,
-                    self.azimuth, cloudCover=weatherData['cloudCover'])
+                    self.azimuth, cloudCover=weather_data['cloudCover'])
         else:
             record = irradiation.blave(timestamp, self.place, self.tilt,
                     self.azimuth)
@@ -366,10 +372,11 @@ class system(object):
         if model == 'STC':
             return self.p_ac(irradiance)
         else:
-            tModule = irradiation.moduleTemp(irradiance, weatherData)
-            return self.p_ac(irradiance, tModule)
+            t_cell = irradiation.moduleTemp(irradiance, weather_data)
+            return self.p_ac(irradiance, t_cell)
 
-    def virr(self, p_ac, timestamp=None, weatherData=None):
+    def virr(self, p_ac, timestamp=None, weather_data=None):
+        """calculate virtual irradiation"""
         girr = 1000.
         gp_ac = self.p_ac(girr)
         if p_ac > gp_ac:
@@ -377,8 +384,8 @@ class system(object):
         iteration = 2
         while round(p_ac, -1) != round(gp_ac, -1):
             #todo: improve non linear search routine
-            tModule = irradiation.moduleTemp(girr, weatherData)
-            gp_ac = self.p_ac(girr, tModule)
+            t_cell = irradiation.moduleTemp(girr, weather_data)
+            gp_ac = self.p_ac(girr, t_cell)
             if gp_ac <= p_ac:
                 girr = girr + 1000./(iteration**2)
             else:
@@ -386,14 +393,14 @@ class system(object):
             iteration += 1
             if iteration > 25:
                 raise Exception('too many iterations')
-        solarAz, solarAlt = irradiation.ephemSun(self.place, timestamp)
-        irrRec = irradiation.irrGuess(timestamp, girr, solarAlt, solarAz,\
+        solar_az, solar_alt = irradiation.ephemSun(self.place, timestamp)
+        irrRec = irradiation.irrGuess(timestamp, girr, solar_alt, solar_az,\
                 self.tilt, self.azimuth)
         irrRec['girr'] = round(girr, 0)
         return irrRec
 
-    def forecastOutput(self, daylightSavings=False, source=None, hours=24):
-    #def powerToday(self, daylightSavings = False, source = None, hours = 24):
+    def forecast_output(self, daylightSavings=False, source=None, hours=24):
+        """forecast output of system"""
         #default is forecast with solpy.blave
         #this is ugly code... sorry
         d = datetime.date.today()
@@ -410,14 +417,14 @@ class system(object):
                         self.tilt, self.azimuth, cloudCover=i['cloudCover'])
                 irradiance = irradiation.irradiation(rec, self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
-                tModule = irradiation.moduleTemp(irradiance, i)
-                irr.append(self.p_ac(irradiance, tModule))
+                t_cell = irradiation.moduleTemp(irradiance, i)
+                irr.append(self.p_ac(irradiance, t_cell))
                 ts.append(i['utc_datetime'])
 
-            rs = ResultSet()
-            rs.values = irr
-            rs.timeseries = ts
-            return rs
+            resultset = ResultSet()
+            resultset.values = irr
+            resultset.timeseries = ts
+            return resultset
 
         if source == 'forecast':
             wseries = forecast.hourly(self.place)
@@ -428,14 +435,14 @@ class system(object):
                     break
                 irradiance = irradiation.irradiation(i, self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
-                tModule = irradiation.moduleTemp(irradiance, i)
-                irr.append(self.p_ac(irradiance, tModule))
+                t_cell = irradiation.moduleTemp(irradiance, i)
+                irr.append(self.p_ac(irradiance, t_cell))
                 ts.append(i['utc_datetime'])
 
-            rs = ResultSet()
-            rs.values = irr
-            rs.timeseries = ts
-            return rs
+            resultset = ResultSet()
+            resultset.values = irr
+            resultset.timeseries = ts
+            return resultset
 
         if source == 'blave':
             wseries = forecast.hourly(self.place)
@@ -448,8 +455,8 @@ class system(object):
                         self.tilt, self.azimuth, cloudCover=i['cloudCover'])
                 irradiance = irradiation.irradiation(rec, self.place,\
                         t=self.tilt, array_azimuth=self.azimuth, model='p90')
-                tModule = irradiation.moduleTemp(irradiance, i)
-                irr.append(self.p_ac(irradiance, tModule))
+                t_cell = irradiation.moduleTemp(irradiance, i)
+                irr.append(self.p_ac(irradiance, t_cell))
                 ts.append(i['utc_datetime'])
 
             rs = ResultSet()
@@ -479,6 +486,7 @@ class system(object):
             return rs
 
     def dump(self):
+        """dump to dict"""
         d = {}
         #hack to simply
         s = [str(i.dump()) for i in self.shape]
@@ -496,5 +504,5 @@ class system(object):
         if hasattr(self, "address"):
             d['address'] = self.address
         d['zipcode'] = self.zipcode
-        d['system_name'] = self.systemName
+        d['system_name'] = self.system_name
         return d

@@ -18,18 +18,18 @@ def usage():
 import ee
 import nec
 
-def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
+def vd(a,l,size= None,v = 240, pf=-1, t_amb=30, percent=1, material='CU', \
         c='STEEL',verbose = True):
     oc = a * 1.25
-    ocp = ee.ocpSize(oc)
+    ocp = ee.ocp_size(oc)
     #print "OCP Size: %s" % ocp
     #egc = ee.findEGC(ocp,material)
     vdrop = v * percent/100.0
     #ratio = ee.CMIL[ee.conductorAmpacity(a,material).size]*1.0/ee.CMIL[ee.findEGC(ocp)]
     if size:
-        conductor  = ee.conductor(size,material)
-        conductor = ee.checkAmpacity(conductor, ocp, tAmb)
-        vdrop = conductor.vd(a,l, v = v, pf=pf, tAmb=tAmb,c=c)
+        conductor  = ee.Conductor(size,material)
+        conductor = ee.check_ampacity(conductor, ocp, t_amb)
+        vdrop = conductor.vd(a,l, v = v, pf=pf, t_amb=t_amb,c=c)
         vdp=(vdrop * 100/v)
         if verbose:
             print "Percent drop: %s%%" % round(vdp,2)
@@ -45,9 +45,9 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
             sets += 1
             for s in nec.CONDUCTOR_STANDARD_SIZES:
                 #print s, material
-                conductor = ee.conductor(s,material)
+                conductor = ee.Conductor(s,material)
                 #print conductor
-                if conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c) < vdrop:
+                if conductor.vd(a*1.0/sets,l, v = v, pf=pf, t_amb=t_amb,c=c) < vdrop:
                     break
                 else:
                     conductor = None
@@ -59,10 +59,10 @@ def vd(a,l,size= None,v = 240, pf=-1, tAmb=30, percent=1, material='CU', \
         else:
             if verbose:
                 print "Conductor %s" % conductor
-            conductor = ee.checkAmpacity(conductor, ocp/sets, tAmb)
+            conductor = ee.check_ampacity(conductor, ocp/sets, t_amb)
             #print "EGC Size: %s %s" % ( incEGC(conductor,egc,ratio),'CU'#conductor.material)
             if verbose:
-                print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, tAmb=tAmb,c=c),2)
+                print "Drop: %s V" % round(conductor.vd(a*1.0/sets,l, v = v, pf=pf, t_amb=t_amb,c=c),2)
             return conductor
 
 if __name__ == "__main__":

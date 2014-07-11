@@ -126,7 +126,7 @@ def string_notes(system, run=0.0, station_class = 1):
         notes.append("Magnetic declination: %s Degrees" % \
                 round(geomag.declination(dlat=system.place[0],dlon=system.place[1])))
     notes.append("Minimum Row space ratio: %s" % \
-            round(system.minRowSpace(1.0),2))
+            round(system.min_row_space(1.0),2))
     print "\n".join(notes)
 
     print ""
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         if 'address' in jsonP:
             print '%s - %s %s' % \
                 (jsonP['system_name'].upper(),jsonP['address'],jsonP['zipcode'])
-        plant = pv.jsonToSystem(jsonP)
+        plant = pv.json_system(jsonP)
         if "run" in jsonP:
             string_notes(plant,jsonP["run"])
             pass
