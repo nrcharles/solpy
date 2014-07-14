@@ -27,7 +27,7 @@ if __name__ == "__main__":
         print ""
         output  = plant.model()
         output.summary()
-        output.plot().savefig('%s_output_%s.pdf' % (plant.systemName, plant.zipcode),format='pdf')
+        output.plot().savefig('%s_output_%s.pdf' % (plant.system_name, plant.zipcode),format='pdf')
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
