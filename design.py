@@ -174,7 +174,7 @@ def performanceModelSet(clist):
         from celery import group
         import pmodel
         #print CSTAT
-        return group(pmodel.modelPlant.s(i) for i in clist)().get()
+        return group(pmodel.model_plant.s(i) for i in clist)().get()
     else:
         return [performanceModelPlant(pJSON) for pJSON in clist]
 
