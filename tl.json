@@ -152,5 +152,11 @@
     "current":39.0},
 {"inverter": "Solectria Renewables: PVI 23TL-480 480V",
     "phase":3,
-    "current":32.0}
+    "current":32.0},
+{"inverter": "ABB: UNO-7.6-I-OUTD-US (240 V) 240V *",
+    "phase":1,
+    "current":32.0},
+{"inverter": "ABB: UNO-8.6-I-OUTD-US (240 V) 240V *",
+    "phase":1,
+    "current":36.0}
     ]
