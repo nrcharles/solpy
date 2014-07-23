@@ -112,6 +112,8 @@ def generateOptions(inverterName, moduleName, zipcode, \
     return solutions
 
 def knapsack(items, maxweight):
+    """knapsack problem weight is system DC size and value is annual output
+    this could be expanded with different constraints for different rankings"""
     #http://codereview.stackexchange.com/questions/20569/
     #dynamic-programming-solution-to-knapsack-problem
     bestvalues = [[0] * (maxweight + 1)
@@ -136,20 +138,28 @@ def knapsack(items, maxweight):
         i -= 1
 
     reconstruction.reverse()
-    systemSet = [subA for v, w, subA in reconstruction]
+    system_set = [subA for v, w, subA in reconstruction]
 
-    return bestvalues[len(items)][maxweight], systemSet
+    results = {'algorithm':'knapsack',
+            'notes':'most annual generation',
+            'system_weight':bestvalues[len(items)][maxweight], 
+            'system_set': system_set}
+    return results
 
 def efficient(items, maxweight):
     """symetric design of the most efficeint inverter panel combo"""
-    mostEff = [None, None, None]
-    for (value, weight, systemDict) in items:
+    most_eff = [None, None, None]
+    for (value, weight, system_dict) in items:
         eff = value/float(weight)
-        if eff > mostEff[0]:
-            mostEff = [eff, weight, systemDict]
-    scale = maxweight/mostEff[1]
-    result = [mostEff[2]]*scale
-    return (mostEff[1]*scale, result)
+        if eff > most_eff[0]:
+            most_eff = [eff, weight, system_dict]
+    scale = maxweight/most_eff[1]
+    system_result = [most_eff[2]]*scale
+    results = {'algorithm':'efficient',
+            'notes':'symetric design of most efficient combination',
+            'system_weight':most_eff[1]*scale,
+            'system_set': system_result}
+    return results
 
 def combinations(a, b):
     s = []
@@ -178,7 +188,7 @@ def performanceModelSet(clist):
     else:
         return [performanceModelPlant(pJSON) for pJSON in clist]
 
-def design(reqsStr):
+def design(reqsStr,ranking=[efficient,knapsack]):
     """parts selection algorithm. """
     reqs = json.loads(reqsStr)
     validC = []
@@ -207,18 +217,11 @@ def design(reqsStr):
         configSet += [(o['yearone'], o['DCnominal'], o['array'][0])] * scale
 
     suggested = []
-
-    #knapsack problem weight is system DC size and value is annual output
-    #this could be expanded with different constraints for different rankings
-    systemWeight, systemSet = knapsack(configSet, reqs['desired size'])
-    reqs['array'] = systemSet
-    reqs['notes'] = 'Maximum size'
-    suggested.append(copy.deepcopy(reqs))
-
-    systemWeight, systemSet = efficient(configSet, reqs['desired size'])
-    reqs['array'] = systemSet
-    reqs['notes'] = 'Maximum symetric efficiency'
-    suggested.append(copy.deepcopy(reqs))
+    for algo in ranking:
+        proposed = algo(configSet, reqs['desired size'])
+        reqs['array'] = proposed['system_set']
+        reqs['algorithm'] = proposed['algorithm']
+        suggested.append(copy.deepcopy(reqs))
 
     return suggested
 
@@ -330,7 +333,7 @@ if __name__ == "__main__":
             proposedPlant = pv.json_system(proposed)
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
-            print proposed['notes']
+            print proposed['algorithm']
             expedite.string_notes(proposedPlant)
 
     except (KeyboardInterrupt, SystemExit):
