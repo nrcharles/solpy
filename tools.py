@@ -48,7 +48,7 @@ def find_file(filename, search_path):
 
 if __name__ == "__main__":
     from design import tools_fill as fill
-    from design import generateOptions
+    from design import generate_options
     import inverters
     import modules
     zc='44701'
@@ -62,4 +62,4 @@ if __name__ == "__main__":
     ms = modules.module(m)
     system = inverters.inverter("Refusol: 20 kW 480V",modules.PvArray(ms,[{'series':11,'parallel':6}]))
     #print fill(system,zc)
-    print generateOptions("Refusol: 20 kW 480V",m,zc)
+    print generate_options("Refusol: 20 kW 480V",m,zc)

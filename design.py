@@ -62,7 +62,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
                     solutions.append(t)
     return solutions
 
-def generateOptions(inverterName, moduleName, zipcode, \
+def generate_options(inverterName, moduleName, zipcode, \
         ac_dc_ratio=1.2, mount="Roof", station_class=1, v_max=600, bipolar=True):
     import geo
     import inverters
@@ -85,9 +85,11 @@ def generateOptions(inverterName, moduleName, zipcode, \
 
     if inverter.vdcmax != 0:
         v_max = inverter.vdcmax
-    maxlen = int(v_max/moduleMaxVoltage)
+    maxlen = int(v_max//moduleMaxVoltage)
     minlen = int(inverter.mppt_low/moduleMinVoltage) + 1
-    inverter.array = modules.array(module, \
+    if minlen > maxlen:
+        return []
+    inverter.array = modules.Array(module, \
             [{'series':minlen}]*inverter.mppt_channels)
     inverter.array.minlength(minlen)
     inverter.array.maxlength(maxlen)
@@ -97,7 +99,7 @@ def generateOptions(inverterName, moduleName, zipcode, \
     solutions = []
     while inverter.array.output(1000) < inverter_nominal * (ac_dc_ratio + pTol):
         inverter.array.inc()
-        print inverter.array
+        #print inverter.array
         print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
         t.maxV = t.array.v_max(epw_min)
@@ -197,12 +199,12 @@ def design(reqsStr,ranking=[efficient,knapsack]):
 
     for inverterModel, panelModel in combinations(reqs['inverter options'],\
             reqs['panel options']):
-        system = inverters.Inverter(inverterModel,\
-                modules.PvArray(modules.Module(panelModel), [{'series':2}]))
-        configs = fill(system, zc)
+        #system = inverters.Inverter(inverterModel,\
+        #        modules.PvArray(modules.Module(panelModel), [{'series':2}]))
+        configs = generate_options(inverterModel, panelModel, zc)
         for config in configs:
             validC.append(config)
-            print config, config.array, config.array.panel, \
+            print config, '\n',config.array, config.array.dump()['panel'], \
                     config.array.output(1000), config.ratio()
 
             reqs['array'] = [config.dump()]
@@ -334,7 +336,7 @@ if __name__ == "__main__":
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
             print proposed['algorithm']
-            expedite.string_notes(proposedPlant)
+            expedite.string_notes(proposedPlant,1)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
