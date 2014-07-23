@@ -170,6 +170,8 @@ class Mppt(object):
 
     def inc(self):
         """increase number of panels in channel"""
+        if self.minlength > self.maxlength:
+            raise Exception('Min length exceeds Max length')
         if (self.series+1) <= self.maxlength:
             self.series += 1
         else:
