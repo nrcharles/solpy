@@ -19,7 +19,7 @@ try:
 except:
     print "Warning: geomag not loaded.  Magnetic declination unavailible"
 
-def string_notes(system, run=0.0, station_class = 1):
+def string_notes(system, run=0.0, station_class = 3):
     """page 5"""
 
     name, usaf = geo.closest_usaf( geo.zip_coordinates(system.zipcode), station_class)
