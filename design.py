@@ -40,7 +40,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         v_max = inverter.vdcmax
     smax = int(v_max/maxV)
     #range to search
-    pTol = .30
+    p_tol = .30
     inverter_nominal = inverter.p_aco
     psize = inverter.array.panel.p_max
     solutions = []
@@ -53,8 +53,8 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         if (s*minV) >= inverter.mppt_low:
             for p in range(stringMax):
                 pRatio = p*s*psize*1.0/inverter_nominal
-                if pRatio < (ac_dc_ratio*(1+pTol)) and \
-                        pRatio > (ac_dc_ratio*(1-pTol)):
+                if pRatio < (ac_dc_ratio*(1+p_tol)) and \
+                        pRatio > (ac_dc_ratio*(1-p_tol)):
                     inverter.array.shape = [s]*p
                     t = copy.deepcopy(inverter)
                     t.minV = s*minV
@@ -94,17 +94,19 @@ def generate_options(inverterName, moduleName, zipcode, \
     inverter.array.minlength(minlen)
     inverter.array.maxlength(maxlen)
     #range to search
-    pTol = .30
+    p_tol = .30
     inverter_nominal = inverter.p_aco
     solutions = []
-    while inverter.array.output(1000) < inverter_nominal * (ac_dc_ratio + pTol):
+    while inverter.array.output(1000) < inverter_nominal * (ac_dc_ratio + p_tol):
         inverter.array.inc()
         #print inverter.array
-        print inverter.array.output(1000), inverter.ratio()
+        #print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
         t.maxV = t.array.v_max(epw_min)
         t.minV = t.array.v_min(epw2, tempAdder[mount])
-        solutions.append(t)
+        #print inverter.ratio()
+        if inverter.ratio() > ac_dc_ratio*(1. - p_tol):
+            solutions.append(t)
     return solutions
 
     #i_max = max(inverter.idcmax,inverter.p_dco*1.0/inverter.mppt_low)
