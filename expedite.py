@@ -68,9 +68,9 @@ def string_notes(system, run=0.0, station_class = 3):
             notes.append("Quantity: %s" % dp[moduleN])
             notes.append("Max Power-Point Current (Imp): %s A" % m.i_mpp)
             notes.append("Max Power-Point Voltage (Vmp): %s V" % m.v_mpp)
-            notes.append("Open-Circuit Voltage (v_oc): %s V" % m.v_oc)
-            notes.append("Short-Circuit Current (i_sc): %s A" % m.i_sc)
-            notes.append("Maximum Power (p_max): %s W" % round(m.p_max,1))
+            notes.append("Open-Circuit Voltage (Voc): %s V" % m.v_oc)
+            notes.append("Short-Circuit Current (Isc): %s A" % m.i_sc)
+            notes.append("Maximum Power (Pmax): %s W" % round(m.p_max,1))
             #notes.append("Module Rated Max Voltage: %s V" % i.array.panel.Vrated)
 
             notes.append("")
