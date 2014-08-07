@@ -15,14 +15,14 @@ def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
 
 def str_format(inverter):
     """format as str: '9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
-    DC = inverter.array.output(1000)
-    ratio = DC/inverter.p_aco
-    return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
+    dc = inverter.array.output(1000)
+    ratio = dc/inverter.p_aco
+    return '%sW : %s : ratio %s : %s - %s V' % (dc, inverter.array, \
             round(ratio, 2), round(inverter.min_v), round(inverter.max_v))
 
 def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         v_max=600, bipolar=True):
-    """String sizing"""
+    """deprecated use generate_options"""
     import geo
     t_derate = {"Roof":30, \
             "Ground":25, \
@@ -33,8 +33,8 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
     max_v = inverter.array.panel.v_max(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
-    min_v = inverter.array.panel.v_min(epw.twopercent(usaf), t_derate[mount]) * \
-            derate20
+    min_v = inverter.array.panel.v_min(epw.twopercent(usaf), \
+            t_derate[mount]) * derate20
 
     if inverter.vdcmax != 0:
         v_max = inverter.vdcmax
@@ -52,9 +52,9 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
     for s in range(smax+1):
         if (s*min_v) >= inverter.mppt_low:
             for p in range(string_max):
-                pRatio = p*s*psize*1.0/inverter_nominal
-                if pRatio < (ac_dc_ratio*(1+p_tol)) and \
-                        pRatio > (ac_dc_ratio*(1-p_tol)):
+                p_nom = p*s*psize*1.0/inverter_nominal
+                if p_nom < (ac_dc_ratio*(1+p_tol)) and \
+                        p_nom > (ac_dc_ratio*(1-p_tol)):
                     inverter.array.shape = [s]*p
                     t = copy.deepcopy(inverter)
                     t.min_v = s*min_v
@@ -108,7 +108,6 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
         #print inverter.ratio()
         if inverter.ratio() > ac_dc_ratio*(1. - p_tol):
             solutions.append(t)
-    return solutions
 
     #i_max = max(inverter.idcmax,inverter.p_dco*1.0/inverter.mppt_low)
     #string_max = int(round(i_max/inverter.array.panel.i_mpp))+1
@@ -152,10 +151,18 @@ def knapsack(item_set, maxweight):
     reconstruction.reverse()
     system_set = [subA for v, w, subA in reconstruction]
 
-    results = {'algorithm':'knapsack', \
+    results = {'address':item_set[0]['address'], \
+            'voltage':item_set[0]['voltage'], \
+            'phase':item_set[0]['phase'], \
+            'azimuth':item_set[0]['azimuth'], \
+            'tilt':item_set[0]['tilt'], \
+            'zipcode':item_set[0]['zipcode'], \
+            'system_name':item_set[0]['system_name'], \
+            'algorithm':'knapsack', \
             'notes':'most annual generation', \
             'system_weight':bestvalues[len(items)][maxweight], \
-            'system_set': system_set}
+            'array': system_set}
+
     return results
 
 def efficient(items, maxweight):
@@ -169,10 +176,18 @@ def efficient(items, maxweight):
             most_eff = [eff, weight, o['array'][0]]
     scale = maxweight/most_eff[1]
     system_result = [most_eff[2]]*scale
-    results = {'algorithm':'efficient', \
+    results = {'address':items[0]['address'], \
+            'voltage':items[0]['voltage'], \
+            'phase':items[0]['phase'], \
+            'azimuth':items[0]['azimuth'], \
+            'tilt':items[0]['tilt'], \
+            'zipcode':items[0]['zipcode'], \
+            'system_name':items[0]['system_name'], \
+            'algorithm':'efficient', \
+            'notes':'most annual generation', \
             'notes':'symetric design of most efficient combination', \
             'system_weight':most_eff[1]*scale, \
-            'system_set': system_result}
+            'array': system_result}
     return results
 
 def combinations(a, b):
@@ -202,7 +217,7 @@ def performance_model_set(clist):
     else:
         return [performance_model_plant(pJSON) for pJSON in clist]
 
-def design(reqs_str,ranking=[efficient, knapsack]):
+def design(reqs_str, ranking=[efficient, knapsack]):
     """parts selection algorithm. """
     reqs = json.loads(reqs_str)
     validC = []
@@ -223,14 +238,14 @@ def design(reqs_str,ranking=[efficient, knapsack]):
         optionSet.append(copy.deepcopy(reqs))
 
     performance_results = performance_model_set(optionSet)
-    print performance_results[0]
 
     suggested = []
     for algo in ranking:
+        print 'p results', performance_results
         proposed = algo(performance_results, reqs['desired size'])
-        reqs['array'] = proposed['system_set']
-        reqs['algorithm'] = proposed['algorithm']
-        suggested.append(copy.deepcopy(reqs))
+        #reqs['array'] = proposed['system_set']
+        #reqs['algorithm'] = proposed['algorithm']
+        suggested.append(proposed)
 
     return suggested
 
@@ -339,12 +354,11 @@ if __name__ == "__main__":
             testreqs = open(args['file']).read()
 
         for proposed in design(testreqs):
-            print proposed
             proposedPlant = pv.json_system(proposed)
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
             print proposed['algorithm']
-            expedite.string_notes(proposedPlant,1)
+            expedite.string_notes(proposedPlant, 1)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
