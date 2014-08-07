@@ -18,27 +18,27 @@ def str_format(inverter):
     DC = inverter.array.output(1000)
     ratio = DC/inverter.p_aco
     return '%sW : %s : ratio %s : %s - %s V' % (DC, inverter.array, \
-            round(ratio, 2), round(inverter.minV), round(inverter.maxV))
+            round(ratio, 2), round(inverter.min_v), round(inverter.max_v))
 
 def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         v_max=600, bipolar=True):
     """String sizing"""
     import geo
-    tDerate = {"Roof":30,
-            "Ground":25,
+    t_derate = {"Roof":30, \
+            "Ground":25, \
             "Pole":20}
 
     #csv is performance hit
     name, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
-    maxV = inverter.array.panel.v_max(epw.minimum(usaf))
+    max_v = inverter.array.panel.v_max(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
-    minV = inverter.array.panel.v_min(epw.twopercent(usaf), tDerate[mount]) * \
+    min_v = inverter.array.panel.v_min(epw.twopercent(usaf), t_derate[mount]) * \
             derate20
 
     if inverter.vdcmax != 0:
         v_max = inverter.vdcmax
-    smax = int(v_max/maxV)
+    smax = int(v_max/max_v)
     #range to search
     p_tol = .30
     inverter_nominal = inverter.p_aco
@@ -46,32 +46,32 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
     solutions = []
 
     i_max = max(inverter.idcmax, inverter.p_dco*1.0/inverter.mppt_low)
-    stringMax = int(round(i_max/inverter.array.panel.i_mpp))+1
+    string_max = int(round(i_max/inverter.array.panel.i_mpp))+1
 
     #Diophantine equation
     for s in range(smax+1):
-        if (s*minV) >= inverter.mppt_low:
-            for p in range(stringMax):
+        if (s*min_v) >= inverter.mppt_low:
+            for p in range(string_max):
                 pRatio = p*s*psize*1.0/inverter_nominal
                 if pRatio < (ac_dc_ratio*(1+p_tol)) and \
                         pRatio > (ac_dc_ratio*(1-p_tol)):
                     inverter.array.shape = [s]*p
                     t = copy.deepcopy(inverter)
-                    t.minV = s*minV
-                    t.maxV = s*maxV
+                    t.min_v = s*min_v
+                    t.max_v = s*max_v
                     solutions.append(t)
     return solutions
 
-def generate_options(inverterName, moduleName, zipcode, \
-        ac_dc_ratio=1.2, mount="Roof", station_class=1, v_max=600, bipolar=True):
+def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
+        mount="Roof", station_class=1, v_max=600, bipolar=True):
     import geo
     import inverters
     import modules
-    module = modules.Module(moduleName)
-    inverter = inverters.Inverter(inverterName)
+    module = modules.Module(module_name)
+    inverter = inverters.Inverter(inverter_name)
     """String sizing"""
-    tempAdder = {"Roof":30,
-            "Ground":25,
+    tempAdder = {"Roof":30,\
+            "Ground":25,\
             "Pole":20}
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
@@ -79,14 +79,14 @@ def generate_options(inverterName, moduleName, zipcode, \
     #csv is performance hit
     name, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
     epw_min = epw.minimum(usaf)
-    moduleMaxVoltage = module.v_max(epw_min)
+    module_max_voltage = module.v_max(epw_min)
     epw2 = epw.twopercent(usaf)
-    moduleMinVoltage = module.v_min(epw2, tempAdder[mount]) * derate20
+    module_min_voltage = module.v_min(epw2, tempAdder[mount]) * derate20
 
     if inverter.vdcmax != 0:
         v_max = inverter.vdcmax
-    maxlen = int(v_max//moduleMaxVoltage)
-    minlen = int(inverter.mppt_low/moduleMinVoltage) + 1
+    maxlen = int(v_max//module_max_voltage)
+    minlen = int(inverter.mppt_low/module_min_voltage) + 1
     if minlen > maxlen:
         return []
     inverter.array = modules.Array(module, \
@@ -97,29 +97,37 @@ def generate_options(inverterName, moduleName, zipcode, \
     p_tol = .30
     inverter_nominal = inverter.p_aco
     solutions = []
-    while inverter.array.output(1000) < inverter_nominal * (ac_dc_ratio + p_tol):
+    while inverter.array.output(1000) < inverter_nominal * \
+            (ac_dc_ratio + p_tol):
         inverter.array.inc()
         #print inverter.array
         #print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
-        t.maxV = t.array.v_max(epw_min)
-        t.minV = t.array.v_min(epw2, tempAdder[mount])
+        t.max_v = t.array.v_max(epw_min)
+        t.min_v = t.array.v_min(epw2, tempAdder[mount])
         #print inverter.ratio()
         if inverter.ratio() > ac_dc_ratio*(1. - p_tol):
             solutions.append(t)
     return solutions
 
     #i_max = max(inverter.idcmax,inverter.p_dco*1.0/inverter.mppt_low)
-    #stringMax = int(round(i_max/inverter.array.panel.i_mpp))+1
+    #string_max = int(round(i_max/inverter.array.panel.i_mpp))+1
 
     #Diophantine equation
     return solutions
 
-def knapsack(items, maxweight):
+def knapsack(item_set, maxweight):
     """knapsack problem weight is system DC size and value is annual output
     this could be expanded with different constraints for different rankings"""
     #http://codereview.stackexchange.com/questions/20569/
     #dynamic-programming-solution-to-knapsack-problem
+    items = []
+
+    for o in item_set:
+        #hack to expand for semetery
+        scale = maxweight // o['DCnominal']
+        items += [(o['yearone'], o['DCnominal'], o['array'][0])] * scale
+
     bestvalues = [[0] * (maxweight + 1)
                   for i in xrange(len(items) + 1)]
     for i, (value, weight, systemDict) in enumerate(items):
@@ -144,24 +152,26 @@ def knapsack(items, maxweight):
     reconstruction.reverse()
     system_set = [subA for v, w, subA in reconstruction]
 
-    results = {'algorithm':'knapsack',
-            'notes':'most annual generation',
-            'system_weight':bestvalues[len(items)][maxweight], 
+    results = {'algorithm':'knapsack', \
+            'notes':'most annual generation', \
+            'system_weight':bestvalues[len(items)][maxweight], \
             'system_set': system_set}
     return results
 
 def efficient(items, maxweight):
     """symetric design of the most efficeint inverter panel combo"""
     most_eff = [None, None, None]
-    for (value, weight, system_dict) in items:
+    for o in items:
+        value = o['yearone']
+        weight = o['DCnominal']
         eff = value/float(weight)
         if eff > most_eff[0]:
-            most_eff = [eff, weight, system_dict]
+            most_eff = [eff, weight, o['array'][0]]
     scale = maxweight/most_eff[1]
     system_result = [most_eff[2]]*scale
-    results = {'algorithm':'efficient',
-            'notes':'symetric design of most efficient combination',
-            'system_weight':most_eff[1]*scale,
+    results = {'algorithm':'efficient', \
+            'notes':'symetric design of most efficient combination', \
+            'system_weight':most_eff[1]*scale, \
             'system_set': system_result}
     return results
 
@@ -172,7 +182,7 @@ def combinations(a, b):
             s.append((i, j))
     return s
 
-def performanceModelPlant(jsonDef):
+def performance_model_plant(jsonDef):
     plant = pv.json_system(jsonDef)
     yearone = plant.model()
     PDC = sum([i.array.output(1000) for i in plant.shape])
@@ -181,7 +191,7 @@ def performanceModelPlant(jsonDef):
     plantDict['DCnominal'] = int(PDC)
     return plantDict
 
-def performanceModelSet(clist):
+def performance_model_set(clist):
     """wrapper for distributed performance modelling"""
     CSTAT = celery_worker_status()
     if not 'ERROR' in CSTAT:
@@ -190,39 +200,34 @@ def performanceModelSet(clist):
         #print CSTAT
         return group(pmodel.model_plant.s(i) for i in clist)().get()
     else:
-        return [performanceModelPlant(pJSON) for pJSON in clist]
+        return [performance_model_plant(pJSON) for pJSON in clist]
 
-def design(reqsStr,ranking=[efficient,knapsack]):
+def design(reqs_str,ranking=[efficient, knapsack]):
     """parts selection algorithm. """
-    reqs = json.loads(reqsStr)
+    reqs = json.loads(reqs_str)
     validC = []
     optionSet = []
     zc = reqs['zipcode']
 
-    for inverterModel, panelModel in combinations(reqs['inverter options'],\
+    for inverter_model, panel_model in combinations(reqs['inverter options'],\
             reqs['panel options']):
-        #system = inverters.Inverter(inverterModel,\
-        #        modules.PvArray(modules.Module(panelModel), [{'series':2}]))
-        configs = generate_options(inverterModel, panelModel, zc)
+        #system = inverters.Inverter(inverter_model,\
+        #        modules.PvArray(modules.Module(panel_model), [{'series':2}]))
+        configs = generate_options(inverter_model, panel_model, zc)
         for config in configs:
             validC.append(config)
-            print config, '\n',config.array, config.array.dump()['panel'], \
+            print config, '\n', config.array, config.array.dump()['panel'], \
                     config.array.output(1000), config.ratio()
 
             reqs['array'] = [config.dump()]
         optionSet.append(copy.deepcopy(reqs))
 
-    performanceResults = performanceModelSet(optionSet)
-
-    configSet = []
-    for o in performanceResults:
-        #hack to expand for semetery
-        scale = reqs['desired size'] // o['DCnominal']
-        configSet += [(o['yearone'], o['DCnominal'], o['array'][0])] * scale
+    performance_results = performance_model_set(optionSet)
+    print performance_results[0]
 
     suggested = []
     for algo in ranking:
-        proposed = algo(configSet, reqs['desired size'])
+        proposed = algo(performance_results, reqs['desired size'])
         reqs['array'] = proposed['system_set']
         reqs['algorithm'] = proposed['algorithm']
         suggested.append(copy.deepcopy(reqs))
@@ -334,6 +339,7 @@ if __name__ == "__main__":
             testreqs = open(args['file']).read()
 
         for proposed in design(testreqs):
+            print proposed
             proposedPlant = pv.json_system(proposed)
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
