@@ -99,7 +99,6 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     solutions = []
     while inverter.array.output(1000) < inverter_nominal * \
             (ac_dc_ratio + p_tol):
-        inverter.array.inc()
         #print inverter.array
         #print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
@@ -108,6 +107,7 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
         #print inverter.ratio()
         if inverter.ratio() > ac_dc_ratio*(1. - p_tol):
             solutions.append(t)
+        inverter.array.inc()
 
     #i_max = max(inverter.idcmax,inverter.p_dco*1.0/inverter.mppt_low)
     #string_max = int(round(i_max/inverter.array.panel.i_mpp))+1
