@@ -94,17 +94,14 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     inverter.array.minlength(minlen)
     inverter.array.maxlength(maxlen)
     #range to search
-    p_tol = .30
+    p_tol = .40
     inverter_nominal = inverter.p_aco
     solutions = []
     while inverter.array.output(1000) < inverter_nominal * \
             (ac_dc_ratio + p_tol):
-        #print inverter.array
-        #print inverter.array.output(1000), inverter.ratio()
         t = copy.deepcopy(inverter)
         t.max_v = t.array.v_max(epw_min)
         t.min_v = t.array.v_min(epw2, tempAdder[mount])
-        #print inverter.ratio()
         if inverter.ratio() > ac_dc_ratio*(1. - p_tol):
             solutions.append(t)
         inverter.array.inc()
@@ -121,7 +118,6 @@ def knapsack(item_set, maxweight):
     #http://codereview.stackexchange.com/questions/20569/
     #dynamic-programming-solution-to-knapsack-problem
     items = []
-
     for o in item_set:
         #hack to expand for semetery
         scale = maxweight // o['DCnominal']
@@ -160,24 +156,29 @@ def knapsack(item_set, maxweight):
             'system_name':item_set[0]['system_name'], \
             'algorithm':'knapsack', \
             'notes':'most annual generation', \
-            'system_weight':bestvalues[len(items)][maxweight], \
+            'yearone':bestvalues[len(items)][maxweight], \
+            'DCnominal':sum([dc_nom for y1_kwh, dc_nom, inv_conf in reconstruction]), \
             'array': system_set}
 
     return results
 
 def efficient(items, maxweight):
     """symetric design of the most efficeint inverter panel combo"""
-    most_eff = [None, None, None]
+    most_eff = {'eff':0}
     for o in items:
         value = o['yearone']
         weight = o['DCnominal']
         eff = value/float(weight)
-        if eff > most_eff[0]:
-            most_eff = [eff, weight, o['array'][0]]
-    scale = maxweight/most_eff[1]
-    system_result = [most_eff[2]]*scale
+        if eff > most_eff['eff']:
+            most_eff = {'eff':eff, \
+                    'weight': weight, \
+                    'value': value, \
+                    'sub_array':o['array'][0]}
+    scale = maxweight/most_eff['weight']
+    system_result = [most_eff['sub_array']]*scale
     results = {'address':items[0]['address'], \
             'voltage':items[0]['voltage'], \
+            'yearone':most_eff['value']*scale,
             'phase':items[0]['phase'], \
             'azimuth':items[0]['azimuth'], \
             'tilt':items[0]['tilt'], \
@@ -186,7 +187,7 @@ def efficient(items, maxweight):
             'algorithm':'efficient', \
             'notes':'most annual generation', \
             'notes':'symetric design of most efficient combination', \
-            'system_weight':most_eff[1]*scale, \
+            'DCnominal':most_eff['weight']*scale, \
             'array': system_result}
     return results
 
@@ -217,9 +218,8 @@ def performance_model_set(clist):
     else:
         return [performance_model_plant(pJSON) for pJSON in clist]
 
-def design(reqs_str, ranking=[efficient, knapsack]):
+def design(reqs, ranking=[efficient, knapsack]):
     """parts selection algorithm. """
-    reqs = json.loads(reqs_str)
     validC = []
     optionSet = []
     zc = reqs['zipcode']
@@ -235,16 +235,11 @@ def design(reqs_str, ranking=[efficient, knapsack]):
                     config.array.output(1000), config.ratio()
 
             reqs['array'] = [config.dump()]
-        optionSet.append(copy.deepcopy(reqs))
-
+            optionSet.append(copy.deepcopy(reqs))
     performance_results = performance_model_set(optionSet)
-
     suggested = []
     for algo in ranking:
-        print 'p results', performance_results
         proposed = algo(performance_results, reqs['desired size'])
-        #reqs['array'] = proposed['system_set']
-        #reqs['algorithm'] = proposed['algorithm']
         suggested.append(proposed)
 
     return suggested
@@ -353,12 +348,14 @@ if __name__ == "__main__":
         if args['file']:
             testreqs = open(args['file']).read()
 
-        for proposed in design(testreqs):
+        for proposed in design(json.loads(testreqs)):
             proposedPlant = pv.json_system(proposed)
+            print proposed
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
             print proposed['algorithm']
-            expedite.string_notes(proposedPlant, 1)
+            if proposed['array']:
+                expedite.string_notes(proposedPlant, 1)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
