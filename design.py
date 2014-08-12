@@ -94,7 +94,7 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     inverter.array.minlength(minlen)
     inverter.array.maxlength(maxlen)
     #range to search
-    p_tol = .40
+    p_tol = .30
     inverter_nominal = inverter.p_aco
     solutions = []
     while inverter.array.output(1000) < inverter_nominal * \
@@ -226,14 +226,10 @@ def design(reqs, ranking=[efficient, knapsack]):
 
     for inverter_model, panel_model in combinations(reqs['inverter options'],\
             reqs['panel options']):
-        #system = inverters.Inverter(inverter_model,\
-        #        modules.PvArray(modules.Module(panel_model), [{'series':2}]))
         configs = generate_options(inverter_model, panel_model, zc)
         for config in configs:
             validC.append(config)
-            print config, '\n', config.array, config.array.dump()['panel'], \
-                    config.array.output(1000), config.ratio()
-
+            print config, round(config.array.output(1000),1), round(config.ratio(),2)
             reqs['array'] = [config.dump()]
             optionSet.append(copy.deepcopy(reqs))
     performance_results = performance_model_set(optionSet)
@@ -241,7 +237,6 @@ def design(reqs, ranking=[efficient, knapsack]):
     for algo in ranking:
         proposed = algo(performance_results, reqs['desired size'])
         suggested.append(proposed)
-
     return suggested
 
 def celery_worker_status():
@@ -350,7 +345,6 @@ if __name__ == "__main__":
 
         for proposed in design(json.loads(testreqs)):
             proposedPlant = pv.json_system(proposed)
-            print proposed
             print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
                 separators=(',', ': '))
             print proposed['algorithm']
