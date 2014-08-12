@@ -506,3 +506,6 @@ class System(object):
         d['zipcode'] = self.zipcode
         d['system_name'] = self.system_name
         return d
+
+    def __repr__(self):
+        return '\n'.join([i for i in self.shape])

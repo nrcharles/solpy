@@ -41,7 +41,7 @@ class TestModeling(unittest.TestCase):
             ]}"""
         plant = pv.json_system(json.loads(p1))
         rs = plant.model()
-        self.assertAlmostEquals(rs.annual_output,7697.56)
+        self.assertAlmostEquals(rs.annual_output,7697.53)
 
     def test_annual_output2(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
@@ -123,11 +123,11 @@ class TestDesign1(unittest.TestCase):
         i_name = "SMA America: SB7000US-11 277V"
         sols = design.generate_options(i_name,m,zc,mount="Roof")
         str_sols = [design.str_format(i) for i in sols]
-        ans_1 = ['6513.0W : channel 0: 13S x 2P : ratio 0.93 : 323.0 - 552.0 V',
-                '7014.0W : channel 0: 14S x 2P : ratio 1.0 : 348.0 - 595.0 V',
-                '8266.5W : channel 0: 11S x 3P : ratio 1.18 : 274.0 - 467.0 V',
-                '9018.0W : channel 0: 12S x 3P : ratio 1.29 : 298.0 - 510.0 V', 
-                '9769.5W : channel 0: 13S x 3P : ratio 1.4 : 323.0 - 552.0 V']
+        ans_1 = ['6513.0W : channel 0: 13S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 0.93 : 323.0 - 552.0 V',
+                '7014.0W : channel 0: 14S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.0 : 348.0 - 595.0 V',
+                '8266.5W : channel 0: 11S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.18 : 274.0 - 467.0 V',
+                '9018.0W : channel 0: 12S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.29 : 298.0 - 510.0 V',
+                '9769.5W : channel 0: 13S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.4 : 323.0 - 552.0 V']
         self.assertListEqual(ans_1,str_sols)
 
 class TestVirr(unittest.TestCase):

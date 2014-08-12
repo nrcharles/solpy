@@ -102,7 +102,7 @@ class Inverter(object):
         shape = self.array.dump()
         temp['panel'] = shape['panel']
         del shape['panel']
-        temp['inverter'] = str(self)
+        temp['inverter'] = "%s:%s" % (self.make, self.model)
         if len(shape) > 1:
             temp['shape'] = shape
         else:
@@ -110,10 +110,7 @@ class Inverter(object):
         return temp
 
     def __repr__(self):
-        return json.dumps(self.dump())
-
-    def __str__(self):
-        return "%s:%s" % (self.make, self.model)
+        return "%s:%s [%s]" % (self.make, self.model, self.array)
 
 def manufacturers():
     """get list of manufacturers"""
@@ -143,9 +140,14 @@ if __name__ == "__main__":
     PANEL = Module('Mage Solar : Powertec Plus 245-6 PL *')
     INVERTER = Inverter("Enphase Energy: M215-60-SIE-S2x 240V",\
             Array(PANEL, [{'series':1}]))
+    print INVERTER.array
+    print ""
     print INVERTER.dump()
     #si = sb6000us(s)
 
     print INVERTER.p_ac(950)
     print INVERTER.i_ac(960, 240)
 
+    INVERTER = Inverter("SMA America: SB7000US-11 277V", Array(PANEL, [{'series':11,'parallel':3}]))
+    print INVERTER
+    print INVERTER.array

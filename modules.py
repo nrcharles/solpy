@@ -93,11 +93,11 @@ class Module(object):
         #Ground mount = 25
         #Pole mount = 20
         return self.v_mpp + (t_adder+ashrae2p-STC) * self.tk_v_mp
-    def __str__(self):
+
+    def __repr__(self):
         return "%s : %s" % (self.make, self.model)
 
 
-#todo: this needs rewritten
 class PvArray(object):
     """DEPRECATED structure to aggregate panels into an array"""
     def __init__(self, pname, shape):
@@ -193,7 +193,7 @@ class Mppt(object):
         return {"series":self.series, "parallel": self.parallel}
 
     def __repr__(self):
-        return '%sS x %sP' % (self.series, self.parallel)
+        return '%sS x %sP %s' % (self.series, self.parallel, self.module)
 
 class Array(object):
     """rewrite of pvArray"""
@@ -276,7 +276,7 @@ class Array(object):
                 'panel':str(self.channels[0].module)}
 
     def __repr__(self):
-        return '\n'.join(['channel %s: %s' % (i, c) for i, c in \
+        return ', '.join(['channel %s: %s' % (i, c) for i, c in \
                 enumerate(self.channels)])
 
 
@@ -322,5 +322,6 @@ if __name__ == "__main__":
     TEMP = Array(PANEL, [{'series':11}])
     print TEMP.dump()
     TEMP = Array(PANEL, [{'series':11, 'parallel':2}])
+    TEMP = Array(PANEL, [{'series':11, 'parallel':1},{'series':11, 'parallel':1}])
     print TEMP.dump()
     print TEMP
