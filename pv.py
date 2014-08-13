@@ -70,9 +70,9 @@ class ResultSet(object):
         sub_plot.set_ylabel('Hour of Day')
         sub_plot.set_xlabel('Day of Year')
         heatmap = sub_plot.imshow(data, aspect='auto', cmap=plt.cm.OrRd)
-        txt = "Year 1 _output: %s KWh" % round(sum(total)/1000, 1)
+        txt = "Year 1 output: %s KWh" % round(sum(total)/1000, 1)
         cbar = fig.colorbar(heatmap)
-        cbar.set_label('_output (W)')
+        cbar.set_label('output (W)')
         sub_plot.annotate(txt, xy=(10, 3))
         plt.tight_layout()
         return fig
