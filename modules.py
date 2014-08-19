@@ -193,7 +193,10 @@ class Mppt(object):
         return {"series":self.series, "parallel": self.parallel}
 
     def __repr__(self):
-        return '%sS x %sP %s' % (self.series, self.parallel, self.module)
+        if self.parallel > 1:
+            return '%sS x %sP %s' % (self.series, self.parallel, self.module)
+        else:
+            return '%sS %s' % (self.series, self.module)
 
 class Array(object):
     """rewrite of pvArray"""

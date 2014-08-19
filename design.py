@@ -11,7 +11,14 @@ import json
 def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
         station_class=1, v_max=600, bipolar=True):
     """deprecated legacy function"""
-    return [str_format(i) for i in fill(**locals())]
+    tmp = inverter.dump()
+    inverter_name = tmp['inverter']
+    module_name= tmp['panel']
+    return [str_format(i) for i in generate_options(inverter_name, \
+            module_name, zipcode, ac_dc_ratio, \
+            mount, station_class, v_max, bipolar)]
+    #return [str_format(i) for i in fill(inverter, zipcode, ac_dc_ratio, \
+    #        mount, station_class, v_max, bipolar)]
 
 def str_format(inverter):
     """format as str: '9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
@@ -40,7 +47,11 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         v_max = inverter.vdcmax
     smax = int(v_max/max_v)
     #range to search
-    p_tol = .30
+    lower_tol = .30
+    upper_tol = .30
+    p_nom_lower = ac_dc_ratio*(1+lower_tol)
+    p_nom_upper = ac_dc_ratio*(1-upper_tol)
+
     inverter_nominal = inverter.p_aco
     psize = inverter.array.panel.p_max
     solutions = []
@@ -53,8 +64,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         if (s*min_v) >= inverter.mppt_low:
             for p in range(string_max):
                 p_nom = p*s*psize*1.0/inverter_nominal
-                if p_nom < (ac_dc_ratio*(1+p_tol)) and \
-                        p_nom > (ac_dc_ratio*(1-p_tol)):
+                if p_nom < p_nom_upper and p_nom > lower_tol:
                     inverter.array.shape = [s]*p
                     t = copy.deepcopy(inverter)
                     t.min_v = s*min_v
@@ -94,15 +104,17 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     inverter.array.minlength(minlen)
     inverter.array.maxlength(maxlen)
     #range to search
-    p_tol = .30
-    inverter_nominal = inverter.p_aco
+    lower_tol = .25
+    upper_tol = .30
+    p_nom_lower = ac_dc_ratio*(1+lower_tol)
+    p_nom_upper = ac_dc_ratio*(1-upper_tol)
+    #inverter_nominal = inverter.p_aco
     solutions = []
-    while inverter.array.output(1000) < inverter_nominal * \
-            (ac_dc_ratio + p_tol):
+    while inverter.ratio() < p_nom_lower:
         t = copy.deepcopy(inverter)
         t.max_v = t.array.v_max(epw_min)
         t.min_v = t.array.v_min(epw2, tempAdder[mount])
-        if inverter.ratio() > ac_dc_ratio*(1. - p_tol):
+        if inverter.ratio() >= p_nom_upper:
             solutions.append(t)
         inverter.array.inc()
 

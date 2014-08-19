@@ -105,7 +105,7 @@ class TestDesign(unittest.TestCase):
         m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
         ms = modules.Module(m)
         zc = '27713'
-        system = inverters.Inverter("SMA America: SB7000US-11 277V",modules.PvArray(ms,[{'series':14}]))
+        system = inverters.Inverter("SMA America: SB7000US-11 277V",modules.Array(ms,[{'series':14}]))
         sols = design.tools_fill(system,zc,mount="Roof")
         ans = ['8266.5W : 11S x 3P : ratio 1.18 : 265.0 - 467.0 V',
                 '6012.0W : 12S x 2P : ratio 0.86 : 290.0 - 510.0 V',
@@ -114,7 +114,15 @@ class TestDesign(unittest.TestCase):
                 '9769.5W : 13S x 3P : ratio 1.4 : 314.0 - 552.0 V',
                 '7014.0W : 14S x 2P : ratio 1.0 : 338.0 - 595.0 V',
                 '10521.0W : 14S x 3P : ratio 1.5 : 338.0 - 595.0 V']
-        self.assertListEqual(ans,sols)
+        ans1 = ['6513.0W : channel 0: 13S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 0.93 : 323.0 - 552.0 V',
+        '7014.0W : channel 0: 14S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.0 : 348.0 - 595.0 V',
+        '8266.5W : channel 0: 11S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.18 : 274.0 - 467.0 V',
+        '9018.0W : channel 0: 12S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.29 : 298.0 - 510.0 V',
+        '9769.5W : channel 0: 13S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.4 : 323.0 - 552.0 V',
+        '10521.0W : channel 0: 14S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.5 : 348.0 - 595.0 V']
+        print 'ans', '\n'.join(ans)
+        print 'sols', '\n'.join(sols)
+        self.assertListEqual(ans1,sols)
 
 class TestDesign1(unittest.TestCase):
     def test_generate(self):
@@ -127,7 +135,8 @@ class TestDesign1(unittest.TestCase):
                 '7014.0W : channel 0: 14S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.0 : 348.0 - 595.0 V',
                 '8266.5W : channel 0: 11S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.18 : 274.0 - 467.0 V',
                 '9018.0W : channel 0: 12S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.29 : 298.0 - 510.0 V',
-                '9769.5W : channel 0: 13S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.4 : 323.0 - 552.0 V']
+                '9769.5W : channel 0: 13S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.4 : 323.0 - 552.0 V',
+                '10521.0W : channel 0: 14S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.5 : 348.0 - 595.0 V']
         self.assertListEqual(ans_1,str_sols)
 
 class TestVirr(unittest.TestCase):
