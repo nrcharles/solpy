@@ -7,6 +7,9 @@ import copy
 import epw
 import pv
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
         station_class=1, v_max=600, bipolar=True):
@@ -224,9 +227,9 @@ def performance_model_set(clist):
     CSTAT = celery_worker_status()
     if not 'ERROR' in CSTAT:
         from celery import group
-        import pmodel
-        #print CSTAT
-        return group(pmodel.model_plant.s(i) for i in clist)().get()
+        import solpy.pmodel
+        logger.debug(CSTAT)
+        return group(solpy.pmodel.model_plant.s(i) for i in clist)().get()
     else:
         return [performance_model_plant(pJSON) for pJSON in clist]
 
@@ -241,7 +244,9 @@ def design(reqs, ranking=[efficient, knapsack]):
         configs = generate_options(inverter_model, panel_model, zc)
         for config in configs:
             validC.append(config)
-            print config, round(config.array.output(1000),1), round(config.ratio(),2)
+            logger.info('%s %s %s' % (config, \
+                    round(config.array.output(1000),1), \
+                    round(config.ratio(),2)))
             reqs['array'] = [config.dump()]
             optionSet.append(copy.deepcopy(reqs))
     performance_results = performance_model_set(optionSet)
@@ -270,6 +275,7 @@ def celery_worker_status():
     return d
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     import inverters
     import modules
     import expedite
@@ -357,9 +363,9 @@ if __name__ == "__main__":
 
         for proposed in design(json.loads(testreqs)):
             proposedPlant = pv.json_system(proposed)
-            print json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
-                separators=(',', ': '))
-            print proposed['algorithm']
+            logger.info(json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
+                separators=(',', ': ')))
+            logger.info(proposed['algorithm'])
             if proposed['array']:
                 expedite.string_notes(proposedPlant, 1)
 

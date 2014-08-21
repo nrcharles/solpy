@@ -14,10 +14,16 @@ import vd
 import modules
 from math import degrees
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
 try:
     import geomag
 except:
-    print "Warning: geomag not loaded.  Magnetic declination unavailible"
+    logger.warning("geomag not loaded.  Magnetic declination unavailible")
 
 def string_notes(system, run=0.0, station_class = 3):
     """page 5"""
@@ -99,12 +105,12 @@ def string_notes(system, run=0.0, station_class = 3):
                 notes.append("DC Operating Voltage: %s V" % round(i.array.v_dc(),1))
                 notes.append("System Max DC Voltage: %s V" % round(i.array.v_max(mintemp),1))
                 if i.array.v_max(mintemp) > 600:
-                    print "WARNING: Array exceeds 600V DC"
+                    logger.warning("WARNING: Array exceeds 600V DC")
                 notes.append("Pnom Ratio: %s" % round((i.array.p_max/i.p_aco),2))
                 if (i.array.v_dc(twopercentTemp) *.9) < i.mppt_low:
-                    print "WARNING: Array IV Knee drops out of Inverter range"
+                    logger.warning("WARNING: Array IV Knee drops out of Inverter range")
                 if (i.array.p_max/i.p_aco) < 1.1:
-                    print "WARNING: Array potentially undersized"
+                    logger.warning("WARNING: Array potentially undersized")
             notes.append("")
             di.pop(i.model)
         if i.array.v_max(mintemp) > aMax:
@@ -127,7 +133,10 @@ def string_notes(system, run=0.0, station_class = 3):
                 round(geomag.declination(dlat=system.place[0],dlon=system.place[1])))
     notes.append("Minimum Row space ratio: %s" % \
             round(system.min_row_space(1.0),2))
-    print "\n".join(notes)
+    if __name__ == '__main__':
+        print "\n".join(notes)
+    else:
+        logger.info("Plant Details:\n" + "\n".join(notes))
 
     print ""
     print "Minimum Bundle"
