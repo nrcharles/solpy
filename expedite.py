@@ -5,6 +5,8 @@
 # This program is free software. See terms in LICENSE file.
 
 """Calculate expedited permit process info"""
+import logging
+logger = logging.getLogger(__name__)
 
 import epw
 import geo
@@ -14,9 +16,6 @@ import vd
 import modules
 from math import degrees
 import sys
-import logging
-
-logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
@@ -157,45 +156,47 @@ def micro_calcs(system,d,Vnominal=240):
     print vd.vd(sum([i.p_aco for i in system.shape])/Vnominal,d)
     pass
 
-def write_notes(system, Vnominal=240.0):
+def write_notes(system, filename='output', Vnominal=240.0):
     station_class = 1
     name, usaf = geo.closest_usaf( geo.zip_coordinates(system.zipcode), station_class)
     mintemp = epw.minimum(usaf)
     twopercentTemp = epw.twopercent(usaf)
     fields = []
     for i in set(system.shape):
+        moduleN = i.array.dump()['panel']
+        m = modules.Module(moduleN) 
         print "PV Module Ratings @ STC"
-        print "Module Make:", i.array.make
-        fields.append(('Text1ModuleMake',i.array.make))
-        print "Module Model:", i.array.model
-        fields.append(('Text1ModuleModel',i.array.model))
-        print "Max Power-Point Current (Imp):",i.array.i_mpp
-        fields.append(('MAX POWERPOINT CURRENT IMP',i.array.i_mpp))
-        print "Max Power-Point Voltage (Vmp):",i.array.v_mpp
-        fields.append(('MAX POWERPOINT VOLTAGE VMP',i.array.v_mpp))
-        print "Open-Circuit Voltage (v_oc):",i.array.v_oc
-        fields.append(('OPENCIRCUIT VOLTAGE VOC',i.array.v_oc))
-        print "Short-Circuit Current (i_sc):",i.array.i_sc
-        fields.append(('SHORTCIRCUIT CURRENT ISC',i.array.i_sc))
+        print "Module Make:", m.make
+        fields.append(('Text1ModuleMake',m.make))
+        print "Module Model:", m.model
+        fields.append(('Text1ModuleModel',m.model))
+        print "Max Power-Point Current (Imp):",m.i_mpp
+        fields.append(('MAX POWERPOINT CURRENT IMP',m.i_mpp))
+        print "Max Power-Point Voltage (Vmp):",m.v_mpp
+        fields.append(('MAX POWERPOINT VOLTAGE VMP',m.v_mpp))
+        print "Open-Circuit Voltage (v_oc):",m.v_oc
+        fields.append(('OPENCIRCUIT VOLTAGE VOC',m.v_oc))
+        print "Short-Circuit Current (i_sc):",m.i_sc
+        fields.append(('SHORTCIRCUIT CURRENT ISC',m.i_sc))
         fields.append(('MAX SERIES FUSE OCPD','15'))
-        print "Maximum Power (p_max):",i.array.p_max
-        fields.append(('MAXIMUM POWER PMAX',i.array.p_max))
-        print "Module Rated Max Voltage:",i.array.Vrated
-        fields.append(('MAX VOLTAGE TYP 600VDC',i.array.Vrated))
-        fields.append(('VOC TEMP COEFF mVoC or oC',round(i.array.tk_v_oc,2)))
+        print "Maximum Power (p_max):",m.p_max
+        fields.append(('MAXIMUM POWER PMAX',m.p_max))
+        print "Module Rated Max Voltage:",m.Vrated
+        fields.append(('MAX VOLTAGE TYP 600VDC',m.Vrated))
+        fields.append(('VOC TEMP COEFF mVoC or oC',round(m.tk_v_oc,2)))
         fields.append(('VOC TEMP COEFF mVoC','On'))
         print "Inverter Make:",i.make
         fields.append(('INVERTER MAKE',i.make))
         print "Inverter Model:",i.model
         fields.append(('INVERTER MODEL',i.model))
         print "Max Power", i.p_aco
-        fields.append(('MAX POWER  40oC',i.model))
+        fields.append(('MAX POWER  40oC',i.p_aco))
         fields.append(('NOMINAL AC VOLTAGE',240))
         print "Max AC Current: %s" % round(i.p_aco/Vnominal,2)
         fields.append(('MAX AC CURRENT', round(i.p_aco/Vnominal,2)))
-        fields.append(('MAX DC VOLT RATING',i.model))
-        print "Max AC OCPD Rating: %s" % ee.ocpSize(i.p_aco/Vnominal*1.25)
-        print "Max System Voltage:",round(i.array.v_max(mintemp),1)
+        fields.append(('MAX DC VOLT RATING',i.mppt_hi))
+        print "Max AC OCPD Rating: %s" % ee.ocp_size(i.p_aco/Vnominal*1.25)
+        print "Max System Voltage:",round(m.v_max(mintemp),1)
     print "AC Output Current: %s" % \
             round(sum([i.p_aco for i in system.shape])/Vnominal,2)
     fields.append(('AC OUTPUT CURRENT', \
@@ -212,7 +213,7 @@ def write_notes(system, Vnominal=240.0):
     fdf_file.close()
     import shlex
     from subprocess import call
-    cmd = shlex.split("pdftk Example2-Micro-Inverter.pdf fill_form data.fdf output output.pdf flatten")
+    cmd = shlex.split("pdftk Example2-Micro-Inverter.pdf fill_form data.fdf %s output.pdf flatten" % filename)
     rc = call(cmd)
 
 if __name__ == "__main__":
