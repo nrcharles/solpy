@@ -1,10 +1,9 @@
-import modules
 import unittest
 import json
-import pv
-import tools
-import design
-import inverters
+from solpy import pv
+from solpy import modules
+from solpy import design
+from solpy import inverters
 
 
 #modules.py
@@ -12,11 +11,11 @@ class TestModules(unittest.TestCase):
     def test_module(self):
         model = modules.model_search('Powertec 250 PL')[0]
         p = modules.Module(model)
-        self.assertAlmostEquals(p.v_max(-10),42.3129)
-        self.assertAlmostEquals(p.v_dc(),31.28)
-        self.assertAlmostEquals(p.i_dc(),8.01)
-        self.assertAlmostEquals(p.v_min(40),24.931724)
-        self.assertAlmostEquals(p.output(900),225.49752)
+        self.assertAlmostEquals(p.v_max(-10), 42.3129)
+        self.assertAlmostEquals(p.v_dc(), 31.28)
+        self.assertAlmostEquals(p.i_dc(), 8.01)
+        self.assertAlmostEquals(p.v_min(40), 24.931724)
+        self.assertAlmostEquals(p.output(900), 225.49752)
 
 #inverters.py
 class TestInverters(unittest.TestCase):
@@ -41,7 +40,7 @@ class TestModeling(unittest.TestCase):
             ]}"""
         plant = pv.json_system(json.loads(p1))
         rs = plant.model()
-        self.assertAlmostEquals(rs.annual_output,7697.53)
+        self.assertAlmostEquals(rs.annual_output, 7697.56)
 
     def test_annual_output2(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
@@ -73,8 +72,8 @@ class TestModeling(unittest.TestCase):
         plant2 = pv.json_system(js2)
         js3 = json.loads(json.dumps(plant2.dump()))
         rs2 = plant2.model()
-        self.assertDictEqual(js2,js3)
-        self.assertAlmostEquals(rs1.annual_output,rs2.annual_output)
+        self.assertDictEqual(js2, js3)
+        self.assertAlmostEquals(rs1.annual_output, rs2.annual_output)
 
     def test_hourlyShading(self):
         p1 = """{"system_name":"Another Happy Customer",
@@ -96,7 +95,7 @@ class TestModeling(unittest.TestCase):
         js1 = json.loads(p1)
         plant1 = pv.json_system(js1)
         rs1 = plant1.model()
-        self.assertAlmostEquals(rs1.annual_output,8600.66)
+        self.assertAlmostEquals(rs1.annual_output, 8600.66)
 
 #design.py
 #tools.py
@@ -105,14 +104,15 @@ class TestDesign(unittest.TestCase):
         m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
         ms = modules.Module(m)
         zc = '27713'
-        system = inverters.Inverter("SMA America: SB7000US-11 277V",modules.Array(ms,[{'series':14}]))
-        sols = design.tools_fill(system,zc,mount="Roof")
-        ans = ['8266.5W : 11S x 3P : ratio 1.18 : 265.0 - 467.0 V',
-                '6012.0W : 12S x 2P : ratio 0.86 : 290.0 - 510.0 V',
-                '9018.0W : 12S x 3P : ratio 1.29 : 290.0 - 510.0 V',
-                '6513.0W : 13S x 2P : ratio 0.93 : 314.0 - 552.0 V',
-                '9769.5W : 13S x 3P : ratio 1.4 : 314.0 - 552.0 V',
-                '7014.0W : 14S x 2P : ratio 1.0 : 338.0 - 595.0 V',
+        system = inverters.Inverter("SMA America: SB7000US-11 277V", \
+                modules.Array(ms, [{'series':14}]))
+        sols = design.tools_fill(system, zc, mount="Roof")
+        ans = ['8266.5W : 11S x 3P : ratio 1.18 : 265.0 - 467.0 V', \
+                '6012.0W : 12S x 2P : ratio 0.86 : 290.0 - 510.0 V', \
+                '9018.0W : 12S x 3P : ratio 1.29 : 290.0 - 510.0 V', \
+                '6513.0W : 13S x 2P : ratio 0.93 : 314.0 - 552.0 V', \
+                '9769.5W : 13S x 3P : ratio 1.4 : 314.0 - 552.0 V', \
+                '7014.0W : 14S x 2P : ratio 1.0 : 338.0 - 595.0 V', \
                 '10521.0W : 14S x 3P : ratio 1.5 : 338.0 - 595.0 V']
         ans1 = ['6513.0W : channel 0: 13S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 0.93 : 323.0 - 552.0 V',
         '7014.0W : channel 0: 14S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.0 : 348.0 - 595.0 V',
@@ -120,16 +120,16 @@ class TestDesign(unittest.TestCase):
         '9018.0W : channel 0: 12S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.29 : 298.0 - 510.0 V',
         '9769.5W : channel 0: 13S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.4 : 323.0 - 552.0 V',
         '10521.0W : channel 0: 14S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.5 : 348.0 - 595.0 V']
-        print 'ans', '\n'.join(ans)
-        print 'sols', '\n'.join(sols)
-        self.assertListEqual(ans1,sols)
+        #print 'ans', '\n'.join(ans)
+        #print 'sols', '\n'.join(sols)
+        self.assertListEqual(ans1, sols)
 
 class TestDesign1(unittest.TestCase):
     def test_generate(self):
         m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
         zc = '27713'
         i_name = "SMA America: SB7000US-11 277V"
-        sols = design.generate_options(i_name,m,zc,mount="Roof")
+        sols = design.generate_options(i_name, m, zc, mount="Roof")
         str_sols = [design.str_format(i) for i in sols]
         ans_1 = ['6513.0W : channel 0: 13S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 0.93 : 323.0 - 552.0 V',
                 '7014.0W : channel 0: 14S x 2P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.0 : 348.0 - 595.0 V',
@@ -137,7 +137,7 @@ class TestDesign1(unittest.TestCase):
                 '9018.0W : channel 0: 12S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.29 : 298.0 - 510.0 V',
                 '9769.5W : channel 0: 13S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.4 : 323.0 - 552.0 V',
                 '10521.0W : channel 0: 14S x 3P Mage Solar : USA Powertec Plus 250-6 MNCS : ratio 1.5 : 348.0 - 595.0 V']
-        self.assertListEqual(ans_1,str_sols)
+        self.assertListEqual(ans_1, str_sols)
 
 class TestVirr(unittest.TestCase):
     def test_virr1(self):
@@ -156,12 +156,12 @@ class TestVirr(unittest.TestCase):
             }
             ]}"""
         plant = pv.json_system(json.loads(p1))
-        ts =datetime.datetime(2000,9,22,19)
+        ts = datetime.datetime(2000, 9, 22, 19)
         weatherData = {}
         weatherData['temperature'] = 25
         weatherData['windSpeed'] = 0
-        virrRec = plant.virr(2000,ts, weatherData)
-        self.assertAlmostEquals(virrRec['girr'],437.0)
+        virrRec = plant.virr(2000, ts, weatherData)
+        self.assertAlmostEquals(virrRec['girr'], 437.0)
 
 #todo: modules that still need unit tests
 #ee.py
