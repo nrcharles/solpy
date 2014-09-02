@@ -7,18 +7,18 @@ Photovoltaic System Performance Monitoring
 
 """
 
-import tmy3
-import geo
+from solpy import tmy3
+from solpy import geo
+from solpy import inverters
+from solpy import modules
+from solpy import irradiation
+from solpy import forecast
+from solpy import noaa
+from solpy import pathfinder
 import numpy as np
-import inverters
-import modules
-import irradiation
+import datetime
 import json
 import math
-import datetime
-import forecast
-import noaa
-import pathfinder
 from collections import Counter
 from geopy import geocoders
 
@@ -135,7 +135,10 @@ def json_system(json_description):
             block.derate = i["derate"]
         json_shape += [block] * scale
     plant = System(json_shape)
-    plant.set_zipcode(json_description["zipcode"])
+    if 'station_class' in json_description:
+        plant.set_zipcode(json_description["zipcode"], json_description['station_class'])
+    else:
+        plant.set_zipcode(json_description["zipcode"])
     if "address" in json_description:
         plant.address = json_description["address"]
     try:
@@ -191,12 +194,12 @@ class System(object):
         self.system_name = ""
         self.clip = 0
 
-    def set_zipcode(self, zipcode):
+    def set_zipcode(self, zipcode, station_class = 3):
         """update zipcode"""
         self.zipcode = zipcode
         self.place = geo.zip_coordinates(self.zipcode)
         self.tz = geo.zip_tz(self.zipcode)
-        self.name, self.usaf = geo.closest_usaf(self.place)
+        self.name, self.usaf = geo.closest_usaf(self.place, station_class)
 
     def model(self, model_name='p9', single_thread=False):
         """model pv system performance"""
@@ -366,8 +369,11 @@ class System(object):
             record = irradiation.blave(timestamp, self.place, self.tilt,
                     self.azimuth)
 
-        irradiance = irradiation.irradiation(record, self.place, self.horizon,\
+        irradiance = irradiation.irradiation(record, self.place, None,\
                 t=self.tilt, array_azimuth=self.azimuth, model='p9')
+
+        if hasattr(self, 'hourly_shade'):
+            irradiance = irradiance * self.hourly_shade.shade(timestamp)
 
         if model == 'STC':
             return self.p_ac(irradiance)
