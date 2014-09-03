@@ -18,7 +18,7 @@ Features
 
 Files
 -----
--design.py - parametric design library
+-design.py - parametric design library  
 -enphase.py - Enphase API wrapper  
 -epw.py - EPW weather data functions
 -expedite.py - calculate information needed for the expedited permit process  
