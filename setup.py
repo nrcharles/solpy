@@ -20,7 +20,7 @@ setup(
     keywords = "solar pv",
     url = "https://github.com/nrcharles/solpy",
     packages=find_packages(),
-    long_description=read('README'),
+    long_description=read('README.md'),
     install_requires = ['geopy','numpy','matplotlib','scipy','pyephem'],
     package_data={'': ['*.json','*.csv','pvcli']},
     classifiers=[
