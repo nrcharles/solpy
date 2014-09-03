@@ -26,7 +26,7 @@ Files
 -forecast.py - forecast.io API wrapper  
 -noaa.py - NOAA weather data API wrapper  
 -pv.py - system performance prediction  
--pvcli - cli for pv modeling using historic weather data--
+-pvcli - cli for pv modeling using historic weather data  
 -tmy3.py - read tmy3 data  
 -vd.py - voltage drop  
 
