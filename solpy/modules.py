@@ -97,43 +97,6 @@ class Module(object):
     def __repr__(self):
         return "%s : %s" % (self.make, self.model)
 
-
-class PvArray(object):
-    """DEPRECATED structure to aggregate panels into an array"""
-    def __init__(self, pname, shape):
-        self.shape = []
-        for string in shape:
-            if "parallel" in string:
-                self.shape += [string["series"]]*string["parallel"]
-            else:
-                self.shape.append(string["series"])
-        self.panel = pname
-        self.p_max = pname.p_max*sum(self.shape)
-
-    def v_dc(self, t_cell=25):
-        """Array Voltage at tempature"""
-        return self.panel.v_dc(t_cell) * max(self.shape)
-    def v_max(self, ashrae_min):
-        """Maximum Array Voltage"""
-        return self.panel.v_max(ashrae_min) * max(self.shape)
-    def v_min(self, ashrae2p, t_adder=30):
-        """Minimum Array voltage under load"""
-        return  self.panel.v_min(ashrae2p, t_adder)* min(self.shape)
-    def output(self, insolation, t_ambient=25):
-        """Array output for insolation"""
-        return self.panel.output(insolation, t_ambient)*sum(self.shape)
-    def dump(self):
-        """dump array to dict"""
-        count = Counter(self.shape)
-        temp = [{"series":i, "parallel": count[i]} for i in count.iterkeys()]
-        return {'shape':temp, 'panel':str(self.panel)}
-
-    def __str__(self):
-        count = Counter(self.shape)
-        temp = ', '.join(['%sS x %sP' % (i, count[i]) \
-                for i in count.iterkeys()])
-        return "%s" % (temp)
-
 class Mppt(object):
     """structure to aggregate panels into an array)"""
     def __init__(self, module, series, parallel=1):
