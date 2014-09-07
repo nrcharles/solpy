@@ -9,7 +9,10 @@ Welcome to solpy's documentation!
 Contents:
 
 .. toctree::
+   modules
+   inverters
    pv
+   design
    :maxdepth: 2
 
 
