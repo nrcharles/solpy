@@ -21,7 +21,7 @@ setup(
     url = "https://github.com/nrcharles/solpy",
     packages=find_packages(),
     long_description=read('README.md'),
-    install_requires = ['geopy','numpy','matplotlib','scipy','pyephem'],
+    install_requires = ['geopy','numpy','matplotlib','scipy','pyephem','mock'],
     package_data={'': ['*.json','*.csv','pvcli']},
     classifiers=[
         "Development Status :: 4 - Beta",
