@@ -84,6 +84,9 @@ class ResultSet(object):
         print "Year 1 Daily Average: %s kWh" % self.daily_ave
         print "Inverter hours clipping: %s" % self.clipping_hours
 
+    def __repr__(self):
+        return "Year 1 Annual _output: %s kWh" % self.annual_output
+
 def load_system(filename):
     """Load a system from a json file"""
     try:
