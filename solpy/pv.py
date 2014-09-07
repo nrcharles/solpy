@@ -41,8 +41,8 @@ class ResultSet(object):
         return ([int((i - datetime.datetime(1970, 1, 1)).total_seconds()) \
                 for i in self.timeseries], self.values)
 
-    def plotd(self):
-        """plots graph of values"""
+    def chart(self):
+        """plots chart of values"""
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         fig = plt.figure()
