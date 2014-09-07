@@ -47,9 +47,7 @@ def find_file(filename, search_path):
 # fill has moved to design
 
 if __name__ == "__main__":
-    from design import tools_fill as fill
     from design import generate_options
-    import inverters
     import modules
     zc='44701'
     zc='27713'
@@ -60,7 +58,6 @@ if __name__ == "__main__":
     #m = "Mage Solar : Powertec Plus 245-6 PL *"
     m = "Mage Solar : USA Powertec Plus 250-6 MNCS"
     ms = modules.Module(m)
-    system = inverters.Inverter("Refusol: 20 kW 480V",modules.PvArray(ms,[{'series':11,'parallel':6}]))
     #print fill(system,zc)
     print generate_options("Refusol: 20 kW 480V",m,zc)
     print generate_options("Enphase Energy: M215-60-2LL-IG-S2X (240V) 240V",m,zc)
