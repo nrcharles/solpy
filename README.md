@@ -5,6 +5,8 @@ Daniel Thomas did work adding the Tang evacuated glass tube model. Pyephem was a
 
 This is primarily a research and analysis tool and there is no guarantee on the calculations.
 
+[Documentation](http://solpy.readthedocs.org/)
+
 Features
 --------
 -Liu & Jordan diffuse irradiance model  
