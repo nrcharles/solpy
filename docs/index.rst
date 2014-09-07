@@ -9,6 +9,7 @@ Welcome to solpy's documentation!
 Contents:
 
 .. toctree::
+   models
    modules
    inverters
    pv
