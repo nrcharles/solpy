@@ -6,7 +6,7 @@
 import csv
 import math
 import os
-from tools import memoized
+from solpy.tools import memoized
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 def station_info(usaf):
