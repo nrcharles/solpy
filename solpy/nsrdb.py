@@ -21,7 +21,7 @@ def strptime(string, tz=0):
     ts = datetime.datetime(Y, M, D) + datetime.timedelta(hours=h, minutes=m) - datetime.timedelta(hours=tz)
     return ts
 
-def normalizeDate(tmyDate, year):
+def normalize_date(tmyDate, year):
     """change TMY3 date to an arbitrary year"""
     Y = year
     M = tmyDate.month

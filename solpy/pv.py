@@ -181,7 +181,7 @@ def _calc(record):
             horizon, properties['tilt'], properties['azimuth'], \
             properties['model_name'])
     year = 2000
-    timestamp = tmy3.normalizeDate(record['datetime'], year)
+    timestamp = tmy3.normalize_date(record['datetime'], year)
     return timestamp, insolation, record
 
 class System(object):
