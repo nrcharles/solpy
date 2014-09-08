@@ -80,12 +80,12 @@ class ResultSet(object):
     def summary(self):
         """prints summary"""
         #todo: should get rid of print statements
-        print "Year 1 Annual _output: %s kWh" % self.annual_output
+        print "Year 1 Annual output: %s kWh" % self.annual_output
         print "Year 1 Daily Average: %s kWh" % self.daily_ave
         print "Inverter hours clipping: %s" % self.clipping_hours
 
     def __repr__(self):
-        return "Year 1 Annual _output: %s kWh" % self.annual_output
+        return "Year 1 Annual output: %s kWh" % self.annual_output
 
 def load_system(filename):
     """Load a system from a json file"""
@@ -115,8 +115,7 @@ def json_system(json_description):
                 parallel = i["parallel"]
             else:
                 parallel = 1
-            shape = [{"series":i["series"],
-                    "parallel":parallel}]
+            shape = [{"series":i["series"], "parallel":parallel}]
         else:
             shape = [{'series':1}]
 
@@ -139,7 +138,8 @@ def json_system(json_description):
         json_shape += [block] * scale
     plant = System(json_shape)
     if 'station_class' in json_description:
-        plant.set_zipcode(json_description["zipcode"], json_description['station_class'])
+        plant.set_zipcode(json_description["zipcode"], \
+                json_description['station_class'])
     else:
         plant.set_zipcode(json_description["zipcode"])
     if "address" in json_description:
@@ -197,7 +197,7 @@ class System(object):
         self.system_name = ""
         self.clip = 0
 
-    def set_zipcode(self, zipcode, station_class = 3):
+    def set_zipcode(self, zipcode, station_class=3):
         """update zipcode"""
         self.zipcode = zipcode
         self.place = geo.zip_coordinates(self.zipcode)
@@ -366,10 +366,10 @@ class System(object):
             weather_data = forecast.data(self.place)['currently']
 
         if model == 'CC':
-            record = irradiation.blave(timestamp, self.place, self.tilt,
+            record = irradiation.blave(timestamp, self.place, self.tilt, \
                     self.azimuth, cloudCover=weather_data['cloudCover'])
         else:
-            record = irradiation.blave(timestamp, self.place, self.tilt,
+            record = irradiation.blave(timestamp, self.place, self.tilt, \
                     self.azimuth)
 
         irradiance = irradiation.irradiation(record, self.place, None,\
@@ -402,7 +402,7 @@ class System(object):
             iteration += 1
             if iteration > 25:
                 raise Exception('too many iterations')
-        solar_az, solar_alt = irradiation.ephemSun(self.place, timestamp)
+        solar_az, solar_alt = irradiation.ephem_sun(self.place, timestamp)
         irrRec = irradiation.irrGuess(timestamp, girr, solar_alt, solar_az,\
                 self.tilt, self.azimuth)
         irrRec['girr'] = round(girr, 0)
@@ -475,16 +475,16 @@ class System(object):
         else:
             #blave
             stime = datetime.datetime.today().timetuple()
-            tzOff = datetime.timedelta(hours=self.tz)
+            tz_off = datetime.timedelta(hours=self.tz)
             if daylightSavings:
-                tzOff += datetime.timedelta(hours=1)
+                tz_off += datetime.timedelta(hours=1)
             else:
-                tzOff += datetime.timedelta(hours=0)
-            initTime = datetime.datetime(stime[0], stime[1], stime[2]) - tzOff
+                tz_off += datetime.timedelta(hours=0)
+            initTime = datetime.datetime(stime[0], stime[1], stime[2]) - tz_off
             timeseries = []
             values = []
             ts = initTime
-            while ts < datetime.datetime.now()-tzOff:
+            while ts < datetime.datetime.now()-tz_off:
                 ts += datetime.timedelta(minutes=5)
                 currentPower = self.now(ts)
                 values.append(currentPower)

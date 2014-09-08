@@ -23,7 +23,7 @@ def airmass(zenith):
     """returns airmass for zenith in radians"""
     #Pickering 2002 footnote 39
     #h = apparant altitude
-    h =  fabs(90 - degrees(zenith))
+    h = fabs(90 - degrees(zenith))
     m = 0
     #print degrees(zenith)
     #if dni > 10:
@@ -53,7 +53,7 @@ def eBin(clearness):
         return 1
     return 0
 
-def perez(dni,hdi,etr,S,theta,zenith):
+def perez(dni, hdi, etr, S, theta, zenith):
     """Perez ee al. 1990
     Diffuse irradiance and illuminance on tilted surfaces
     """
@@ -82,30 +82,30 @@ def perez(dni,hdi,etr,S,theta,zenith):
 
     #Table 6
     #Irradiance model
-    IRR = [[-0.008, 0.588,-0.062,-0.060, 0.072,-0.022],
-            [0.130, 0.683,-0.151,-0.019, 0.066,-0.029],
-            [0.330, 0.487,-0.221, 0.055,-0.064,-0.026],
-            [0.568, 0.187,-0.295, 0.109,-0.152,-0.014],
-            [0.873,-0.392,-0.362, 0.226,-0.462, 0.001],
-            [1.132,-1.237,-0.412, 0.288,-0.823, 0.056],
-            [1.060,-1.600,-0.359, 0.264,-1.127, 0.131],
-            [0.678,-0.327,-0.250, 0.156,-1.377, 0.251]]
+    IRR = [[-0.008, 0.588, -0.062, -0.060, 0.072, -0.022], \
+            [0.130, 0.683, -0.151, -0.019, 0.066, -0.029], \
+            [0.330, 0.487, -0.221, 0.055, -0.064, -0.026], \
+            [0.568, 0.187, -0.295, 0.109, -0.152, -0.014], \
+            [0.873, -0.392, -0.362, 0.226, -0.462, 0.001], \
+            [1.132, -1.237, -0.412, 0.288, -0.823, 0.056], \
+            [1.060, -1.600, -0.359, 0.264, -1.127, 0.131], \
+            [0.678, -0.327, -0.250, 0.156, -1.377, 0.251]]
     #Illumanince
-    ILL = [ [0.011, 0.570,-0.081,-0.095, 0.158,-0.018],
-            [0.429, 0.363,-0.307, 0.050, 0.008,-0.065],
-            [0.809,-0.054,-0.442, 0.181,-0.169,-0.092],
-            [1.014,-0.252,-0.531, 0.275,-0.350,-0.096],
-            [1.282,-0.420,-0.689, 0.380,-0.559,-0.114],
-            [1.426,-0.653,-0.779, 0.425,-0.785,-0.097],
-            [1.485,-1.214,-0.784, 0.411,-0.629,-0.082],
-            [1.170,-0.300,-0.615, 0.518,-1.892,-0.055]]
+    ILL = [[0.011, 0.570, -0.081, -0.095, 0.158, -0.018], \
+           [0.429, 0.363, -0.307, 0.050, 0.008, -0.065], \
+           [0.809, -0.054, -0.442, 0.181, -0.169, -0.092], \
+           [1.014, -0.252, -0.531, 0.275, -0.350, -0.096], \
+           [1.282, -0.420, -0.689, 0.380, -0.559, -0.114], \
+           [1.426, -0.653, -0.779, 0.425, -0.785, -0.097], \
+           [1.485, -1.214, -0.784, 0.411, -0.629, -0.082], \
+           [1.170, -0.300, -0.615, 0.518, -1.892, -0.055]]
 
     #3.2
-    a = max(0,cos(theta))
-    b = max(0.087,cos(Z))
+    a = max(0, cos(theta))
+    b = max(0.087, cos(Z))
 
-    F1= IRR[e][0] + IRR[e][1]*delta + IRR[e][2]*Z
-    F2= IRR[e][3] + IRR[e][4]*delta + IRR[e][5]*Z
+    F1 = IRR[e][0] + IRR[e][1]*delta + IRR[e][2]*Z
+    F2 = IRR[e][3] + IRR[e][4]*delta + IRR[e][5]*Z
     #print F1,F2
 
     #3.2.2 Illumanince Model
@@ -116,64 +116,71 @@ def perez(dni,hdi,etr,S,theta,zenith):
     #Xc = Xh*(.5*(1-F1)*(1+cos(beta)) + F1*a/b+F2*sin(beta))
 
     #possible bug?  not sure why the negative insolation sometimes
-    return max(Xc,0.0)
+    return max(Xc, 0.0)
 
-def ephemSun(place,utc_datetime):
+def ephem_sun(place, utc_datetime):
+    """ephemeris of the sun"""
     latitude, longitude = place
-    o = ephem.Observer()
-    o.date =  utc_datetime
-    o.lat = radians(latitude)
-    o.lon = radians(longitude)
-    az = ephem.Sun(o).az
-    alt = ephem.Sun(o).alt
+    observer = ephem.Observer()
+    observer.date = utc_datetime
+    observer.lat = radians(latitude)
+    observer.lon = radians(longitude)
+    az = ephem.Sun(observer).az
+    alt = ephem.Sun(observer).alt
     return az, alt
 
-def irradiation(record, place, horizon = None, t = 0.0, array_azimuth = 180.0, model = 'lj'):
+def irradiation(record, place, horizon=None, t=0.0, array_azimuth=180.0, \
+        model='lj'):
+    """using a data record, calculate irradiance/insolation at a place.
+    Inputs are in degrees.
+    Valid models: perez 90 (p9), badescu, tian, Liu & Jordan (lj)"""
     Gh = int(record['GHI (W/m^2)'])
     Dh = int(record['DHI (W/m^2)'])
     Bh = int(record['DNI (W/m^2)'])
     etr = int(record['ETR (W/m^2)'])
 
     #theta = incidence angle of the sun
-    #todo: SUNY uses average for time period. This is really and integration
+    #todo: SUNY uses average for time period. This is really an integration
     #function and some error maybe introduced as is. This should be evaluated.
-    az,alt = ephemSun(place,record['utc_datetime'])
+    #irradiance is instantanious, insolation is over time
+    az, alt = ephem_sun(place, record['utc_datetime'])
 
     slope = radians(t)
     aaz = radians(array_azimuth+180)
     Z = pi/2-alt
     theta = arccos(cos(Z)*cos(slope) + sin(slope)*sin(Z)*cos(az - pi - aaz))
     S = radians(t) #
-    return totalIRR(Gh,Dh,Bh,etr,az,alt,S,theta,horizon,model)
+    return totalIRR(Gh, Dh, Bh, etr, az, alt, S, theta, horizon, model)
 
-def totalIRR(Gh,Dh,Bh,etr,az,alt,S,theta,horizon=None, model = 'lj'):
+def totalIRR(Gh, Dh, Bh, etr, az, alt, S, theta, horizon=None, model='lj'):
+    """valid models are perez 90 (p9), badescu, tian, Liu & Jordan (lj)"""
     Z = pi/2-alt
     nA = degrees(az) % 360-180
     if horizon:
         if horizon(nA) > degrees(theta):
             Bh = 0
-            print "shaded", nA,degrees(theta),horizon(nA)
+            print "shaded", nA, degrees(theta), horizon(nA)
     #Z = solar Zenith angle
 
     #NREL Manual
-    Bth = max(0,Bh * cos(theta))
+    Bth = max(0, Bh * cos(theta))
 
     #sky-diffuse
     Dth = 0
     if model == "badescu":
         #Badescu 2002 (badescu)
-         rd = 3+cos(2*S)/4
-         Dth = rd*Dh
+        rd = 3+cos(2*S)/4
+        Dth = rd*Dh
     if model == "tian":
-         #Tian et al. 2001 (tian)
-         rd = 1 -S/(2 *pi)
-         Dth = rd*Dh
+        #Tian et al. 2001 (tian)
+        rd = 1 -S/(2 *pi)
+        Dth = rd*Dh
     if model == "lj":
-         #Liu and Jordan (lj)
-         rd = (1+cos(S))/2
-         Dth = rd*Dh
+        #Liu and Jordan (lj)
+        rd = (1+cos(S))/2
+        Dth = rd*Dh
     if model == "p9":
-         Dth = perez(Bh, Dh, etr, S, theta, Z)
+        Dth = perez(Bh, Dh, etr, S, theta, Z)
 
     #ground diffuse p = ground reflectivity
     p = 0.2
@@ -186,14 +193,15 @@ def totalIRR(Gh,Dh,Bh,etr,az,alt,S,theta,horizon=None, model = 'lj'):
 
 def airMassRatio(altitude):
     #Masters, p. 412
-    return (1/sin(altitude))
+    return 1/sin(altitude)
 
 def apparentExtraterrestrialFlux(day):
     #Masters, p. 412
     return 1160 + (75 * sin(((2*pi)/365) * (day - 275)))
 
 def dayOfYear(utc_datetime):
-    start = datetime.datetime(utc_datetime.year, 1, 1, tzinfo=utc_datetime.tzinfo)
+    start = datetime.datetime(utc_datetime.year, 1, 1, \
+            tzinfo=utc_datetime.tzinfo)
     delta = (utc_datetime - start)
     return delta.days
 
@@ -203,7 +211,7 @@ def opticalDepth(day):
 
 def directNormal(utc_datetime, altitude):
     #Masters, p. 413
-    if(altitude > 0):
+    if altitude > 0:
         day = dayOfYear(utc_datetime)
         flux = apparentExtraterrestrialFlux(day)
         optical_depth = opticalDepth(day)
@@ -212,20 +220,20 @@ def directNormal(utc_datetime, altitude):
     else:
         return 0.0
 
-def globalHorizontal(Ib,theta,n):
+def globalHorizontal(Ib, theta, n):
     C = 0.095 + 0.04 * sin((2*pi/365*(n-100)))
     #print "theta",theta
     hDirect = Ib*cos(theta)
     return C* Ib + hDirect
 
-def diffuseHorizontal(altitude,Ib,n):
+def diffuseHorizontal(altitude, Ib, n):
     #Masters p. 416
     C = 0.095 + 0.04 * sin((2.*pi/365*(n-100)))
     return Ib *C
 
-def blave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
+def blave(timestamp, place, tilt=0, azimuth=180, cloudCover=0.0):
     #synthetic irradiance
-    az,alt = ephemSun(place,timestamp)
+    az, alt = ephem_sun(place, timestamp)
 
     Z = pi/2-alt
     aaz = radians(azimuth+180)
@@ -234,7 +242,7 @@ def blave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
     theta = arccos(cos(Z)*cos(slope) + \
             sin(slope)*sin(Z)*cos(az - pi - aaz))
 
-    Bh,Gh,Dh,ETR =  synthetic(timestamp, alt,az,theta, cloudCover)
+    Bh, Gh, Dh, ETR = synthetic(timestamp, alt, az, theta, cloudCover)
 
     record = {}
     record['utc_datetime'] = timestamp
@@ -245,22 +253,22 @@ def blave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
 
     return record
 
-def synthetic(timestamp,alt, az, theta, cloudCover):
+def synthetic(timestamp, alt, az, theta, cloudCover):
     #Palescu 2013 (3.16)
-    a=.25
-    b= .5
+    a = .25
+    b = .5
     cs = 1 - (a*cloudCover + b*cloudCover**2)
 
     #Irradiance
-    Bh = directNormal(timestamp,alt) * cs
+    Bh = directNormal(timestamp, alt) * cs
     day = dayOfYear(timestamp)
-    Dh = diffuseHorizontal(alt,Bh,day)
+    Dh = diffuseHorizontal(alt, Bh, day)
 
     #todo: should this theta include tilt of collector?
-    Gh = globalHorizontal(Bh,theta,day)
+    Gh = globalHorizontal(Bh, theta, day)
     ETR = apparentExtraterrestrialFlux(day)
     #print Gh, Bh, Dh #, ETR
-    return Bh,Gh,Dh, ETR
+    return Bh, Gh, Dh, ETR
 
 def irrGuess(timestamp, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz):
     "angles in radians"
@@ -270,15 +278,18 @@ def irrGuess(timestamp, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz):
     girr = 0
     cloudCover = 1.
     iteration = 2
-    Bh,Gh,Dh,etr = synthetic(timestamp, solarAlt,solarAz,theta,0.)
+    Bh, Gh, Dh, etr = synthetic(timestamp, solarAlt, solarAz, theta, 0.)
     #totalIRR(Gh,Dh,Bh,etr,az,alt,S,theta,horizon=None, model = 'lj'):
-    maxirr = totalIRR(Gh,Dh,Bh,etr,solarAz,solarAlt,surfaceTilt,theta, model = 'perez')
+    maxirr = totalIRR(Gh, Dh, Bh, etr, solarAz, solarAlt, surfaceTilt, theta,\
+            model='perez')
     if irradiance > maxirr:
         raise Exception('irradiance exceeds clear sky max')
-    while round(irradiance,0) != round(girr,0):
+    while round(irradiance, 0) != round(girr, 0):
         #todo: improve non linear search routine
-        Bh,Gh,Dh,etr = synthetic(timestamp, solarAlt,solarAz,theta,cloudCover)
-        girr = totalIRR(Gh,Dh,Bh,etr,solarAz,solarAlt,surfaceTilt,theta, model = 'lj')
+        Bh, Gh, Dh, etr = synthetic(timestamp, solarAlt, solarAz, theta, \
+                cloudCover)
+        girr = totalIRR(Gh, Dh, Bh, etr, solarAz, solarAlt, surfaceTilt, \
+                theta, model='lj')
         if girr <= irradiance:
             cloudCover = cloudCover - 1./(iteration**2)
         else:
@@ -294,19 +305,20 @@ def irrGuess(timestamp, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz):
     record['cloudCover'] = cloudCover
     return record
 
-def moduleTemp(irradiance,weatherData):
+def moduleTemp(irradiance, weatherData):
     #todo: Maybe Sandia Module Temperature instead?
     #TamizhMani 2003
     tAmb = (weatherData['temperature'] - 32) * 5/9
     windSpd = weatherData['windSpeed']
-    tModule = .945*tAmb +.028*irradiance - 1.528*windSpd + 4.3
+    tModule = .945*tAmb + .028*irradiance - 1.528*windSpd + 4.3
     return tModule
 
 #what are good default values?
-def bird(Z, P, tau38=0.05, tau5=0.05, rg=.2, Uw=0.0, Uo=0.32, Ba=0.84, K1 = 0.385):
+def bird(Z, P, tau38=0.05, tau5=0.05, rg=.2, Uw=0.0, Uo=0.32, Ba=0.84, \
+        K1=0.385):
     """Bird clear sky model 1981
     Solar Constant
-    Z = Zenith angle (radians, Bird uses degrees but I converted formulas) 
+    Z = Zenith angle (radians, Bird uses degrees but I converted formulas)
     P = Surface Pressure(millibars)
     rg = ground albedo
     Uw = precipitable water vapor (cm)
@@ -350,7 +362,7 @@ def bird(Z, P, tau38=0.05, tau5=0.05, rg=.2, Uw=0.0, Uo=0.32, Ba=0.84, K1 = 0.38
     It = (Id+Ias)/(1-rg*rs)
     return It, Id, Ias
 
-def bblave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
+def bird_blave(timestamp, place, tilt=0, azimuth=180, cloudCover=0.0):
     #SUN Position
     o = ephem.Observer()
     o.date = timestamp #'2000/12/21 %s:00:00' % (hour - self.tz)
@@ -373,8 +385,8 @@ def bblave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
             sin(slope)*sin(Z)*cos(az - pi - aaz))
     ETR = apparentExtraterrestrialFlux(day)
     #pressure?
-    t,Bh,Gh =  bird(theta,1010.0)
-    Dh = diffuseHorizontal(alt,Bh,day)
+    t, Bh, Gh = bird(theta, 1010.0)
+    Dh = diffuseHorizontal(alt, Bh, day)
 
     record['DNI (W/m^2)'] = Bh #8 Direct normal irradiance
     record['GHI (W/m^2)'] = Gh #5 Global horizontal irradiance
@@ -384,7 +396,7 @@ def bblave(timestamp, place, tilt = 0, azimuth = 180, cloudCover = 0.0):
 
 if __name__ == "__main__":
     for i in range(-90,180):
-        print i,airmass(radians(i)),airMassRatio(radians(i))
+        print i, airmass(radians(i)), airMassRatio(radians(i))
 
     print airMassRatio(radians(30))
     print "perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)"
@@ -413,7 +425,7 @@ if __name__ == "__main__":
     tilt = 1
     azimuth = 180
     print blave(timestamp,place,tilt,azimuth)
-    print bblave(timestamp,place,tilt,azimuth)
+    print bird_blave(timestamp,place,tilt,azimuth)
     print "Bird",bird(0.478253620172,1000.0)
     azimuth = 90
     print blave(timestamp,place,tilt,azimuth)
@@ -422,7 +434,7 @@ if __name__ == "__main__":
     irradiance = 300.
     utc_datetime = datetime.datetime.utcnow()
     print utc_datetime
-    solarAz, solarAlt = ephemSun(place,utc_datetime)
+    solarAz, solarAlt = ephem_sun(place,utc_datetime)
     surfaceTilt = radians(15)
     surfaceAz = radians(180)
     print 'cc', irrGuess(utc_datetime, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz)
