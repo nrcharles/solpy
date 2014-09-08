@@ -395,46 +395,44 @@ def bird_blave(timestamp, place, tilt=0, azimuth=180, cloudCover=0.0):
     return record
 
 if __name__ == "__main__":
-    for i in range(-90,180):
+    for i in range(-90, 180):
         print i, airmass(radians(i)), airMassRatio(radians(i))
 
     print airMassRatio(radians(30))
-    print "perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)"
-    print perez(0,0,0,0.558505360638,2.81089306448,2.79093661679)
-    #print perez(60,786,60,540,0.558505360638,0.624040125833,1.14157618561)
-    #print perez(66,782,66,618,0.558505360638,0.548264494026,1.10572704488)
-    print "perez(124,672,124,630,0.558505360638,0.585437141297,1.12283464275)"
-    print perez(672,124,630,0.558505360638,0.585437141297,1.12283464275)
-    print perez(725,71,575,0.558505360638,0.71816314243,1.19054164885)
-    print perez(458,84,457,0.558505360638,0.905073340885,1.30063355891)
-    print perez(365,52,283,0.558505360638,1.11854235428,1.44247248195)
-    print perez(83,22,75,0.558505360638,1.33812695863,1.59866999006)
-    print perez(0,0,0,0.558505360638,1.58526434614,1.7938116797)
-    print perez(0,0,0,0.558505360638,1.82430194526,1.98580885248)
-    print perez(0,0,0,0.558505360638,2.0648085416,2.18380405772)
-    print perez(0,0,0,0.558505360638,2.30391057936,2.38276512577)
-    print perez(0,0,0,0.558505360638,2.5366580297,2.57519603892)
-    print perez(0,0,0,0.558505360638,2.74856500007,2.7436087649)
-    print perez(0,0,0,0.558505360638,2.87979696349,2.83820540821)
+    print "perez(0, 0, 0, 0.558505360638, 2.81089306448, 2.79093661679)"
+    print perez(0, 0, 0, 0.558505360638, 2.81089306448, 2.79093661679)
+    print perez(672, 124, 630, 0.558505360638, 0.585437141297, 1.12283464275)
+    print perez(725, 71, 575, 0.558505360638, 0.71816314243, 1.19054164885)
+    print perez(458, 84, 457, 0.558505360638, 0.905073340885, 1.30063355891)
+    print perez(365, 52, 283, 0.558505360638, 1.11854235428, 1.44247248195)
+    print perez(83, 22, 75, 0.558505360638, 1.33812695863, 1.59866999006)
+    print perez(0, 0, 0, 0.558505360638, 1.58526434614, 1.7938116797)
+    print perez(0, 0, 0, 0.558505360638, 1.82430194526, 1.98580885248)
+    print perez(0, 0, 0, 0.558505360638, 2.0648085416, 2.18380405772)
+    print perez(0, 0, 0, 0.558505360638, 2.30391057936, 2.38276512577)
+    print perez(0, 0, 0, 0.558505360638, 2.5366580297, 2.57519603892)
+    print perez(0, 0, 0, 0.558505360638, 2.74856500007, 2.7436087649)
+    print perez(0, 0, 0, 0.558505360638, 2.87979696349, 2.83820540821)
     #from scipy.interpolate import interp1d
     #import numpy as np
     import geo
-    #thorizon = interp1d(np.array([-180.0,180.0]),np.array([0.0,0.0]))
+    #thorizon = interp1d(np.array([-180.0,180.0]),np.array([0.0, 0.0]))
     timestamp = datetime.datetime.now()
     place = geo.zip_coordinates('17603')
     tilt = 1
     azimuth = 180
-    print blave(timestamp,place,tilt,azimuth)
-    print bird_blave(timestamp,place,tilt,azimuth)
-    print "Bird",bird(0.478253620172,1000.0)
+    print blave(timestamp, place, tilt, azimuth)
+    print bird_blave(timestamp, place, tilt, azimuth)
+    print "Bird", bird(0.478253620172, 1000.0)
     azimuth = 90
-    print blave(timestamp,place,tilt,azimuth)
+    print blave(timestamp, place, tilt, azimuth)
     azimuth = 270
-    print blave(timestamp,place,tilt,azimuth)
+    print blave(timestamp, place, tilt, azimuth)
     irradiance = 300.
     utc_datetime = datetime.datetime.utcnow()
     print utc_datetime
-    solarAz, solarAlt = ephem_sun(place,utc_datetime)
+    solarAz, solarAlt = ephem_sun(place, utc_datetime)
     surfaceTilt = radians(15)
     surfaceAz = radians(180)
-    print 'cc', irrGuess(utc_datetime, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz)
+    print 'cc', irrGuess(utc_datetime, irradiance, solarAlt, solarAz, \
+            surfaceTilt, surfaceAz)
