@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+# Copyright (C) 2012 Nathan Charles
+#
+# This program is free software. See terms in LICENSE file.
+
+#from numpy import *
+import matplotlib
+import pv
+import json
+import sys
+import pathfinder
+import expedite
+
+if __name__ == "__main__":
+    import argparse
+    matplotlib.use('Agg')
+    parser = argparse.ArgumentParser(description='Model a PV system. annual and daily output')
+    parser.add_argument('-f', '--file',help='json system description',required=True)
+    parser.add_argument('-s', '--shade',help='Solar Pathfinder Horizon file')
+    args = vars(parser.parse_args())
+    try:
+        #start program
+        plant = pv.json_system(json.loads(open(args['file']).read()))
+        if args['shade']:
+            plant.horizon = pathfinder.horizon('example.hor')
+        expedite.string_notes(plant)
+        print ""
+        output  = plant.model()
+        output.summary()
+        output.plot().savefig('%s_output_%s.pdf' % (plant.system_name, plant.zipcode),format='pdf')
+
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit(1)
+    except:
+        raise

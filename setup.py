@@ -23,6 +23,7 @@ setup(
     long_description=read('README.md'),
     install_requires = ['geopy','numpy','matplotlib','scipy','pyephem','mock'],
     package_data={'': ['*.json','*.csv','pvcli']},
+    test_suite='tests.unit',
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
