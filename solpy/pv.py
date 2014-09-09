@@ -412,11 +412,12 @@ class System(object):
         """forecast output of system"""
         #default is forecast with solpy.blave
         #this is ugly code... sorry
+        #todo: refactor
         d = datetime.date.today()
         endTimeUTC = datetime.datetime(d.year, d.month, d.day)\
                 + datetime.timedelta(hours=hours-self.tz)
         if source == 'noaa':
-            wseries = noaa.herpDerpInterp(self.place)
+            wseries = noaa.herp_derp_interp(self.place)
             ts = []
             irr = []
             for i in wseries:

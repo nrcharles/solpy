@@ -1,88 +1,108 @@
+"""wrapper around NOAA GFS api"""
+import logging
+logger = logging.getLogger(__name__)
+
 import urllib2
 import xml.etree.ElementTree as ET
 from scipy.interpolate import interp1d
 import datetime
-import time
 
-def forecast(place, forecast = True):
-    lat,lon = place
-    url = """http://graphical.weather.gov/xml/SOAP_server/ndfdXMLclient.php?whichClient=NDFDgen&lat=%s&lon=%s&Unit=e&temp=temp&wspd=wspd&sky=sky&wx=wx&rh=rh&product=time-series&Submit=Submit""" % (lat,lon)
-    print url
-    res =  urllib2.urlopen(url).read()
+def forecast(place, series=True):
+    """NOAA weather forecast for a location"""
+    lat, lon = place
+    url = "http://graphical.weather.gov/xml/SOAP_server/ndfdXMLclient.php?" + \
+            "whichClient=NDFDgen&" + "lat=%s&lon=%s&" % (lat, lon) + \
+            "Unit=e&temp=temp&wspd=wspd&sky=sky&wx=wx&rh=rh&" + \
+            "product=time-series&Submit=Submit"
+    logger.debug(url)
+    res = urllib2.urlopen(url).read()
     root = ET.fromstring(res)
-
-    timeSeries = [(i.text) for i in root.findall('./data/time-layout')[0].iterfind('start-valid-time')]
+    time_series = [(i.text) for i in \
+            root.findall('./data/time-layout')[0].iterfind('start-valid-time')]
+    logger.debug(res)
     #knots to mph
-    print res
-    windSpd = [eval(i.text)*1.15 for i in root.findall('./data/parameters/wind-speed')[0].iterfind('value')]
-    cloudCover = [eval(i.text)/100.0 for i in root.findall('./data/parameters/cloud-amount')[0].iterfind('value')]
-    temperature = [eval(i.text) for i in root.findall('./data/parameters/temperature')[0].iterfind('value')]
-    if not forecast:
-        return {'cloudCover':cloudCover[0],
-            'temperature':temperature[0],
-            'windSpeed':windSpd[0],
-            'start-valid-time':timeSeries[0]}
+    wind_speed = [eval(i.text)*1.15 for i in \
+            root.findall('./data/parameters/wind-speed')[0].iterfind('value')]
+    cloud_cover = [eval(i.text)/100.0 for i in \
+            root.findall('./data/parameters/cloud-amount')[0].iterfind('value')]
+    temperature = [eval(i.text) for i in \
+            root.findall('./data/parameters/temperature')[0].iterfind('value')]
+    if not series:
+        return {'cloudCover':cloud_cover[0], \
+                'temperature':temperature[0], \
+                'windSpeed':wind_speed[0], \
+                'start-valid-time':time_series[0]}
     else:
-        return {'cloudCover':cloudCover,
-            'temperature':temperature,
-            'windSpeed':windSpd,
-            'start-valid-time':timeSeries}
+        return {'cloudCover':cloud_cover, \
+                'temperature':temperature, \
+                'windSpeed':wind_speed, \
+                'start-valid-time':time_series}
 
-def strToTime(str):
-    fmt='%Y-%m-%dT%H:%M:00'
-    return datetime.datetime.strptime(str[0:19],fmt)
+def str_to_time(string):
+    """unused fuction?"""
+    fmt = '%Y-%m-%dT%H:%M:00'
+    return datetime.datetime.strptime(string[0:19], fmt)
 
-def castFloat(d):
+def cast_float(temp_dt):
     """returns utc timestamp"""
-    if type(d) == str:
-        fmt='%Y-%m-%dT%H:%M:00'
-        lt= d[0:19]
-        tz = eval(d[19:22])
-        d = datetime.datetime.strptime(lt,fmt) - datetime.timedelta(hours=tz)
-    return (d - datetime.datetime(1970,1,1)).total_seconds()
+    if type(temp_dt) == str:
+        fmt = '%Y-%m-%dT%H:%M:00'
+        base_dt = temp_dt[0:19]
+        tz_offset = eval(temp_dt[19:22])
+        temp_dt = datetime.datetime.strptime(base_dt, fmt) - \
+                datetime.timedelta(hours=tz_offset)
+    return (temp_dt - datetime.datetime(1970, 1, 1)).total_seconds()
 
-def herpDerpInterp(place):
-    lat,lon = place
+def herp_derp_interp(place):
+    """simple interpolation of GFS forecast"""
+    lat, lon = place
     #begin=2014-02-14T00%3A00%3A00&end=2018-02-22T00%3A00%3A00
-    fmt='%Y-%m-%dT00:00:00'
-    fmt='%Y-%m-%dT%H:%M:00'
-    begin=(datetime.datetime.now()-datetime.timedelta(hours=12)).strftime(fmt)
+    fmt = '%Y-%m-%dT00:00:00'
+    fmt = '%Y-%m-%dT%H:%M:00'
+    begin = (datetime.datetime.now()-datetime.timedelta(hours=12)).strftime(fmt)
     #end=(datetime.datetime.now()+datetime.timedelta(hours=48)).strftime(fmt)
-    url = """http://graphical.weather.gov/xml/SOAP_server/ndfdXMLclient.php?whichClient=NDFDgen&lat=%s&lon=%s&Unit=e&temp=temp&wspd=wspd&sky=sky&wx=wx&rh=rh&product=time-series&begin=%s&end=2018-02-22T00:00:00&Submit=Submit""" % (lat, lon, begin)
-    res =  urllib2.urlopen(url).read()
+    url = "http://graphical.weather.gov/xml/SOAP_server/ndfdXMLclient.php?" + \
+            "whichClient=NDFDgen&lat=%s&lon=%s&" % (lat, lon) + \
+            "Unit=e&temp=temp&wspd=wspd&sky=sky&wx=wx&rh=rh&" + \
+            "product=time-series&begin=%s&end=2018-02-22T00:00:00" % begin + \
+            "&Submit=Submit"""
+    res = urllib2.urlopen(url).read()
     root = ET.fromstring(res)
 
-    timeSeries = [castFloat(i.text) for i in root.findall('./data/time-layout')[0].iterfind('start-valid-time')]
+    time_series = [cast_float(i.text) for i in \
+            root.findall('./data/time-layout')[0].iterfind('start-valid-time')]
     #knots to mph
-    windSpd = [eval(i.text)*1.15 for i in root.findall('./data/parameters/wind-speed')[0].iterfind('value')]
-    cloudCover = [eval(i.text)/100.0 for i in root.findall('./data/parameters/cloud-amount')[0].iterfind('value')]
-    temperature = [eval(i.text) for i in root.findall('./data/parameters/temperature')[0].iterfind('value')]
+    wind_speed = [eval(i.text)*1.15 for i in \
+            root.findall('./data/parameters/wind-speed')[0].iterfind('value')]
+    cloud_cover = [eval(i.text)/100.0 for i in \
+            root.findall('./data/parameters/cloud-amount')[0].iterfind('value')]
+    temperature = [eval(i.text) for i in \
+            root.findall('./data/parameters/temperature')[0].iterfind('value')]
 
-    ws = interp1d(timeSeries, windSpd, kind='cubic')
-    cc = interp1d(timeSeries, cloudCover, kind='cubic')
-    t  = interp1d(timeSeries, temperature, kind='cubic')
-    startD = datetime.datetime.utcfromtimestamp(timeSeries[0])
+    ws_interp = interp1d(time_series, wind_speed, kind='cubic')
+    cc_interp = interp1d(time_series, cloud_cover, kind='cubic')
+    t_interp = interp1d(time_series, temperature, kind='cubic')
+    start_date = datetime.datetime.utcfromtimestamp(time_series[0])
 
     series = []
     for i in range(48):
         try:
             temp_dict = {}
-            b = startD + datetime.timedelta(hours=i)
-            temp_dict['utc_datetime'] = b
-            temp_dict['windSpeed'] = ws(castFloat(b)).item()
-            temp_dict['temperature'] = t(castFloat(b)).item()
-            temp_dict['cloudCover'] = cc(castFloat(b)).item()
+            forecast_dt = start_date + datetime.timedelta(hours=i)
+            temp_dict['utc_datetime'] = forecast_dt
+            temp_dict['windSpeed'] = ws_interp(cast_float(forecast_dt)).item()
+            temp_dict['temperature'] = t_interp(cast_float(forecast_dt)).item()
+            temp_dict['cloudCover'] = cc_interp(cast_float(forecast_dt)).item()
             series.append(temp_dict)
         except:
             pass
     return series
 
 if __name__ == '__main__':
-    import geo
-    place = geo.zipToCoordinates('17603')
+    from solpy import geo
+    PLACE = geo.zip_coordinates('17603')
     #print forecast(place)
-    print herpDerpInterp(place)
-    #print windSpd, len(windSpd)
+    print herp_derp_interp(PLACE)
+    #print wind_speed, len(wind_speed)
     #print cloudCover, len(cloudCover)
     #print temperature, len(temperature)
-    
