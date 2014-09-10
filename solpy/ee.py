@@ -13,23 +13,21 @@ Voltage drop
 -<3% from mains to last inverter
 """
 import math
-import nec
+from solpy import nec
 
 MATERIAL_MAP = {'AL':'XHHW',
                 'CU':'THWN'}
 
-SERVICE_TYPE = {"120":(120, 2, 1),
-    "120/208":(208, 3, 2),
-    "120/240":(240, 2, 2),
-    "240/3":(240, 3, 1),
-    "277/480":(480, 3, 2),
-    "480/3":(480, 3, 1),
-    "400":(400, 2, 1),
-    "700":(700, 2, 1)
-}
+SERVICE_TYPE = {"120":(120, 2, 1), \
+    "120/208":(208, 3, 2), \
+    "120/240":(240, 2, 2), \
+    "240/3":(240, 3, 1), \
+    "277/480":(480, 3, 2), \
+    "480/3":(480, 3, 1), \
+    "400":(400, 2, 1), \
+    "700":(700, 2, 1)}
 
-CONDUIT_MAP = {"STEEL":"EMT",
-    "PVC":"PVC40"}
+CONDUIT_MAP = {"STEEL":"EMT", "PVC":"PVC40"}
 
 def find_conduit(harness, conduit='EMT', fill=.40):
     """find size of conduit for conductor bundle"""
@@ -94,8 +92,8 @@ class Conductor(object):
         return ta_new + (i_new*1.0/i_old)**2*(tc_old-ta_old)
 
     def a(self):
-        a = {"CU":0.00323,
-                "AL":0.00330}
+        """a coefficeint for material"""
+        a = {"CU":0.00323, "AL":0.00330}
         return a[self.material]
 
     def ampacity(self, ta_new=30, tc_old=75, ta_old=30):

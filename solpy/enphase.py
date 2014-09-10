@@ -2,14 +2,15 @@
 #
 # This program is free software. See terms in LICENSE file.
 
-"""This is a thin wrapper around the enphase energy api.  Use simply requires 
-importing and then setting the apikey.
+"""This is a thin wrapper around the enphase energy api.
+Import and then setting the APIKEY.
+
+if ENPHASE environmental variable is set that will be used first.
 
 import enphase
-enphase.apikey = "key hash"
+enphase.APIKEY = "key hash"
 
 enphase.index()
-
 """
 
 TCP_TIMEOUT = 5.0
@@ -19,74 +20,82 @@ import urllib2
 import numpy as np
 import datetime
 import matplotlib
-import time
 import os
 
 matplotlib.use('Agg')
 
-apiurl = "https://api.enphaseenergy.com/api/systems"
-apiurl2 = "https://api.enphaseenergy.com/api/v2/systems"
+APIURL = "https://api.enphaseenergy.com/api/systems"
+APIURL2 = "https://api.enphaseenergy.com/api/v2/systems"
 
-apikey = os.getenv('ENPHASE')
+APIKEY = os.getenv('ENPHASE')
 
-def toSeconds(dt):
-        return (dt - datetime.datetime(1970,1,1)).total_seconds()
+def seconds(temp_dt):
+    """datetime seconds since epoch"""
+    return (temp_dt - datetime.datetime(1970, 1, 1)).total_seconds()
 
-if not apikey:
+if not APIKEY:
     print "WARNING: Enphase key not set."
     print "Realtime weather data not availible."
 
-class resultSet(object):
-    def __init__(self,ts,v):
+class ResultSet(object):
+    """Result Set"""
+    def __init__(self, ts, v):
         self.timeseries = ts
         self.values = v
     def plot(self):
+        """plot data"""
         fig = matplotlib.pyplot.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(self.timeseries, self.values)
+        subplot = fig.add_subplot(111)
+        subplot.plot(self.timeseries, self.values)
         return fig
     def jsify(self):
-        return zip([ int(toSeconds(obj)*1000) \
-                for obj in self.timeseries.tolist()],self.values.tolist())
+        """return dict of unix timestamps and values"""
+        return zip([int(seconds(obj)*1000) \
+                for obj in self.timeseries.tolist()], self.values.tolist())
 
-class system(object):
+class System(object):
     """system(system_id) if called directly"""
-    def __init__(self,*system_id, **sys_info):
+    def __init__(self, *system_id, **sys_info):
         #deal with direct load
         if len(system_id) > 0:
-            url = apiurl2 + "?key=%s&system_id=%s" % (apikey,system_id[0])
-            tsys = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+            url = APIURL2 + "?key=%s&system_id=%s" % (APIKEY, system_id[0])
+            tsys = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
             self.__dict__.update(tsys['systems'][0])
 
         self.__dict__.update(sys_info)
 
     def summary(self, summary_date=None):
-        url = apiurl + "/%s/summary?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+        """summary"""
+        url = APIURL + "/%s/summary?key=%s" % (self.system_id, APIKEY)
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
-    def alerts(self,level=None):
-        url = apiurl + "/%s/alerts?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+    def alerts(self, level=None):
+        """alerts"""
+        url = APIURL + "/%s/alerts?key=%s" % (self.system_id, APIKEY)
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def energy_lifetime(self):
-        url = apiurl + "/%s/energy_lifetime?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+        """energy produced"""
+        url = APIURL + "/%s/energy_lifetime?key=%s" % (self.system_id, APIKEY)
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def monthly_production(self, start_date):
-        url = apiurl + "/%s/monthly_production?key=%s&start=%s" % \
-                (self.system_id,apikey,start_date)
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+        """production this month"""
+        url = APIURL + "/%s/monthly_production?key=%s&start=%s" % \
+                (self.system_id, APIKEY, start_date)
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def power_today(self):
-        d = datetime.date.today()
-        midnight = datetime.datetime(d.year,d.month,d.day)
-        start_at= int(toSeconds(midnight))
+        """power produced so far today"""
+        today = datetime.date.today()
+        midnight = datetime.datetime(today.year, today.month, today.day)
+        start_at = int(seconds(midnight))
         production = []
         timeseries = []
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
             timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
-        return resultSet(np.array(timeseries), np.array(production))
+        return ResultSet(np.array(timeseries), np.array(production))
 
     def power_2days(self):
         """this function returns last two days to get at last 24 hours"""
@@ -94,81 +103,81 @@ class system(object):
         timeseries = []
 
         #yesterday
-        d = datetime.date.today()
-        midnight = datetime.datetime(d.year,d.month,d.day)
-        start_at= int(toSeconds(midnight-datetime.timedelta(days=1)))
+        today = datetime.date.today()
+        midnight = datetime.datetime(today.year, today.month, today.day)
+        start_at = int(seconds(midnight-datetime.timedelta(days=1)))
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
             timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
         #today
-        midnight = datetime.datetime(d.year,d.month,d.day)
+        midnight = datetime.datetime(today.year, today.month, today.day)
         for i in self.stats(start_at)['intervals']:
             production.append(i['powr'])
             timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
-        return resultSet(np.array(timeseries), np.array(production))
+        return ResultSet(np.array(timeseries), np.array(production))
 
     def power_week(self):
         #deprecated
-        url = apiurl + "/%s/power_week?key=%s" % (self.system_id,apikey)
-        a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+        url = APIURL + "/%s/power_week?key=%s" % (self.system_id, APIKEY)
+        a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
         production = np.array(a["production"])
-        begin = strToDatetime(a["first_interval_end_date"])
+        begin = _str_datetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
-        timeseries = np.array([begin]) 
-        for i in range(1,len(a["production"])):
-            timeseries = np.append(timeseries,begin + interval * i)
-        return resultSet(timeseries,production)
+        timeseries = np.array([begin])
+        for i in range(1, len(a["production"])):
+            timeseries = np.append(timeseries, begin + interval * i)
+        return ResultSet(timeseries, production)
 
     def power_week_i(self):
         #deprecated
-        url = apiurl + "/%s/power_week?key=%s" % (self.system_id,apikey)
-        a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
-        begin = strToDatetime(a["first_interval_end_date"])
+        url = APIURL + "/%s/power_week?key=%s" % (self.system_id, APIKEY)
+        a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+        begin = _str_datetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
-        timeseries = np.array([begin]) 
-        url = apiurl + "/%s/power_today?key=%s" % (self.system_id,apikey)
-        ai = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
-        production_i = a["production"]+ai["production"]
+        timeseries = np.array([begin])
+        url = APIURL + "/%s/power_today?key=%s" % (self.system_id, APIKEY)
+        ai = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+        production_i = a["production"] + ai["production"]
         production = np.array(production_i)
-        for i in range(1,len(production_i)):
-            timeseries = np.append(timeseries,begin + interval * i)
-        return resultSet(timeseries,production)
+        for i in range(1, len(production_i)):
+            timeseries = np.append(timeseries, begin + interval * i)
+        return ResultSet(timeseries, production)
 
-    def rgm_stats(self, start_date=None,end_date=None):
-        url = apiurl + "/%s/rgm_stats?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+    def rgm_stats(self, start_date=None, end_date=None):
+        url = APIURL + "/%s/rgm_stats?key=%s" % (self.system_id, APIKEY)
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
-    def stats(self,start_at=None,end_at=None):
+    def stats(self, start_at=None, end_at=None):
         """start_at and end_at are unix epoch"""
-        url = apiurl2 + "/%s/stats?key=%s" % (self.system_id,apikey)
+        url = APIURL2 + "/%s/stats?key=%s" % (self.system_id, APIKEY)
         if start_at:
             url += "&start_at=%s" % start_at
         if end_at:
             url += "end_ad=%s"
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def envoys(self):
-        url = apiurl + "/%s/envoys?key=%s" % (self.system_id,apikey)
-        return json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
+        url = APIURL + "/%s/envoys?key=%s" % (self.system_id, APIKEY)
+        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def performance_factor(self, tilt=0):
         a = self.summary()
-        p = a['current_power']*1.0/(a['modules']*215)
+        p = a['current_power']*1.0 / (a['modules']*215)
         return p
 
-def strToDatetime(ts1):
+def _str_datetime(ts1):
     #yyyy-mm-ddThh:mm:ss-xx:y
     #reformat = ts1[0:22]+ts1[23:25]
     tsformat = "%Y-%m-%dT%H:%M:%S"
-    tz = ts1[19:22]+ts1[23:25]
-    return datetime.datetime.strptime(ts1[0:19],tsformat)
+    timezone = ts1[19:22]+ts1[23:25]
+    return datetime.datetime.strptime(ts1[0:19], tsformat)
 
 def index():
-    apiurl = "https://api.enphaseenergy.com/api/systems/"
-    #url = "https://api.enphaseenergy.com/api/systems?key=%s" % apikey
-    url = apiurl + "?key=%s" % apikey
-    a = json.loads(urllib2.urlopen(url,timeout=TCP_TIMEOUT).read())
-    return [system(**i) for i in a["systems"]]
+    APIURL = "https://api.enphaseenergy.com/api/systems/"
+    #url = "https://api.enphaseenergy.com/api/systems?key=%s" % APIKEY
+    url = APIURL + "?key=%s" % APIKEY
+    a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+    return [System(**i) for i in a["systems"]]
 
 def power_today():
     ts = None
@@ -177,7 +186,7 @@ def power_today():
         a = i.power_today()
         ts = a.timeseries
         b.append(a.values)
-    return resultSet(ts,sum(b))
+    return ResultSet(ts, sum(b))
 
 def power_week():
     ts = None
@@ -186,7 +195,7 @@ def power_week():
         a = i.power_week()
         ts = a.timeseries
         b.append(a.values)
-    return resultSet(ts,sum(b))
+    return ResultSet(ts, sum(b))
 
 def power_week_i():
     #include today
@@ -196,12 +205,12 @@ def power_week_i():
         a = i.power_week_i()
         ts = a.timeseries
         b.append(a.values)
-    return resultSet(ts,sum(b))
+    return ResultSet(ts, sum(b))
 
 #todo: determine relavence
-#Analytical models of enphase parts. 
-class m215():
-    def __init__(self, number, landscape = True, phase =1):
+#Analytical models of enphase parts.
+class M215():
+    def __init__(self, number, landscape=True, phase=1):
         self.phase = phase
         self.number = number
         self.a = .896
@@ -226,20 +235,21 @@ class m215():
         else:
             print "ERROR"
 
-class engage():
-    def __init__(self, inverters, phase = 1, landscape = True, endfed = False):
+class Engage():
+    def __init__(self, inverters, phase=1, landscape=True, endfed=False):
         self.endfed = endfed
         self.landscape = landscape
         self.phase = phase
         self.s1 = []
         self.s2 = []
         if endfed is True:
-            self.s1 = [m215(i,self.landscape,self.phase) for i in range(0,inverters)]
+            self.s1 = [M215(i, self.landscape, self.phase) \
+                    for i in range(0, inverters)]
         else:
             a = inverters/2
-            self.s1 = [m215(i,self.landscape,self.phase) for i in range(0,a)]
-            b = inverters - a 
-            self.s2 = [m215(i,self.landscape,self.phase) for i in range(0,b)]
+            self.s1 = [M215(i, self.landscape, self.phase) for i in range(0, a)]
+            b = inverters - a
+            self.s2 = [M215(i, self.landscape, self.phase) for i in range(0, b)]
 
     def vd(self):
         if self.endfed:

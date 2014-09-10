@@ -166,7 +166,7 @@ def json_system(json_description):
         plant.tilt = orientations[0]["tilt"]
         plant.azimuth = orientations[0]["azimuth"]
     if 'shade' in json_description:
-        plant.hourly_shade = pathfinder.hourly(json_description['shade'])
+        plant.hourly_shade = pathfinder.Hourly(json_description['shade'])
 
     plant.phase = json_description["phase"]
     plant.voltage = json_description["voltage"]
