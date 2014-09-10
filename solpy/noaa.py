@@ -38,12 +38,12 @@ def forecast(place, series=True):
                 'windSpeed':wind_speed, \
                 'start-valid-time':time_series}
 
-def str_to_time(string):
+def _str_time(string):
     """unused fuction?"""
     fmt = '%Y-%m-%dT%H:%M:00'
     return datetime.datetime.strptime(string[0:19], fmt)
 
-def cast_float(temp_dt):
+def _cast_float(temp_dt):
     """returns utc timestamp"""
     if type(temp_dt) == str:
         fmt = '%Y-%m-%dT%H:%M:00'
@@ -69,7 +69,7 @@ def herp_derp_interp(place):
     res = urllib2.urlopen(url).read()
     root = ET.fromstring(res)
 
-    time_series = [cast_float(i.text) for i in \
+    time_series = [_cast_float(i.text) for i in \
             root.findall('./data/time-layout')[0].iterfind('start-valid-time')]
     #knots to mph
     wind_speed = [eval(i.text)*1.15 for i in \
@@ -90,9 +90,9 @@ def herp_derp_interp(place):
             temp_dict = {}
             forecast_dt = start_date + datetime.timedelta(hours=i)
             temp_dict['utc_datetime'] = forecast_dt
-            temp_dict['windSpeed'] = ws_interp(cast_float(forecast_dt)).item()
-            temp_dict['temperature'] = t_interp(cast_float(forecast_dt)).item()
-            temp_dict['cloudCover'] = cc_interp(cast_float(forecast_dt)).item()
+            temp_dict['windSpeed'] = ws_interp(_cast_float(forecast_dt)).item()
+            temp_dict['temperature'] = t_interp(_cast_float(forecast_dt)).item()
+            temp_dict['cloudCover'] = cc_interp(_cast_float(forecast_dt)).item()
             series.append(temp_dict)
         except:
             pass
