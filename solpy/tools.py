@@ -48,10 +48,4 @@ def find_file(filename, search_path):
             (filename, ':'.join(search_path)))
 
 if __name__ == "__main__":
-    from solpy.design import generate_options
-    ZIPCODE = '44701'
-
-    EXAMPLE_MOD = "Mage Solar : USA Powertec Plus 250-6 MNCS"
-    print generate_options("Refusol: 20 kW 480V", EXAMPLE_MOD, ZIPCODE)
-    print generate_options("Enphase Energy: M215-60-2LL-IG-S2X (240V) 240V", \
-            EXAMPLE_MOD, ZIPCODE)
+    pass

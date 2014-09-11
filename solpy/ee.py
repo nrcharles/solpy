@@ -317,13 +317,8 @@ if __name__ == "__main__":
     print "AL EGC", find_egc(Conductor("1/0", 'AL'), 40)
     print "AL EGC", find_egc(Conductor("1/0", 'AL'), 40, 'AL')
     print "AL EGC", find_egc(Conductor("1", 'AL'), 100)
-    import vd
-    tcond = vd.vd(18, 250, material='AL')
-    print "found", tcond
-    print "EGC", find_egc(tcond, 18*1.25, 'AL')
     print ocp_size(10.1)
     print ocp_size(9)
     print find_conductor(.001)
     print conductor_ampacity(200, "CU")
-    print check_ampacity(tcond, 20, ambient=30)
     print assemble(Conductor("2", "CU", "PV"), 40)

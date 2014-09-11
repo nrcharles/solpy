@@ -2,13 +2,16 @@
 # Copyright (C) 2013 Nathan Charles
 #
 # This program is free software. See terms in LICENSE file.
+"""EPW weather data file wrapper"""
 
 import os
 import re
 import csv
+import urllib2
+import zipfile
 #path to epw data
 #default = ~/epw/
-path = os.environ['HOME'] + "/epw/"
+EPW_PATH = os.environ['HOME'] + "/epw/"
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 try:
@@ -19,56 +22,60 @@ except OSError:
     except IOError:
         pass
 
-def basename(USAF):
-    files = os.listdir(path)
-    for f in files:
-        if f.find(USAF) is not -1:
-            return f[0:f.rfind('.')]
-def epwbasename(USAF):
-    f = open(SPATH + '/epwurls.csv')
-    for line in f.readlines():
-        if line.find(USAF) is not -1:
+def basename(usaf):
+    """usaf basename"""
+    files = os.listdir(EPW_PATH)
+    for filen in files:
+        if filen.find(usaf) is not -1:
+            return filen[0:filen.rfind('.')]
+
+def epwbasename(usaf):
+    """find epw url basename"""
+    urlfile = open(SPATH + '/epwurls.csv')
+    for line in urlfile.readlines():
+        if line.find(usaf) is not -1:
             return line.rstrip()
 
-def downloadEPW(USAF):
-    import os
-    url = "http://apps1.eere.energy.gov/buildings/energyplus/weatherdata/4_north_and_central_america_wmo_region_4/1_usa/"
-    import urllib2
-    import zipfile
-    epwfile = epwbasename(USAF)
-    u = urllib2.urlopen(url + epwfile)
-    localFile = open(path + epwfile, 'w')
-    localFile.write(u.read())
-    localFile.close()
-    epw = zipfile.ZipFile(path + epwfile, 'r')
-    epw.extractall(path)
-    os.remove(path + epwfile)
+def download_epw(usaf):
+    """download epw data for usaf"""
+    url = ("http://apps1.eere.energy.gov/buildings/energyplus/weatherdata/" \
+            "4_north_and_central_america_wmo_region_4/1_usa/")
+    epwfile = epwbasename(usaf)
+    epwdata = urllib2.urlopen(url + epwfile)
+    local_file = open(EPW_PATH + epwfile, 'w')
+    local_file.write(epwdata.read())
+    local_file.close()
+    epw = zipfile.ZipFile(EPW_PATH + epwfile, 'r')
+    epw.extractall(EPW_PATH)
+    os.remove(EPW_PATH + epwfile)
 
-def twopercent(USAF):
+def twopercent(usaf):
+    """two percent Temperature"""
     #(DB=>MWB) 2%, MaxDB=
     temp = None
     try:
-        fin = open('%s/%s.ddy' % (path,basename(USAF)))
+        fin = open('%s/%s.ddy' % (EPW_PATH, basename(usaf)))
         for line in fin:
-            m = re.search('2%, MaxDB=(\d+\.\d*)',line)
-            if m:
-                temp = float(m.groups()[0])
-    except:
+            value = re.search("""2%, MaxDB=(\\d+\\.\\d*)""", line)
+            if value:
+                temp = float(value.groups()[0])
+    except IOError:
         pass
+
     if not temp:
         #(DB=>MWB) 2%, MaxDB=
         try:
-            fin = open('%s/%s.stat' % (path,basename(USAF)))
+            fin = open('%s/%s.stat' % (EPW_PATH, basename(usaf)))
             flag = 0
-            data = []
+            tdata = []
             for line in fin:
                 if line.find('2%') is not -1:
                     flag = 3
                 if flag > 0:
-                    data.append(line.split('\t'))
+                    tdata.append(line.split('\t'))
                     flag -= 1
-            temp = float(data[2][5].strip())
-        except:
+            temp = float(tdata[2][5].strip())
+        except IOError:
             pass
     if temp:
         return temp
@@ -76,28 +83,29 @@ def twopercent(USAF):
         print "Warning: 2% High Temperature not found, using worst case"
         return 38.0
 
-def minimum(USAF):
+def minimum(usaf):
+    """minimum temperature"""
     #(DB=>MWB) 2%, MaxDB=
     temp = None
     fin = None
     try:
-        fin = open('%s/%s.ddy' % (path,basename(USAF)))
-    except:
+        fin = open('%s/%s.ddy' % (EPW_PATH, basename(usaf)))
+    except IOError:
         print "File not found"
         print "Downloading ..."
-        downloadEPW(USAF)
-        fin = open('%s/%s.ddy' % (path,basename(USAF)))
+        download_epw(usaf)
+        fin = open('%s/%s.ddy' % (EPW_PATH, basename(usaf)))
     for line in fin:
-        m = re.search('Max Drybulb=(-?\d+\.\d*)',line)
-        if m:
-            temp = float(m.groups()[0])
+        value = re.search('Max Drybulb=(-?\\d+\\.\\d*)', line)
+        if value:
+            temp = float(value.groups()[0])
     if not temp:
         try:
-            fin = open('%s/%s.stat' % (path,basename(USAF)))
+            fin = open('%s/%s.stat' % (EPW_PATH, basename(usaf)))
             for line in fin:
                 if line.find('Minimum Dry Bulb') is not -1:
                     return float(line[37:-1].split('\xb0')[0])
-        except:
+        except IOError:
             pass
     if temp:
         return temp
@@ -105,109 +113,111 @@ def minimum(USAF):
         print "Warning: Minimum Temperature not found, using worst case"
         return -23.0
 
-class data():
-    def __init__(self, USAF):
-        #filename = path + USAF + 'TY.csv'
-        filename = '%s/%s.epw' % (path,basename(USAF))
+class data(object):
+    """EPW weather generator"""
+    def __init__(self, usaf):
+        #filename = path + usaf + 'TY.csv'
+        filename = '%s/%s.epw' % (EPW_PATH, basename(usaf))
         self.csvfile = None
         try:
             self.csvfile = open(filename)
-        except:
+        except IOError:
             print "File not found"
             print "Downloading ..."
-            downloadEPW(USAF)
+            download_epw(usaf)
             self.csvfile = open(filename)
+        fieldnames = ["Year", "Month", "Day", "Hour", "Minute", "DS", \
+                "Drybulb (C)", "Dewpoint (C)", "Relative Humidity", \
+                "Pressure (Pa)", "ETR (W/m^2)", "ETRN (W/m^2)", "HIR (W/m^2)", \
+                "GHI (W/m^2)", "DNI (W/m^2)", "DHI (W/m^2)", "GHIL (lux)", \
+                "DNIL (lux)", "DFIL (lux)", "Zlum (Cd/m2)", "Wdir (degrees)", \
+                "Wspd (m/s)", "Ts cover", "O sky cover", "CeilHgt (m)", \
+                "Present Weather", "Pw codes", "Pwat (cm)", "AOD (unitless)", \
+                "Snow Depth (cm)", "Days since snowfall"]
         header = ""
-        fieldnames = ["Year","Month","Day","Hour","Minute","DS","Drybulb (C)",
-                "Dewpoint (C)", "Relative Humidity", "Pressure (Pa)",
-                "ETR (W/m^2)","ETRN (W/m^2)","HIR (W/m^2)","GHI (W/m^2)",
-                "DNI (W/m^2)","DHI (W/m^2)","GHIL (lux)","DNIL (lux)",
-                "DFIL (lux)","Zlum (Cd/m2)","Wdir (degrees)","Wspd (m/s)",
-                "Ts cover", "O sky cover","CeilHgt (m)","Present Weather", 
-                "Pw codes","Pwat (cm)","AOD (unitless)","Snow Depth (cm)", 
-                "Days since snowfall"]
         for i in range(8):
-            header +=  self.csvfile.readline()
-        self.epw_data = csv.DictReader(self.csvfile,fieldnames=fieldnames)
+            header += self.csvfile.readline()
+        self.epw_data = csv.DictReader(self.csvfile, fieldnames=fieldnames)
         #print self.latitude, self.longitude
     def __iter__(self):
         return self
 
     def next(self):
-        t = self.epw_data.next()
+        record = self.epw_data.next()
         #sd = t['Date (MM/DD/YYYY)'] +' '+ t['Time (HH:MM)']
         #tz = -5
         #t['utc_datetime'] = strptime(sd,tz)
         #t['datetime'] = strptime(sd)
-        return t
+        return record 
 
     def __del__(self):
         self.csvfile.close()
 
 
-def hdd(USAF,base=18):
+def hdd(usaf, base=18):
     """Heating degree days in C"""
     total = 0.0
-    for record in data(USAF):
+    for record in data(usaf):
         delta = base - float(record['Drybulb (C)'])
         if delta > 0:
             total += delta
-    return round(total/24.0,1)
+    return round(total/24.0, 1)
 
-def cdd(USAF,base=18):
+def cdd(usaf, base=18):
     """cooling degree days in C"""
     total = 0.0
-    for record in data(USAF):
+    for record in data(usaf):
         delta = float(record['Drybulb (C)']) - base
         if delta > 0:
             total += delta
-    return round(total/24.0,1)
+    return round(total/24.0, 1)
 
 
 if __name__ == "__main__":
     import argparse
     import sys
-    import geo
-    parser = argparse.ArgumentParser(description='Model a PV system. Currently displays annual output and graph')
+    from solpy import geo
+    from solpy import modules
+    PARSER = argparse.ArgumentParser(description='Model a PV system. '\
+            'Currently displays annual output and graph')
     #import sys
-    #opts, args = getopt.getopt(sys.argv[1:], 'f:h')
-    parser.add_argument('-z', '--zipcode',required=True)
-    parser.add_argument('-m', '--mname')
-    parser.add_argument('-v', '--voltage',type=int,default=600)
-    args = vars(parser.parse_args())
-    #print args
+    #opts, ARGS = getopt.getopt(sys.argv[1:], 'f:h')
+    PARSER.add_argument('-z', '--zipcode', required=True)
+    PARSER.add_argument('-m', '--mname')
+    PARSER.add_argument('-v', '--voltage', type=int, default=600)
+    ARGS = vars(PARSER.parse_args())
+    #print ARGS
 
     try:
         #start program
-        zip = args['zipcode']
-        maxVoltage = args['voltage']
-        stationClass = 1
-        name, usaf = geo.closestUSAF( geo.zipToCoordinates(zip), stationClass)
-        print "%s USAF: %s" %  (name, usaf)
-        print "Minimum Temperature: %s C" % minimum(usaf)
-        print "2%% Max: %s C" % twopercent(usaf)
-        print "Heating Degree days: %s" %  hdd(usaf)
-        print "Cooling Degree days: %s" %  cdd(usaf)
-        if args['mname']:
+        ZIPCODE = ARGS['zipcode']
+        MAX_VOLTAGE = ARGS['voltage']
+        STATION_CLASS = 1
+        NAME, USAF = geo.closest_usaf(geo.zip_coordinates(ZIPCODE), \
+                STATION_CLASS)
+        print "%s usaf: %s" %  (NAME, USAF)
+        print "Minimum Temperature: %s C" % minimum(USAF)
+        print "2%% Max: %s C" % twopercent(USAF)
+        print "Heating Degree days: %s" %  hdd(USAF)
+        print "Cooling Degree days: %s" %  cdd(USAF)
+        if ARGS['mname']:
             print ""
-            import modules
-            models = modules.model_search(args['mname'].split(' '))
-            m = None
-            if len(models) > 1:
-                for i in models:
+            MODELS = modules.model_search(ARGS['mname'].split(' '))
+            MODULE = None
+            if len(MODELS) > 1:
+                for i in MODELS:
                     print i
                 sys.exit(1)
-            elif len(models) == 1:
-                print models[0]
-                m = modules.module(models[0])
+            elif len(MODELS) == 1:
+                print MODELS[0]
+                MODULE = modules.Module(MODELS[0])
             else:
                 print "Model not found"
                 sys.exit(1)
 
-            print "Maximum: %sV" % m.Vmax(minimum(usaf))
-            print "Max in series", int(maxVoltage/m.Vmax(minimum(usaf)))
-            print "Minimum: %sV" % m.Vmin(twopercent(usaf))
-
+            print "Maximum: %sV" % MODULE.v_max(minimum(USAF))
+            print "Max in series", int(MAX_VOLTAGE/MODULE.v_max(minimum(USAF)))
+            print "Minimum: %sV" % MODULE.v_min(twopercent(USAF))
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)

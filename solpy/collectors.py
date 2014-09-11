@@ -5,6 +5,7 @@
 #
 #   This file contains solar thermal collector classes used by thermal.py
 #   Specifications for specific collectors are also here for now.
+#pylint: skip-file
 
 pi = 3.141
 

@@ -2,6 +2,7 @@
 # Copyright (C) 2013 Daniel Thomas
 #
 # This program is free software. See terms in LICENSE file.
+#pylint: skip-file
 
 import numpy as np
 from   numpy import sin, cos, tan, arcsin, arccos, arctan, pi

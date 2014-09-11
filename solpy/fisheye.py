@@ -2,6 +2,7 @@
 # Copyright (C) 2013 Nathan Charles
 #
 # This program is free software. See terms in LICENSE file.
+#pylint: skip-file
 
 import sys
 import cv

@@ -3,6 +3,8 @@
 #
 # This program is free software. See terms in LICENSE file.
 
+#pylint: skip-file
+
 from __future__ import print_function  # Temp, while using python 2.7
 import matplotlib.pyplot as plt
 import matplotlib.image as img

@@ -10,6 +10,7 @@
 #  - integrate weather data code in tmy3
 #  - move collector and location data out to separate files
 #  - check solar position algorithm against alternatives
+#pylint: skip-file
 
 import numpy as np
 import re
