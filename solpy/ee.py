@@ -33,16 +33,16 @@ def find_conduit(harness, conduit='EMT', fill=.40):
     """find size of conduit for conductor bundle"""
     total_area = 0
     for cond in harness:
-        area = (getattr(nec, MATERIAL_MAP[cond.material])[cond.size]/2.0)**2*\
-                math.pi
-        total_area += area
+        total_area += cond.area()
+    total_area = sum([cond.area() for cond in harness])
     for i in getattr(nec, '%s_TRADE_SIZES' % conduit):
         if getattr(nec, conduit)[i]*fill > total_area:
             return i
 
 def fill_percent(harness, conduit):
     """calculate fill percent"""
-    pass
+    total_area = sum([cond.area() for cond in harness])
+    return total_area/conduit.internal_area()
 
 def ocp_size(current):
     """Find standard size of Overcurrent protection"""
@@ -92,7 +92,7 @@ class Conductor(object):
         return ta_new + (i_new*1.0/i_old)**2*(tc_old-ta_old)
 
     def a(self):
-        """a coefficeint for material"""
+        """coefficeint for material"""
         a = {"CU":0.00323, "AL":0.00330}
         return a[self.material]
 
@@ -170,31 +170,29 @@ class Source(object):
 class Conduit(object):
     """Conduit"""
     def __init__(self, tradesize, material):
-        self.tradesize = 0
-        self.material = ""
-        self.length = 0
+        self.tradesize = tradesize
+        self.material = material 
         self.bundle = []
-    def add_conductors(self, blah):
-        pass
-
+    def internal_area(self):
+        return getattr(nec, self.material)[self.tradesize]
 
 def find_conductor(r, material="CU", conduit="PVC", pf=-1, t_cond=75):
     """find conductor"""
-    for s in nec.CONDUCTOR_STANDARD_SIZES:
-        tr = resistance(Conductor(s, material), conduit, pf, t_cond)
+    for size in nec.CONDUCTOR_STANDARD_SIZES:
+        tr = resistance(Conductor(size, material), conduit, pf, t_cond)
         if tr < r:
-            return Conductor(s, material)
+            return Conductor(size, material)
 
 def min_egc(ocp, material="CU"):
     """find egc for conductor todo: deprecate"""
-    inc = [s for s in iter(nec.EGC_CU)]
+    inc = [_temp for _temp in iter(nec.EGC_CU)]
     inc.sort()
-    for s in inc:
-        if s >= ocp:
+    for size in inc:
+        if size >= ocp:
             if material == "CU":
-                return Conductor(nec.EGC_CU[s], material)
+                return Conductor(nec.EGC_CU[size], material)
             else:
-                return Conductor(nec.EGC_AL[s], material)
+                return Conductor(nec.EGC_AL[size], material)
 
 def find_egc(cond, ocp, material="CU"):
     """find egc for conductor when increased in size"""
@@ -229,21 +227,20 @@ def egc(ocp, conductor=None, material='CU'):
         else:
             return egc_c
     else:
-        inc = [s for s in iter(nec.EGC_CU)]
+        inc = [i for i in iter(nec.EGC_CU)]
         inc.sort()
-        for s in inc:
-            if s >= ocp:
+        for size in inc:
+            if size >= ocp:
                 if material == "CU":
-                    return Conductor(nec.EGC_CU[s], material)
+                    return Conductor(nec.EGC_CU[size], material)
                 else:
-                    return Conductor(nec.EGC_AL[s], material)
-
+                    return Conductor(nec.EGC_AL[size], material)
 
 def conductor_ampacity(current, material):
     """find conductor ampacity. todo:deprecate"""
-    for s in nec.CONDUCTOR_STANDARD_SIZES:
-        if getattr(nec, "%s_AMPACITY_A30_75" % (material))[s] >= current:
-            return Conductor(s, material)
+    for size in nec.CONDUCTOR_STANDARD_SIZES:
+        if getattr(nec, "%s_AMPACITY_A30_75" % (material))[size] >= current:
+            return Conductor(size, material)
 
 def check_ampacity(c, oca, ambient=30):
     """check ampacity"""
@@ -295,16 +292,16 @@ if __name__ == "__main__":
     print resistance(Conductor("400", "AL"), "STEEL", .77)
     print resistance(Conductor("400", "AL"), "STEEL", "DC")
     print "transformer"
-    t1 = Transformer(1000000, 8404, 2143)
-    print t1.output(0)
-    print t1.output(500000)
+    T1 = Transformer(1000000, 8404, 2143)
+    print T1.output(0)
+    print T1.output(500000)
     bund = [Conductor("400", "AL"), Conductor("400", "AL"), \
             Conductor("6", "CU"), Conductor("6", "CU")]
     print Conductor("8", "CU", "PV").area()
     print "PV Conduit", find_conduit([Conductor("8", "CU", "PV")]*12 +\
-            [Conductor("6", "CU")])
+            [Conductor("6", "CU")]), 'should be 1 1/4'
     print "PV Conduit", find_conduit([Conductor("8", "CU", "PV")]*4 + \
-            [Conductor("6", "CU")])
+            [Conductor("6", "CU")]), 'should be 3/4'
 
     print "conductor area", bund[0].area()
     print find_conduit(bund)
@@ -322,3 +319,5 @@ if __name__ == "__main__":
     print find_conductor(.001)
     print conductor_ampacity(200, "CU")
     print assemble(Conductor("2", "CU", "PV"), 40)
+    PVC_2 = Conduit('2', 'PVC40')
+    print 'fill', fill_percent(bund,PVC_2)

@@ -2,21 +2,24 @@
 Parametric Design tools
 """
 # This program is free software. See terms in LICENSE file.
+import logging
+logger = logging.getLogger(__name__)
 
 import copy
-import epw
-import pv
 import json
-import logging
 
-logger = logging.getLogger(__name__)
+from solpy import epw
+from solpy import pv
+from solpy import geo
+from solpy import inverters
+from solpy import modules
 
 def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
         station_class=1, v_max=600, bipolar=True):
     """deprecated legacy function"""
     tmp = inverter.dump()
     inverter_name = tmp['inverter']
-    module_name= tmp['panel']
+    module_name = tmp['panel']
     return [str_format(i) for i in generate_options(inverter_name, \
             module_name, zipcode, ac_dc_ratio, \
             mount, station_class, v_max, bipolar)]
@@ -25,15 +28,14 @@ def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
 
 def str_format(inverter):
     """format as str: '9769.5W : 13S x 3P : ratio 1.22 : 314.0 - 552.0 V'"""
-    dc = inverter.array.output(1000)
-    ratio = dc/inverter.p_aco
-    return '%sW : %s : ratio %s : %s - %s V' % (dc, inverter.array, \
+    dc_nom = inverter.array.output(1000)
+    ratio = dc_nom/inverter.p_aco
+    return '%sW : %s : ratio %s : %s - %s V' % (dc_nom, inverter.array, \
             round(ratio, 2), round(inverter.min_v), round(inverter.max_v))
 
 def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
         v_max=600, bipolar=True):
     """deprecated use generate_options"""
-    import geo
     t_derate = {"Roof":30, \
             "Ground":25, \
             "Pole":20}
@@ -60,30 +62,27 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
     solutions = []
 
     i_max = max(inverter.idcmax, inverter.p_dco*1.0/inverter.mppt_low)
-    string_max = int(round(i_max/inverter.array.panel.i_mpp))+1
+    max_parallel = int(round(i_max/inverter.array.panel.i_mpp))+1
 
     #Diophantine equation
-    for s in range(smax+1):
-        if (s*min_v) >= inverter.mppt_low:
-            for p in range(string_max):
-                p_nom = p*s*psize*1.0/inverter_nominal
+    for string_len in range(smax+1):
+        if (string_len*min_v) >= inverter.mppt_low:
+            for p_count in range(max_parallel):
+                p_nom = p_count*string_len*psize*1.0/inverter_nominal
                 if p_nom < p_nom_upper and p_nom > lower_tol:
-                    inverter.array.shape = [s]*p
-                    t = copy.deepcopy(inverter)
-                    t.min_v = s*min_v
-                    t.max_v = s*max_v
-                    solutions.append(t)
+                    inverter.array.shape = [string_len]*p_count
+                    _tmp = copy.deepcopy(inverter)
+                    _tmp.min_v = string_len*min_v
+                    _tmp.max_v = string_len*max_v
+                    solutions.append(_tmp)
     return solutions
 
 def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
         mount="Roof", station_class=1, v_max=600, bipolar=True):
-    import geo
-    import inverters
-    import modules
+    """String sizing: find all valid configurations for a location"""
     module = modules.Module(module_name)
     inverter = inverters.Inverter(inverter_name)
-    """String sizing"""
-    tempAdder = {"Roof":30,\
+    temp_adder = {"Roof":30,\
             "Ground":25,\
             "Pole":20}
     #NREL suggests that long term degradation is primarily current not voltage
@@ -94,7 +93,7 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     epw_min = epw.minimum(usaf)
     module_max_voltage = module.v_max(epw_min)
     epw2 = epw.twopercent(usaf)
-    module_min_voltage = module.v_min(epw2, tempAdder[mount]) * derate20
+    module_min_voltage = module.v_min(epw2, temp_adder[mount]) * derate20
 
     if inverter.vdcmax != 0:
         v_max = inverter.vdcmax
@@ -114,15 +113,15 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     #inverter_nominal = inverter.p_aco
     solutions = []
     while inverter.ratio() < p_nom_lower:
-        t = copy.deepcopy(inverter)
-        t.max_v = t.array.v_max(epw_min)
-        t.min_v = t.array.v_min(epw2, tempAdder[mount])
+        _tmp = copy.deepcopy(inverter)
+        _tmp.max_v = _tmp.array.v_max(epw_min)
+        _tmp.min_v = _tmp.array.v_min(epw2, temp_adder[mount])
         if inverter.ratio() >= p_nom_upper:
-            solutions.append(t)
+            solutions.append(_tmp)
         inverter.array.inc()
 
     #i_max = max(inverter.idcmax,inverter.p_dco*1.0/inverter.mppt_low)
-    #string_max = int(round(i_max/inverter.array.panel.i_mpp))+1
+    #max_parallel = int(round(i_max/inverter.array.panel.i_mpp))+1
 
     #Diophantine equation
     return solutions
@@ -133,14 +132,15 @@ def knapsack(item_set, maxweight):
     #http://codereview.stackexchange.com/questions/20569/
     #dynamic-programming-solution-to-knapsack-problem
     items = []
-    for o in item_set:
+    for option in item_set:
         #hack to expand for semetery
-        scale = maxweight // o['DCnominal']
-        items += [(o['yearone'], o['DCnominal'], o['array'][0])] * scale
+        scale = maxweight // option['DCnominal']
+        items += [(option['yearone'], option['DCnominal'], \
+                option['array'][0])] * scale
 
     bestvalues = [[0] * (maxweight + 1)
                   for i in xrange(len(items) + 1)]
-    for i, (value, weight, systemDict) in enumerate(items):
+    for i, (value, weight, system_dict) in enumerate(items):
         i += 1
         for capacity in xrange(maxweight + 1):
             if weight > capacity:
@@ -172,7 +172,8 @@ def knapsack(item_set, maxweight):
             'algorithm':'knapsack', \
             'notes':'most annual generation', \
             'yearone':bestvalues[len(items)][maxweight], \
-            'DCnominal':sum([dc_nom for y1_kwh, dc_nom, inv_conf in reconstruction]), \
+            'DCnominal':sum([dc_nom \
+            for y1_kwh, dc_nom, inv_conf in reconstruction]), \
             'array': system_set}
 
     return results
@@ -180,76 +181,79 @@ def knapsack(item_set, maxweight):
 def efficient(items, maxweight):
     """symetric design of the most efficeint inverter panel combo"""
     most_eff = {'eff':0}
-    for o in items:
-        value = o['yearone']
-        weight = o['DCnominal']
+    for option in items:
+        value = option['yearone']
+        weight = option['DCnominal']
         eff = value/float(weight)
         if eff > most_eff['eff']:
             most_eff = {'eff':eff, \
                     'weight': weight, \
                     'value': value, \
-                    'sub_array':o['array'][0]}
+                    'sub_array':option['array'][0]}
     scale = maxweight/most_eff['weight']
     system_result = [most_eff['sub_array']]*scale
     results = {'address':items[0]['address'], \
             'voltage':items[0]['voltage'], \
-            'yearone':most_eff['value']*scale,
+            'yearone':most_eff['value']*scale, \
             'phase':items[0]['phase'], \
             'azimuth':items[0]['azimuth'], \
             'tilt':items[0]['tilt'], \
             'zipcode':items[0]['zipcode'], \
             'system_name':items[0]['system_name'], \
             'algorithm':'efficient', \
-            'notes':'most annual generation', \
             'notes':'symetric design of most efficient combination', \
             'DCnominal':most_eff['weight']*scale, \
             'array': system_result}
     return results
 
-def combinations(a, b):
-    s = []
-    for i in a:
-        for j in b:
-            s.append((i, j))
-    return s
+def combinations(_a, _b):
+    """generate combinations"""
+    _s = []
+    for i in _a:
+        for j in _b:
+            _s.append((i, j))
+    return _s
 
-def performance_model_plant(jsonDef):
-    plant = pv.json_system(jsonDef)
+def performance_model_plant(json_def):
+    """model performance of a system"""
+    plant = pv.json_system(json_def)
     yearone = plant.model()
-    PDC = sum([i.array.output(1000) for i in plant.shape])
-    plantDict = plant.dump()
-    plantDict['yearone'] = yearone.annual_output
-    plantDict['DCnominal'] = int(PDC)
-    return plantDict
+    p_dc = sum([i.array.output(1000) for i in plant.shape])
+    plant_dict = plant.dump()
+    plant_dict['yearone'] = yearone.annual_output
+    plant_dict['DCnominal'] = int(p_dc)
+    return plant_dict
 
 def performance_model_set(clist):
     """wrapper for distributed performance modelling"""
-    CSTAT = celery_worker_status()
-    if not 'ERROR' in CSTAT:
+    cstat = celery_worker_status()
+    if not 'ERROR' in cstat:
         from celery import group
         import solpy.pmodel
-        logger.debug(CSTAT)
+        logger.debug(cstat)
         return group(solpy.pmodel.model_plant.s(i) for i in clist)().get()
     else:
         return [performance_model_plant(pJSON) for pJSON in clist]
 
-def design(reqs, ranking=[efficient, knapsack]):
+def design(reqs, ranking=None):
     """parts selection algorithm. """
-    validC = []
-    optionSet = []
-    zc = reqs['zipcode']
+    if not ranking:
+        ranking = [efficient, knapsack]
+    valid_combo = []
+    option_set = []
+    zipcode = reqs['zipcode']
 
     for inverter_model, panel_model in combinations(reqs['inverter options'],\
             reqs['panel options']):
-        configs = generate_options(inverter_model, panel_model, zc)
+        configs = generate_options(inverter_model, panel_model, zipcode)
         for config in configs:
-            validC.append(config)
-            logger.info('%s %s %s' % (config, \
-                    round(config.array.output(1000),1), \
-                    round(config.ratio(),2)))
+            valid_combo.append(config)
+            logger.info('%s %s %s' , config, \
+                    round(config.array.output(1000), 1), \
+                    round(config.ratio(), 2))
             reqs['array'] = [config.dump()]
-            optionSet.append(copy.deepcopy(reqs))
-    performance_results = performance_model_set(optionSet)
+            option_set.append(copy.deepcopy(reqs))
+    performance_results = performance_model_set(option_set)
     suggested = []
     for algo in ranking:
         proposed = algo(performance_results, reqs['desired size'])
@@ -257,33 +261,32 @@ def design(reqs, ranking=[efficient, knapsack]):
     return suggested
 
 def celery_worker_status():
-    ERROR_KEY = "ERROR"
+    """get celery worker status"""
+    error_key = "ERROR"
     try:
         from celery.task.control import inspect
         insp = inspect()
-        d = insp.stats()
-        if not d:
-            d = {ERROR_KEY: 'No running Celery workers were found.'}
-    except IOError as e:
+        stats = insp.stats()
+        if not stats:
+            stats = {error_key: 'No running Celery workers were found.'}
+    except IOError as err:
         from errno import errorcode
-        msg = "Error connecting to the backend: " + str(e)
-        if len(e.args) > 0 and errorcode.get(e.args[0]) == 'ECONNREFUSED':
+        msg = "Error connecting to the backend: " + str(err)
+        if len(err.args) > 0 and errorcode.get(err.args[0]) == 'ECONNREFUSED':
             msg += ' Check that the RabbitMQ server is running.'
-        d = {ERROR_KEY: msg}
-    except ImportError as e:
-        d = {ERROR_KEY: str(e)}
-    return d
+        stats = {error_key: msg}
+    except ImportError as err:
+        stats = {error_key: str(err)}
+    return stats
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    import inverters
-    import modules
-    import expedite
+    from solpy import expedite
     import argparse
     import sys
 
     #sketchup may be a good way to input this data
-    testreqs = """{"system_name":"HAPPY CUSTOMER",
+    REQS = """{"system_name":"HAPPY CUSTOMER",
         "address":"15013 Denver W Pkwy, Golden, CO",
         "zipcode":"80401",
         "phase":1,
@@ -301,7 +304,7 @@ if __name__ == "__main__":
         "homerun":150,
         "space":[[10,5]],
         "desired size":25000}"""
-    shade = """{
+    SHADE = """{
         "shade":{
             "0": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
@@ -353,21 +356,21 @@ if __name__ == "__main__":
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
             }"""
 
-    parser = argparse.ArgumentParser(description='Design a PV system')
-    parser.add_argument('-f', '--file')
-    args = vars(parser.parse_args())
+    PARSER = argparse.ArgumentParser(description='Design a PV system')
+    PARSER.add_argument('-f', '--file')
+    ARGS = vars(PARSER.parse_args())
     try:
         #start program
-        if args['file']:
-            testreqs = open(args['file']).read()
+        if ARGS['file']:
+            REQS = open(ARGS['file']).read()
 
-        for proposed in design(json.loads(testreqs)):
-            proposedPlant = pv.json_system(proposed)
-            logger.info(json.dumps(proposedPlant.dump(), sort_keys=True, indent=4, \
-                separators=(',', ': ')))
-            logger.info(proposed['algorithm'])
-            if proposed['array']:
-                expedite.string_notes(proposedPlant, 1)
+        for proposed_d in design(json.loads(REQS)):
+            proposed_plant = pv.json_system(proposed_d)
+            logger.info(json.dumps(proposed_plant.dump(), sort_keys=True, \
+                    indent=4, separators=(',', ': ')))
+            logger.info(proposed_d['algorithm'])
+            if proposed_d['array']:
+                expedite.string_notes(proposed_plant, 1)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
