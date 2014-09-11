@@ -1,7 +1,7 @@
 """celery worker"""
-from celery import Celery
-import pv
 import os
+from celery import Celery
+from solpy import pv
 
 HOSTNAME = os.getenv("BROKERHOST")
 
