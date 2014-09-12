@@ -1,6 +1,6 @@
 digraph solpy {
 size="7,7";
-    {rank = same; "Tilt & Azimuth" "PV Nameplate" "Inverter Nameplate";}
+    {rank = same; "Tilt & Azimuth" "PV Nameplate" "Inverter Nameplate" "Latitude & Longitude";}
     {rank = same; "Cloud Index" "Wind Speed" "Ambiant Temperature";}
     {rank = same; "Ground Diffuse" "Sky Diffuse" "Direct";}
     {rank = same; "GHI" "ETR" "DHI" "DNI";}

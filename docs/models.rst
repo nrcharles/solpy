@@ -1,7 +1,7 @@
 models
 ======
 
-Solpy pulls togeather a lot of different models.  This shows their interactions.
+Solpy is dependant on a lot of model interactions.
 
 .. graphviz:: solpy.gv
 
