@@ -165,6 +165,9 @@ class System(object):
         p = a['current_power']*1.0 / (a['modules']*215)
         return p
 
+    def __repr__(self):
+        return '%s: %s' % (self.system_id, self.system_name)
+
 def _str_datetime(ts1):
     #yyyy-mm-ddThh:mm:ss-xx:y
     #reformat = ts1[0:22]+ts1[23:25]
