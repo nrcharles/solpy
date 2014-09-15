@@ -85,7 +85,8 @@ class ResultSet(object):
         print "Inverter hours clipping: %s" % self.clipping_hours
 
     def __repr__(self):
-        return "Year 1 Annual output: %s kWh" % self.annual_output
+        return "Total output: %s" % \
+                round(sum(self.values),1)
 
 def load_system(filename):
     """Load a system from a json file"""
@@ -410,6 +411,7 @@ class System(object):
 
     def forecast_output(self, daylightSavings=False, source=None, hours=24):
         """forecast output of system"""
+        #todo: model and forecast should use consistant units; Wh or KWh
         #default is forecast with solpy.blave
         #this is ugly code... sorry
         #todo: refactor
