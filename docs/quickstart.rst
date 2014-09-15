@@ -28,3 +28,14 @@ This is an example of modeling systems annual performance with no shade.
     print plant.model()
     #Year 1 Annual _output: 8395.12 kWh
 
+Annual Output can be plotted.
+
+.. image:: heatmap_example.png
+
+Annual output can also be charted.
+
+.. image:: chart_example.png
+
+It is also possible to do some basic forecasting using NOAA GFS or forecast.io
+
+.. image:: forecast_example.png
