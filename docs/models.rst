@@ -42,15 +42,11 @@ The alternative to synthetic irradiance is using Typical Meteorological Year (TM
 Beam
 ----
 
-These general irradiance components need to be adapted to the local site and orientation. The beam component of radiation is based on DNI and is adjusted for the angle of incidence. Angle of incidence is calculated where:
+These general irradiance components need to be adapted to the local site and orientation. The beam component of radiation is based on DNI and is adjusted for the angle of incidence. Angle of incidence is calculated where Σ is tilt of collector and :math:`\phi_{s}` is azimuth of collector.
 
 .. math::
 
-    \Sigma tilt of collector
-
-    \phi_{c} azimuth of collector
-
-    \cos \theta_{I} = \cos \alpha \cos (\phi_{s} - \phi_{s}) \sin \Sigma + \sin \alpha \cos \Sigma
+    \cos \theta_{I} = \cos \alpha \cos (\phi_{s} - \phi_{c}) \sin \Sigma + \sin \alpha \cos \Sigma
 
 The beam component is then calculated.
 
