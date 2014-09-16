@@ -7,7 +7,6 @@ import json
 import re
 STC = 25
 import os
-from collections import Counter
 SPATH = os.path.dirname(os.path.abspath(__file__))
 
 class Module(object):
@@ -64,6 +63,11 @@ class Module(object):
         #self.tk_v_mp = self.properties['beta_oc']
         self.tk_i_sc = self.properties['alpha_sc']*self.i_sc/100
         self.a_c = self.properties['a_c']
+        self.i_l_ref = self.properties['i_l_ref']
+        self.a_ref = self.properties['a_ref']
+        self.i_o_ref = self.properties['i_o_ref']
+        self.r_sh_ref = self.properties['r_sh_ref']
+        self.r_s = self.properties['r_s']
         self.eff = self.p_max/self.a_c/1000
         self.nameplate = 1.0
 
@@ -184,6 +188,7 @@ class Array(object):
     def v_max(self, ashrae_min):
         """max voltage"""
         return max([i.v_max(ashrae_min) for i in self.channels])
+
     def v_min(self, ashrae2p, t_adder=30):
         """min voltage under load"""
         return min([i.v_min(ashrae2p, t_adder) for i in self.channels])
