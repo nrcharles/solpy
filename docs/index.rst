@@ -10,7 +10,7 @@ Solpy is a python library to model solar system power performance similar to PVW
 
 .. toctree::
    quickstart
-   models
+   theory
    modules
    inverters
    pv
