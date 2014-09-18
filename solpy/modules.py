@@ -5,9 +5,16 @@
 
 import json
 import re
+from math import exp, sqrt
 STC = 25
 import os
 SPATH = os.path.dirname(os.path.abspath(__file__))
+
+Q = 1.60217657e-19
+K = 1.3806488e-23
+
+PHI = (1 + sqrt(5))/2
+RESPHI = 2 - PHI
 
 class Module(object):
     """generic module class uses JSON defintion"""
@@ -71,9 +78,13 @@ class Module(object):
         self.eff = self.p_max/self.a_c/1000
         self.nameplate = 1.0
 
-    def output(self, insolation, t_cell=25):
+    def output(self, insolation, t_cell=25, simple=True):
         """Watts DC output"""
-        return (insolation/1000.0) * self.i_mpp * self.v_dc(t_cell)
+        if simple is True:
+            return (insolation/1000.0) * self.i_mpp * self.v_dc(t_cell)
+        else:
+            voltage, current = self.mppt_max(insolation, t_cell)
+            return voltage * current
 
     def v_max(self, ashrae_min):
         """Max Voltage at minimum temperature"""
@@ -97,6 +108,53 @@ class Module(object):
         #Ground mount = 25
         #Pole mount = 20
         return self.v_mpp + (t_adder+ashrae2p-STC) * self.tk_v_mp
+
+    def single_diode(self, irradiance, t_cell, v_diode):
+        """single diode model with CEC coefficients"""
+        tc_n = t_cell + 273. #kelvin
+        tc_stc = 273. + 25.
+        a_adj = self.a_ref*(tc_n/tc_stc)
+        #tian attmpt?
+        #e_g_ref = 1.16 - 7.02E-4*(tc_stc**2/(tc_stc-1108))
+        #e_g = 1.16 - 7.02E-4*(tc_n**2/(tc_n-1108))
+        #i_l = (irradiance*self.i_l_ref/1000.)*\
+        #   (1+self.gamma*self.i_l_ref*(tc_n-tc_stc))
+        e_g_ref = 1.121*Q #eVo
+        e_g = (1 - 0.0002677*(tc_n-tc_stc)) * e_g_ref
+        #am is air mass modifier
+        #am = am_stc = 1.
+        i_o = self.i_o_ref*(tc_n/tc_stc)**3*exp(1/K*(e_g_ref/tc_stc - e_g/tc_n))
+        i_l = irradiance*self.i_l_ref/1000.
+        current = i_l - i_o*(exp(v_diode/a_adj)-1) - v_diode/self.r_sh_ref
+        voltage = v_diode - current * self.r_s
+
+        return voltage, current
+
+    def mppt_search(self, irradiance, t_cell, v_low, v_mid, v_hi):
+        """golden rect search"""
+        if abs(v_low - v_hi) < .1:
+            return self.single_diode(irradiance, t_cell, v_mid)
+        #d = v_g
+        #a = v_low
+        #b = v_hi
+        v_g = v_mid + RESPHI*(v_hi-v_mid)
+        vg1, ig1 = self.single_diode(irradiance, t_cell, v_g)
+        p_g = vg1 * ig1
+        vm2, im2 = self.single_diode(irradiance, t_cell, v_mid)
+        p_mid = vm2*im2
+        if p_g > p_mid:
+            return self.mppt_search(irradiance, t_cell, v_mid, v_g, v_hi)
+        else:
+            return self.mppt_search(irradiance, t_cell, v_g, v_mid, v_low)
+
+    def mppt_max(self, irradiance, t_cell):
+        """find mppt_max conditions"""
+        if round(irradiance, 0) == round(0., 0):
+            return 0, 0
+        v_guess = self.v_dc(t_cell)
+        v_hi = v_guess + v_guess*.2
+        v_low = v_guess - v_guess*.2
+        return self.mppt_search(irradiance, t_cell, v_low, v_guess, v_hi)
 
     def __repr__(self):
         return "%s : %s" % (self.make, self.model)
@@ -293,6 +351,7 @@ if __name__ == "__main__":
     TEMP = Array(PANEL, [{'series':11}])
     print TEMP.dump()
     TEMP = Array(PANEL, [{'series':11, 'parallel':2}])
-    TEMP = Array(PANEL, [{'series':11, 'parallel':1},{'series':11, 'parallel':1}])
+    TEMP = Array(PANEL, [{'series':11, 'parallel':1}, \
+            {'series':11, 'parallel':1}])
     print TEMP.dump()
     print TEMP
