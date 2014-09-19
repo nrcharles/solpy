@@ -23,14 +23,14 @@ Irradiance calculations generally involves some level of modeling since historic
 -------------
 Cloud Shading
 -------------
-Having estimated the clear sky component, clouds must be accounted for. There has been empirical correlation between and cloud cloud cover C and bright sunshine 𝜎.
+Having estimated the clear sky component, clouds must be accounted for. There has been empirical correlation between and cloud cloud cover C and bright sunshine :math:`\sigma`.
 
 .. math::
     \kappa = aC+bC^2
 
     \sigma = 1 - \kappa
 
-The coefficients a and b are determined using least squares regression fit for the observed values of cloud shade. The complement of 𝜎 is often called cloud shade and can be used to adjust the clear sky components.
+The coefficients a and b are determined using least squares regression fit for the observed values of cloud shade. The complement of :math:`\sigma` is often called cloud shade and can be used to adjust the clear sky components.
 
 ---------------------------------
 Typical Meteorological Year (TMY)
@@ -59,7 +59,7 @@ Ground Reflected
 ----------------
 
 
-The ground reflected component of irradiance is largely a function of albedo (𝜌) and incident angle. It is well characterized by the function:
+The ground reflected component of irradiance is largely a function of albedo (:math:`\rho`) and incident angle. It is well characterized by the function:
 
 .. math::
     I_{reflected} = \rho (I_{beam} + I_{diffuse})(\frac{1-\cos \Sigma}{2})
