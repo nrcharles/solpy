@@ -17,6 +17,7 @@ from solpy import modules
 def tools_fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", \
         station_class=1, v_max=600, bipolar=True):
     """deprecated legacy function"""
+
     tmp = inverter.dump()
     inverter_name = tmp['inverter']
     module_name = tmp['panel']
@@ -41,7 +42,7 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
             "Pole":20}
 
     #csv is performance hit
-    name, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
+    dummy, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
     max_v = inverter.array.panel.v_max(epw.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
@@ -89,7 +90,7 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     derate20 = .97
 
     #csv is performance hit
-    name, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
+    dummy, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
     epw_min = epw.minimum(usaf)
     module_max_voltage = module.v_max(epw_min)
     epw2 = epw.twopercent(usaf)
@@ -138,9 +139,9 @@ def knapsack(item_set, maxweight):
         items += [(option['yearone'], option['DCnominal'], \
                 option['array'][0])] * scale
 
-    bestvalues = [[0] * (maxweight + 1)
-                  for i in xrange(len(items) + 1)]
-    for i, (value, weight, system_dict) in enumerate(items):
+    bestvalues = [[0] * (maxweight + 1) \
+                for i in xrange(len(items) + 1)]
+    for i, (value, weight, dummy) in enumerate(items):
         i += 1
         for capacity in xrange(maxweight + 1):
             if weight > capacity:
@@ -160,7 +161,7 @@ def knapsack(item_set, maxweight):
         i -= 1
 
     reconstruction.reverse()
-    system_set = [subA for v, w, subA in reconstruction]
+    system_set = [subA for dummy, dummy, subA in reconstruction]
 
     results = {'address':item_set[0]['address'], \
             'voltage':item_set[0]['voltage'], \
@@ -173,7 +174,7 @@ def knapsack(item_set, maxweight):
             'notes':'most annual generation', \
             'yearone':bestvalues[len(items)][maxweight], \
             'DCnominal':sum([dc_nom \
-            for y1_kwh, dc_nom, inv_conf in reconstruction]), \
+            for dummy, dc_nom, dummy in reconstruction]), \
             'array': system_set}
 
     return results
@@ -236,7 +237,73 @@ def performance_model_set(clist):
         return [performance_model_plant(pJSON) for pJSON in clist]
 
 def design(reqs, ranking=None):
-    """parts selection algorithm. """
+    """Design a PV system based upon various ranking algorithms.
+
+    Args:
+        reqs (dict): JSON object of design constriants. Shading is an optional
+        constraint.
+
+        ranking (list): algorithms that define valuation of parts.
+        The default rankings are knapsack and efficient.
+
+    Returns:
+        list of systems
+
+    For example:
+
+    >>> reqs = {"system_name":"HAPPY CUSTOMER",
+        "address":"15013 Denver W Pkwy, Golden, CO",
+        "zipcode":"80401",
+        "phase":1,
+        "voltage":240,
+        "service":200,
+        "tilt":25,
+        "azimuth":180,
+        "notes":"reqs",
+        "inverter options":["SMA America: SB5000TL-US-22 (240V) 240V",
+            "SMA America: SB7000TL-US-12 (240V) 240V",
+            "SMA America: SB8000TL-US-12 (240V) 240V",
+            "SMA America: SB9000TL-US-12 (240V) 240V",
+            "SMA America: SB6000US-11 240V"],
+        "panel options":["Axitec : AC-250P-156-60S *"],
+        "space":[[10,5]],
+        "desired size":25000}
+    >>> design(reqs, ranking=[efficient])
+    [{'DCnominal': 23100,
+    'address': '15013 Denver W Pkwy, Golden, CO',
+    'algorithm': 'efficient',
+    'array': [{'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+        'panel': 'Axitec : AC-250P-156-60S *',
+        'quantity': 1,
+        'shape': [{'parallel': 1, 'series': 12},
+            {'parallel': 1, 'series': 11}]},
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+        'panel': 'Axitec : AC-250P-156-60S *',
+        'quantity': 1,
+        'shape': [{'parallel': 1, 'series': 12},
+            {'parallel': 1, 'series': 11}]},
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+        'panel': 'Axitec : AC-250P-156-60S *',
+        'quantity': 1,
+        'shape': [{'parallel': 1, 'series': 12},
+            {'parallel': 1, 'series': 11}]},
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+        'panel': 'Axitec : AC-250P-156-60S *',
+        'quantity': 1,
+        'shape': [{'parallel': 1, 'series': 12},
+            {'parallel': 1, 'series': 11}]}],
+    'azimuth': 180,
+    'notes': 'symetric design of most efficient combination',
+    'phase': 1,
+    'system_name': 'HAPPY CUSTOMER',
+    'tilt': 25,
+    'voltage': 240,
+    'yearone': 35746.2,
+    'zipcode': '80401'}]
+
+    Specifiying a shading profile is also an option.
+
+    """
     if not ranking:
         ranking = [efficient, knapsack]
     valid_combo = []
@@ -248,7 +315,7 @@ def design(reqs, ranking=None):
         configs = generate_options(inverter_model, panel_model, zipcode)
         for config in configs:
             valid_combo.append(config)
-            logger.info('%s %s %s' , config, \
+            logger.info('%s %s %s', config, \
                     round(config.array.output(1000), 1), \
                     round(config.ratio(), 2))
             reqs['array'] = [config.dump()]
@@ -295,7 +362,7 @@ if __name__ == "__main__":
         "tilt":25,
         "azimuth":180,
         "notes":"reqs",
-        "inverter options":["SMA America: SB5000TL-US-22 (240V) 240V", 
+        "inverter options":["SMA America: SB5000TL-US-22 (240V) 240V",
             "SMA America: SB7000TL-US-12 (240V) 240V",
             "SMA America: SB8000TL-US-12 (240V) 240V",
             "SMA America: SB9000TL-US-12 (240V) 240V",
@@ -303,55 +370,54 @@ if __name__ == "__main__":
         "panel options":["Axitec : AC-250P-156-60S *"],
         "homerun":150,
         "space":[[10,5]],
-        "desired size":25000}"""
-    SHADE = """{
+        "desired size":25000,
         "shade":{
-            "0": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.1, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "1": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6, 1.0, 0.2, 0.0, 
-            0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.4, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "2": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6, 1.0, 1.0, 0.0, 0.0, 
-            0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "3": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 1.0, 1.0, 1.0, 1.0, 1.0, 
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "5": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "6": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "7": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 1.0, 1.0, 1.0, 1.0, 1.0, 
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "8": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 1.0, 1.0, 0.1, 0.0, 
-            0.6, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "9": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.9, 1.0, 0.1, 0.0, 
-            0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "10": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.4, 1.0, 1.0, 1.0, 1.0, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-            "11": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+            "0": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.1, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "1": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6, 1.0, 0.2, 0.0,
+            0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.4, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "2": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6, 1.0, 1.0, 0.0, 0.0,
+            0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "3": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "5": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "6": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "7": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "8": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 1.0, 1.0, 0.1, 0.0,
+            0.6, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "9": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.9, 1.0, 0.1, 0.0,
+            0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "10": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.4, 1.0, 1.0, 1.0, 1.0, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "11": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.1, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
             }"""
