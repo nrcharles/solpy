@@ -301,7 +301,6 @@ def design(reqs, ranking=None):
     'yearone': 35746.2,
     'zipcode': '80401'}]
 
-    Specifiying a shading profile is also an option.
 
     """
     if not ranking:
