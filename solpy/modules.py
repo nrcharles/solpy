@@ -81,10 +81,22 @@ class Module(object):
     def output(self, insolation, t_cell=25, simple=True):
         """Watts DC output"""
         if simple is True:
-            return (insolation/1000.0) * self.i_mpp * self.v_dc(t_cell)
+            voltage = self.v_dc(t_cell)
+            current = (insolation/1000.0) * self.i_mpp
+            return voltage * current
         else:
             voltage, current = self.mppt_max(insolation, t_cell)
             return voltage * current
+
+    def vi_output(self, insolation, t_cell=25, simple=True):
+        """Watts DC output"""
+        if simple is True:
+            voltage = self.v_dc(t_cell)
+            current = (insolation/1000.0) * self.i_mpp
+            return (voltage, current)
+        else:
+            voltage, current = self.mppt_max(insolation, t_cell)
+            return (voltage, current)
 
     def v_max(self, ashrae_min):
         """Max Voltage at minimum temperature"""
@@ -176,6 +188,7 @@ class Mppt(object):
     def v_max(self, ashrae_min):
         """max channel voltage at temperature"""
         return self.module.v_max(ashrae_min) * self.series
+
     def v_min(self, ashrae2p, t_adder=30):
         """min channel voltage under load"""
         return  self.module.v_min(ashrae2p, t_adder)* self.series
@@ -192,6 +205,10 @@ class Mppt(object):
         """watts output of channel"""
         return self.module.output(insolation, t_ambient) * self.series * \
                 self.parallel
+
+    def vi_output(self, irradiance, t_ambient=25):
+        voltage, current =  self.module.vi_output(irradiance, t_ambient)
+        return (voltage * self.series, current * self.parallel)
 
     def inc(self):
         """increase number of panels in channel"""
@@ -242,6 +259,26 @@ class Array(object):
     def output(self, insolation, t_ambient=25):
         """total dc power output"""
         return sum([i.output(insolation, t_ambient) for i in self.channels])
+
+    def vi_output(self, irradiance, t_ambient=25):
+        #if len(self.channels) is 1:
+        #    voltage, current = self.channels[0].vi_output(irradiance, t_ambient)
+        #    return (voltage, current)
+        #else:
+        if True:
+            #this is a hack to conform work with sandia inverter model and
+            #probably is a bad idea but in the absense of a dual mppt model...
+            voltages = []
+            p_total = 0
+            for i in self.channels:
+                voltage, current = self.channels[0].vi_output(irradiance,\
+                        t_ambient)
+                voltages += [voltage] * i.parallel
+                p_total += voltage * current
+            voltage = sum(voltages)/len(voltages)
+            current = p_total/voltage
+            return (voltage, current)
+
 
     def v_max(self, ashrae_min):
         """max voltage"""
@@ -350,8 +387,14 @@ if __name__ == "__main__":
     print "v_min 10%:", PANEL.v_min(31, 25) * SERIES*.90
     TEMP = Array(PANEL, [{'series':11}])
     print TEMP.dump()
+    v,i = TEMP.vi_output(500)
+    print '(%s, %s) %s' % (v,i,v*i)
+    print TEMP.output(500)
     TEMP = Array(PANEL, [{'series':11, 'parallel':2}])
     TEMP = Array(PANEL, [{'series':11, 'parallel':1}, \
             {'series':11, 'parallel':1}])
     print TEMP.dump()
     print TEMP
+    v,i = TEMP.vi_output(500)
+    print '(%s, %s) %s' % (v,i,v*i)
+    print TEMP.output(500)

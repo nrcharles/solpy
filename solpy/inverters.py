@@ -79,8 +79,10 @@ class Inverter(object):
 
     def p_ac(self, insolation, t_cell=25):
         """AC power in Watts"""
-        p_dc = self.array.output(insolation, t_cell)
-        v_dc = self.array.v_dc()
+        #p_dc = self.array.output(insolation, t_cell)
+        #v_dc = self.array.v_dc()
+        v_dc, i_dc = self.array.vi_output(insolation, t_cell)
+        p_dc = v_dc * i_dc
         A = self.p_dco * (1 + self.c1 * (v_dc - self.v_dco))
         B = self.p_so * (1 + self.c2 * (v_dc - self.v_dco))
         C = self.c0 * (1 + self.c3 * (v_dc - self.v_dco))
