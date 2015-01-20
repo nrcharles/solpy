@@ -118,11 +118,15 @@ def perez(dni, hdi, etr, S, theta, zenith):
     #possible bug?  not sure why the negative insolation sometimes
     return max(Xc, 0.0)
 
-def ephem_sun(place, utc_datetime):
-    """ephemeris of the sun"""
+def ephem_sun(place, utc_datetime, timestep = 60.):
+    """Calculate the average ephemeris of the sun.
+        Where default timestep is 60 minutes (0 for instantaneous)"""
     latitude, longitude = place
     observer = ephem.Observer()
-    observer.date = utc_datetime
+    if timestep != 0:
+        observer.date = utc_datetime - datetime.timedelta(minutes=60./2)
+    else:
+        observer.date = utc_datetime
     observer.lat = radians(latitude)
     observer.lon = radians(longitude)
     az = ephem.Sun(observer).az
@@ -130,7 +134,7 @@ def ephem_sun(place, utc_datetime):
     return az, alt
 
 def irradiation(record, place, horizon=None, t=0.0, array_azimuth=180.0, \
-        model='lj'):
+        model='lj', timestep = 60.):
     """using a data record, calculate irradiance/insolation at a place.
     Inputs are in degrees.
     Valid models: perez 90 (p9), badescu, tian, Liu & Jordan (lj)"""
@@ -142,8 +146,8 @@ def irradiation(record, place, horizon=None, t=0.0, array_azimuth=180.0, \
     #theta = incidence angle of the sun
     #todo: SUNY uses average for time period. This is really an integration
     #function and some error maybe introduced as is. This should be evaluated.
-    #irradiance is instantanious, insolation is over time
-    az, alt = ephem_sun(place, record['utc_datetime'])
+    #irradiance is instantaneous, insolation is over time
+    az, alt = ephem_sun(place, record['utc_datetime'], timestep = timestep)
 
     slope = radians(t)
     aaz = radians(array_azimuth+180)
