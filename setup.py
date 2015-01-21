@@ -22,7 +22,7 @@ setup(
     packages=find_packages(),
     long_description=read('README.md'),
     install_requires=['geopy', 'numpy', 'matplotlib', 'scipy', 'pyephem', \
-            'mock'],
+            'caelum', 'mock'],
     package_data={'': ['*.json', '*.csv', 'pvcli']},
     test_suite='tests.unit',
     classifiers=[
