@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 from math import degrees
 import sys
 
-from solpy import eree
+from solpy import eere
 from solpy import geo
 from solpy import pv
 from solpy import ee
@@ -30,8 +30,8 @@ def string_notes(system, run=0.0, station_class=3):
 
     name, usaf = geo.closest_usaf(geo.zip_coordinates(system.zipcode), \
             station_class)
-    mintemp = eree.minimum(usaf)
-    twopercent_temp = eree.twopercent(usaf)
+    mintemp = eere.minimum(usaf)
+    twopercent_temp = eere.twopercent(usaf)
     ac_kva_rated = 0.0
     dc_rated = 0.0
     ac_kw = 0.0
@@ -167,8 +167,8 @@ def write_notes(system, filename='output', v_nominal=240.0):
     station_class = 1
     dummy, usaf = geo.closest_usaf(geo.zip_coordinates(system.zipcode), \
             station_class)
-    mintemp = eree.minimum(usaf)
-    twopercent_temp = eree.twopercent(usaf)
+    mintemp = eere.minimum(usaf)
+    twopercent_temp = eere.twopercent(usaf)
     fields = []
     for i in set(system.shape):
         module_name = i.array.dump()['panel']

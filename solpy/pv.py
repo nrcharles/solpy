@@ -7,7 +7,7 @@ Photovoltaic System Performance Monitoring
 
 """
 
-from caelum import eree
+from caelum import eere
 from solpy import tmy3
 from solpy import geo
 from solpy import inverters
@@ -218,14 +218,14 @@ class System(object):
 
         if single_thread:
             insolation_output = map(_calc, [(properties, i) \
-                    for i in eree.EPWdata(self.usaf)])
+                    for i in eere.EPWdata(self.usaf)])
         else:
             from multiprocessing import Pool
             from multiprocessing import cpu_count
             pool = Pool(processes=cpu_count())
             #still a hack
             insolation_output = pool.map(_calc, [(properties, i) \
-                    for i in eree.EPWdata(self.usaf)])
+                    for i in eere.EPWdata(self.usaf)])
             pool.close()
 
         houly_timeseries = np.array([])

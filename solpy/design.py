@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 import copy
 import json
 
-from caelum import eree
+from caelum import eere
 from solpy import pv
 from solpy import geo
 from solpy import inverters
@@ -43,10 +43,10 @@ def fill(inverter, zipcode, ac_dc_ratio=1.2, mount="Roof", station_class=1, \
 
     #csv is performance hit
     dummy, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
-    max_v = inverter.array.panel.v_max(eree.minimum(usaf))
+    max_v = inverter.array.panel.v_max(eere.minimum(usaf))
     #NREL suggests that long term degradation is primarily current not voltage
     derate20 = .97
-    min_v = inverter.array.panel.v_min(eree.twopercent(usaf), \
+    min_v = inverter.array.panel.v_min(eere.twopercent(usaf), \
             t_derate[mount]) * derate20
 
     if inverter.vdcmax != 0:
@@ -91,10 +91,10 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
 
     #csv is performance hit
     dummy, usaf = geo.closest_usaf(geo.zip_coordinates(zipcode), station_class)
-    eree_min = eree.minimum(usaf)
-    module_max_voltage = module.v_max(eree_min)
-    eree2 = eree.twopercent(usaf)
-    module_min_voltage = module.v_min(eree2, temp_adder[mount]) * derate20
+    eere_min = eere.minimum(usaf)
+    module_max_voltage = module.v_max(eere_min)
+    eere2 = eere.twopercent(usaf)
+    module_min_voltage = module.v_min(eere2, temp_adder[mount]) * derate20
 
     if inverter.vdcmax != 0:
         v_max = inverter.vdcmax
@@ -115,8 +115,8 @@ def generate_options(inverter_name, module_name, zipcode, ac_dc_ratio=1.2, \
     solutions = []
     while inverter.ratio() < p_nom_lower:
         _tmp = copy.deepcopy(inverter)
-        _tmp.max_v = _tmp.array.v_max(eree_min)
-        _tmp.min_v = _tmp.array.v_min(eree2, temp_adder[mount])
+        _tmp.max_v = _tmp.array.v_max(eere_min)
+        _tmp.min_v = _tmp.array.v_min(eere2, temp_adder[mount])
         if inverter.ratio() >= p_nom_upper:
             solutions.append(_tmp)
         inverter.array.inc()
