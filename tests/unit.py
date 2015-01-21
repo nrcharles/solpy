@@ -40,7 +40,7 @@ class TestModeling(unittest.TestCase):
             ]}"""
         plant = pv.json_system(json.loads(p1))
         rs = plant.model()
-        self.assertAlmostEquals(rs.annual_output, 7697.56)
+        self.assertAlmostEquals(rs.annual_output, 7665.82)
 
     def test_annual_output2(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
@@ -75,6 +75,27 @@ class TestModeling(unittest.TestCase):
         self.assertDictEqual(js2, js3)
         self.assertAlmostEquals(rs1.annual_output, rs2.annual_output)
 
+    def test_hourlyNoShading(self):
+        p1 = """{"system_name":"Another Happy Customer",
+        "zipcode":"44654",
+        "tilt":25,
+        "azimuth":180,
+        "phase":1,
+        "voltage":240,
+        "array":[
+            {"inverter":"Enphase Energy: M215-60-2LL-S2x-IG-NA (240 V) 240V",
+            "derate":0.98,
+            "panel":"Mage Solar : Powertec Plus 250-6 PL",
+            "series":1,
+            "parallel":1,
+            "scale":36
+            }
+            ]}"""
+        js1 = json.loads(p1)
+        plant1 = pv.json_system(js1)
+        rs1 = plant1.model()
+        self.assertAlmostEquals(rs1.annual_output, 12883.7)
+
     def test_hourlyShading(self):
         p1 = """{"system_name":"Another Happy Customer",
         "zipcode":"44654",
@@ -95,7 +116,7 @@ class TestModeling(unittest.TestCase):
         js1 = json.loads(p1)
         plant1 = pv.json_system(js1)
         rs1 = plant1.model()
-        self.assertAlmostEquals(rs1.annual_output, 8600.66)
+        self.assertAlmostEquals(rs1.annual_output, 9043.73)
 
 #design.py
 #tools.py
