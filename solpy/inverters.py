@@ -6,25 +6,51 @@
 import json
 import os
 SPATH = os.path.dirname(os.path.abspath(__file__))
+
+
 class Inverter(object):
-    """Sandia Model"""
-    #Inverter Output = Array STC power * Irradiance *\
-    #Negative Module Power Tolerance * Soiling * Temperature factor * \
-    #Wiring efficiency * Inverter efficiency
-    #PVWATTS Default
-    #Mismatch      0.97 - 0.995
+    """Sandia Inverter Model
+
+    Inverter power is calculated using the Sandia Inverter model.
+
+    This is described in King, David L, Sigifredo Gonzalez, Gary M Galbraith,
+        and William E Boyson. 2007.
+
+    "Performance Model for Grid-Connected Photovoltaic Inverters."
+
+    .. math::
+
+        P_{ac} = {(P_{aco}/(A-B)) - C\cdot(A-B)}\cdot(P_{dc}-B)+C\cdot(P_{dc}-B)^2
+
+    where:
+
+    .. math::
+
+        A = P_{dco}\cdot(1+C_{1}(V_{dc}-V_{dco}))
+
+        B = P_{so}\cdot(1+C_{2}(V_{dc}-V_{dco}))
+
+        C = C_{o}\cdot(1+C_{3}(V_{dc}-V_{dco}))
+
+    """
+
+    # Inverter Output = Array STC power * Irradiance *\
+    # Negative Module Power Tolerance * Soiling * Temperature factor * \
+    # Wiring efficiency * Inverter efficiency
+    # PVWATTS Default
+    # Mismatch      0.97 - 0.995
     mismatch = .98
-    #Diodes and connections      0.99 - 0.997
+    # Diodes and connections      0.99 - 0.997
     connections = .995
-    #DC wiring     0.97 - 0.99
+    # DC wiring     0.97 - 0.99
     dc_wiring = .98
-    #AC wiring0.98 - 0.993
+    # AC wiring0.98 - 0.993
     ac_wiring = .99
-    #Soiling       0.30 - 0.995
+    # Soiling       0.30 - 0.995
     soiling = .95
-    #System availability     0.00 - 0.995
+    # System availability     0.00 - 0.995
     availability = 0.98
-    #not included in PVWATTS/SAM
+    # not included in PVWATTS/SAM
     NMPT = .97
     Tfactor = .98
 
@@ -41,7 +67,7 @@ class Inverter(object):
             except:
                 print "Error on key with data", i
                 raise
-        if self.properties == None:
+        if self.properties is None:
             raise Exception("Inverter not found")
         self.ac_voltage = self.properties['ac_voltage']
         self.inverter = self.properties['inverter']
@@ -60,11 +86,12 @@ class Inverter(object):
         self.mppt_low = self.properties['mppt_low']
         self.mppt_channels = 1
         self.make, self.model = self.inverter.split(":", 2)
-        self.derate = self.mismatch * self.soiling * self.dc_wiring *\
-                self.connections * self.availability# * m.Tfactor #* m.NMPT
-        #self.derate = self.dc_wiring
+        self.derate = self.mismatch * self.soiling * self.dc_wiring * \
+            self.connections * self.availability
+        # * m.Tfactor * m.NMPT
+        # self.derate = self.dc_wiring
 
-        #current corrections for TL inverters
+        # current corrections for TL inverters
         tl_meta = json.loads(open(SPATH + '/tl.json').read())
         for i in tl_meta:
             try:
@@ -79,15 +106,16 @@ class Inverter(object):
 
     def p_ac(self, insolation, t_cell=25):
         """AC power in Watts"""
-        #p_dc = self.array.output(insolation, t_cell)
-        #v_dc = self.array.v_dc()
+        # p_dc = self.array.output(insolation, t_cell)
+        # v_dc = self.array.v_dc()
         v_dc, i_dc = self.array.vi_output(insolation, t_cell)
         p_dc = v_dc * i_dc
         A = self.p_dco * (1 + self.c1 * (v_dc - self.v_dco))
         B = self.p_so * (1 + self.c2 * (v_dc - self.v_dco))
         C = self.c0 * (1 + self.c3 * (v_dc - self.v_dco))
-        p_ac = ((self.p_aco / (A - B)) - C*(A - B))*(p_dc- B) + C *(p_dc - B)**2
-        #clip at p_aco
+        p_ac = ((self.p_aco /
+                (A - B)) - C*(A - B))*(p_dc - B) + C * (p_dc - B)**2
+        # clip at p_aco
         return min(float(self.p_aco), p_ac * self.derate)
 
     def i_ac(self, insolation, v_ac):
@@ -114,20 +142,21 @@ class Inverter(object):
     def __repr__(self):
         return "%s:%s [%s]" % (self.make, self.model, self.array)
 
+
 def manufacturers():
     """get list of manufacturers"""
-    man_list = [i['inverter'].split(":")[0] for i in \
-            json.loads(open(SPATH + '/si.json').read())]
+    man_list = [i['inverter'].split(":")[0] for i in
+                json.loads(open(SPATH + '/si.json').read())]
     man_list.sort()
     uniq_list = [i for i in set(man_list)]
     uniq_list.sort()
     return uniq_list
 
+
 def models(manufacturer=None):
-    """models for a particular manufacturer or all models"""
     """returns list of available inverter models"""
-    if manufacturer == None:
-        return [i['inverter'] for i in \
+    if manufacturer is None:
+        return [i['inverter'] for i in
                 json.loads(open(SPATH + '/si.json').read())]
     else:
         a = []
@@ -140,16 +169,17 @@ if __name__ == "__main__":
     from modules import Module, Array
 
     PANEL = Module('Mage Solar : Powertec Plus 245-6 PL *')
-    INVERTER = Inverter("Enphase Energy: M215-60-SIE-S2x 240V",\
-            Array(PANEL, [{'series':1}]))
+    INVERTER = Inverter("Enphase Energy: M215-60-SIE-S2x 240V",
+                        Array(PANEL, [{'series': 1}]))
     print INVERTER.array
     print ""
     print INVERTER.dump()
-    #si = sb6000us(s)
+    # si = sb6000us(s)
 
     print INVERTER.p_ac(950)
     print INVERTER.i_ac(960, 240)
 
-    INVERTER = Inverter("SMA America: SB7000US-11 277V", Array(PANEL, [{'series':11,'parallel':3}]))
+    INVERTER = Inverter("SMA America: SB7000US-11 277V",
+                        Array(PANEL, [{'series': 11, 'parallel': 3}]))
     print INVERTER
     print INVERTER.array
