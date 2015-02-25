@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name="solpy",
-    version="%s.%s.%s.%s" % (MAJOR, NOW.month, NOW.day, NOW.hour),
+    version="%s.%s.%s.%s" % (MAJOR, NOW.month + 12, NOW.day, NOW.hour),
     author="Nathan Charles",
     author_email="ncharles@gmail.com",
     description=("Solar Performance and Design library"),
