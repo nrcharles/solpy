@@ -67,7 +67,7 @@ def perez(dni, hdi, etr, S, theta, zenith):
     .. math::
         X_{c} = X_{h}[(1-F'_{1})(1+\\cos \\theta_{c})/2+F'_{1}\\frac{a}{b} + F'_{2}\\sin \\theta_{c}]
 
-    Where Xc and Xh are, respectively, the tilted and horizontal difuse values
+    Where Xc and Xh are, respectively, the tilted and horizontal diffuse values
     for irradiance. The coefficients are developed from empirical data and
     published in :cite:`Perez1990`.
 
