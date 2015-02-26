@@ -58,9 +58,29 @@ def eBin(clearness):
 
 
 def perez(dni, hdi, etr, S, theta, zenith):
-    """Perez ee al. 1990.
+    """Perez et al. 1990 Anisotropic diffuse irradiance model
 
-    Diffuse irradiance and illuminance on tilted surfaces
+    Diffuse irradiance and illuminance on tilted surfaces.
+
+    The basic form is:
+
+    .. math::
+        X_{c} = X_{h}[(1-F'_{1})(1+\\cos \\theta_{c})/2+F'_{1}\\frac{a}{b} + F'_{2}\\sin \\theta_{c}]
+
+    Where Xc and Xh are, respectively, the tilted and horizontal difuse values
+    for irradiance. The coefficients are developed from empirical data and
+    published in :cite:`Perez1990`.
+
+    Args:
+        dni (float): Direct normal component.
+        hdi (float): Horizontal diffuse component.
+        etr (float): External flux component.
+        theta (float): incidence angle of the sun in radians.
+        zenith (float): zenith of the sun in radians.
+
+    Returns:
+        (float): Diffuse irradiance
+
     """
     # theta is the incidence angle of the sun
     # Xh = horizontal diffuse
@@ -127,7 +147,8 @@ def perez(dni, hdi, etr, S, theta, zenith):
 def ephem_sun(place, utc_datetime, timestep=60.):
     """Calculate the average ephemeris of the sun.
 
-        Where default timestep is 60 minutes (0 for instantaneous)"""
+    Where default timestep is 60 minutes (0 for instantaneous)
+    """
     latitude, longitude = place
     observer = ephem.Observer()
     if timestep != 0:
@@ -141,11 +162,30 @@ def ephem_sun(place, utc_datetime, timestep=60.):
     return az, alt
 
 
-def irradiation(record, place, horizon=None, t=0.0, array_azimuth=180.0, \
-        model='lj', timestep = 60.):
-    """using a data record, calculate irradiance/insolation at a place.
-    Inputs are in degrees.
-    Valid models: perez 90 (p9), badescu, tian, Liu & Jordan (lj)"""
+def irradiation(record, location, horizon=None, t=0.0, array_azimuth=180.0,
+                model='lj', timestep=60.):
+    """Total irradiance/insolation an inclined plane.
+
+    First calculates ephemeris of the sun at the location and then angle of
+    incidence. Angle of incidence is calculated by:
+
+    .. math::
+        \\cos \\theta_{I} = \\cos \\alpha \\cos (\\phi_{s} - \\phi_{s}) \\sin \\Sigma + \\sin \\alpha \\cos \\Sigma
+
+    Where Sigma is the tilt of collector, phi_c is azimuth of collector.
+
+    Args:
+        record (dict): weather data.
+        location (tuple): latitude & longitude in degrees.
+        t (float): tilt of array in degrees.
+        array_azimuth: azimuth of the array in degrees.
+        model (str): perez 90 (p9), badescu, tian or Liu & Jordan (lj).
+        timestep (float): time period of weather data in minutes.
+
+    Returns:
+        (float) Irradiance for time.
+
+    """
     Gh = int(record['GHI (W/m^2)'])
     Dh = int(record['DHI (W/m^2)'])
     Bh = int(record['DNI (W/m^2)'])
@@ -155,18 +195,34 @@ def irradiation(record, place, horizon=None, t=0.0, array_azimuth=180.0, \
     # todo: SUNY uses average for time period. This is really an integration
     # function and some error maybe introduced as is. This should be evaluated.
     # irradiance is instantaneous, insolation is over time
-    az, alt = ephem_sun(place, record['utc_datetime'], timestep=timestep)
+    az, alt = ephem_sun(location, record['utc_datetime'], timestep=timestep)
 
     slope = radians(t)
     aaz = radians(array_azimuth+180)
     Z = pi/2-alt
     theta = arccos(cos(Z)*cos(slope) + sin(slope)*sin(Z)*cos(az - pi - aaz))
     S = radians(t)
-    return totalIRR(Gh, Dh, Bh, etr, az, alt, S, theta, horizon, model)
+    return total_irr(Gh, Dh, Bh, etr, az, alt, S, theta, horizon, model)
 
 
-def totalIRR(Gh, Dh, Bh, etr, az, alt, S, theta, horizon=None, model='lj'):
-    """valid models are perez 90 (p9), badescu, tian, Liu & Jordan (lj)."""
+def total_irr(Gh, Dh, Bh, etr, az, alt, S, theta, horizon=None, model='lj'):
+    """Total irradiance calculation.
+
+    .. math::
+        I_{beam} = I_{DNI} \\cos \\theta_{I}
+
+    .. math::
+        I_{reflected} = \\rho (I_{beam} + I_{diffuse})(\\frac{1-\\cos \\Sigma}{2})
+
+    .. math::
+        I_{total} = I_{beam} + I_{diffuse} + I_{reflected}
+
+    Args:
+        model (str): perez 90 (p9), badescu, tian or Liu & Jordan (lj).
+
+    Returns:
+        (float): I total
+    """
     Z = pi/2-alt
     nA = degrees(az) % 360-180
     if horizon:
@@ -303,7 +359,7 @@ def irrGuess(timestamp, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz):
     iteration = 2
     Bh, Gh, Dh, etr = synthetic(timestamp, solarAlt, solarAz, theta, 0.)
     # totalIRR(Gh,Dh,Bh,etr,az,alt,S,theta,horizon=None, model = 'lj'):
-    maxirr = totalIRR(Gh, Dh, Bh, etr, solarAz, solarAlt, surfaceTilt, theta,\
+    maxirr = total_irr(Gh, Dh, Bh, etr, solarAz, solarAlt, surfaceTilt, theta,\
             model='perez')
     if irradiance > maxirr:
         raise Exception('irradiance exceeds clear sky max')
@@ -311,7 +367,7 @@ def irrGuess(timestamp, irradiance, solarAlt, solarAz, surfaceTilt, surfaceAz):
         # todo: improve non linear search routine
         Bh, Gh, Dh, etr = synthetic(timestamp, solarAlt, solarAz, theta,
                                     cloudCover)
-        girr = totalIRR(Gh, Dh, Bh, etr, solarAz, solarAlt, surfaceTilt,
+        girr = total_irr(Gh, Dh, Bh, etr, solarAz, solarAlt, surfaceTilt,
                         theta, model='lj')
         if girr <= irradiance:
             cloudCover = cloudCover - 1./(iteration**2)
