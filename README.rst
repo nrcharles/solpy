@@ -15,32 +15,34 @@ This is primarily a research and analysis tool and there is no guarantee on the 
 
 Features
 --------
--Liu & Jordan diffuse irradiance model  
--Perez et al. diffuse irradiance model  
--Sandia Inverter model  
--NEC voltage drop caculations  
--Basic System Validation  
--Basic string sizing library  
--Simple Parametric System Design tools  
--realtime system performance forecasting using weather data  
+- Liu & Jordan diffuse irradiance model  
+- Perez et al. diffuse irradiance model  
+- Sandia Inverter model  
+- NEC voltage drop caculations  
+- Basic System Validation  
+- Basic string sizing library  
+- Simple Parametric System Design tools  
+- realtime system performance forecasting using weather data  
 
 Files
 -----
--design.py - parametric design library  
--enphase.py - Enphase API wrapper  
--epw.py - EPW weather data functions
--expedite.py - calculate information needed for the expedited permit process  
--fisheye.py - fisheye image to shading vectors  
--forecast.py - forecast.io API wrapper  
--noaa.py - NOAA weather data API wrapper  
--pv.py - system performance prediction  
--pvcli - cli for pv modeling using historic weather data  
--tmy3.py - read tmy3 data  
--vd.py - voltage drop  
+- design.py - parametric design library  
+- enphase.py - Enphase API wrapper  
+- epw.py - EPW weather data functions
+- expedite.py - calculate information needed for the expedited permit process  
+- fisheye.py - fisheye image to shading vectors  
+- forecast.py - forecast.io API wrapper  
+- noaa.py - NOAA weather data API wrapper  
+- pv.py - system performance prediction  
+- pvcli - cli for pv modeling using historic weather data  
+- tmy3.py - read tmy3 data  
+- vd.py - voltage drop  
 
 Usage
 -----
 PV systems are descibed with json. For example:
+
+::
 
     {"system_name":"System Name",
         "zipcode":"17601",
@@ -71,6 +73,8 @@ $ipython qtconsole --colors=Linux --pylab=inline
 Basic System Validation
 -----------------------
 There is support for simple design validation from the command line warning for overvoltage or excessive ratios.
+
+::
 
     ncharles@vm0 $ cat unit.json 
     {"system_name":"HAPPY CUSTOMER",
