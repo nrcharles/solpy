@@ -2,7 +2,8 @@ solpy
 -------
 Documentation
 -------------
-[Documentation](http://solpy.readthedocs.org/)
+
+`Documentation <http://solpy.readthedocs.org/>`_
 
 Background
 ----------
@@ -65,7 +66,7 @@ This is the sort of project that lends itself nicely to ipython.  Since discover
 
 $ipython qtconsole --colors=Linux --pylab=inline
 
-![example](http://char1es.net/ipython_pv_example.png)
+.. image:: http://char1es.net/ipython_pv_example.png
 
 Basic System Validation
 -----------------------
