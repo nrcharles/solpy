@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 from math import degrees
 import sys
 
-from solpy import eere
+from caelum import eere
 from solpy import geo
 from solpy import pv
 from solpy import ee
