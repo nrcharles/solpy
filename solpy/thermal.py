@@ -6,7 +6,6 @@
 
 import numpy as np
 from   numpy import sin, cos, tan, arcsin, arccos, arctan, pi
-import solar
 from   collectors import *
 from   datetime import datetime, timedelta, date
 
@@ -34,7 +33,7 @@ class solar_day():
         if time == None: self.time = np.array([datetime(2000,1,1)+timedelta(days=n-1,minutes=m) for m in range(1440)])
         else:            self.time = time
         self.omega   = np.array([(t.hour+(t.minute/60.0)-12)*15.0*(pi/180.0) for t in self.time])  # Hour angle (15' per hour, a.m. -ve)
-        self.gamma_s = np.array([solar.azimuth(self.L.phi,self.delta,m) for m in self.omega]) # Solar azimuth
+        self.gamma_s = np.array([azimuth(self.L.phi,self.delta,m) for m in self.omega]) # Solar azimuth
         self.theta_z = arccos( cos(self.L.phi)*cos(self.delta)*cos(self.omega) +
                        sin(self.L.phi)*sin(self.delta) )              # Zenith angle (1.6.5)
         self.theta   = arccos( cos(self.theta_z)*cos(self.C.beta) +   # Angle of incidence on collector (1.6.3)
@@ -82,6 +81,25 @@ def solar_time(n):
     E = 229.2 * (0.000075 + 0.001868*cos(B) - 0.032077*sin(B) - 0.014615*cos(2*B) - 0.04089*sin(2*B))
     return E    
 
+def azimuth(phi,delta,omega):
+    ''' Solar azimuth angle (from D&B eq. 1.6.6)
+        (Angle from South of the projection of beam radiation on the horizontal plane, W = +ve)
+    	phi   - Latitude (radians) 
+    	delta - Declination (radians) 
+    	omega - Hour angle (radians) '''
+    omega_ew = arccos(tan(delta)/tan(phi))  # E-W hour angle (1.6.6g)
+    if (abs(omega) < omega_ew): C_1 =  1
+    else:                       C_1 = -1
+    if (phi*(phi-delta) >= 0):  C_2 =  1
+    else:                       C_2 = -1
+    if (omega >= 0):            C_3 =  1
+    else:                       C_3 = -1
+    #gamma_sp = arctan( sin(omega) / (sin(phi)*cos(omega)-cos(phi)*tan(delta)) ) # Gives error!
+    theta_z  = arccos( cos(phi)*cos(delta)*cos(omega) + sin(phi)*sin(delta) )
+    gamma_sp = arcsin( sin(omega)*cos(delta)/sin(theta_z) )
+    gamma_s  = C_1*C_2*gamma_sp + C_3*((1.0-C_1*C_2)/2.0)*pi
+    return gamma_s
+
 def clear_sky(n, theta_z, alt):
     '''clear_sky: returns an estimate of the clear sky radiation for a given day, time.
        output: G_c = [G_ct, G_cb, G_cd] '''
@@ -100,8 +118,6 @@ def clear_sky(n, theta_z, alt):
     G_c    = [0.0, 0.0, 0.0]
     if (G_o > 0.0): G_c = [(tau_b+tau_d)*G_o, tau_b*G_o, tau_d*G_o]
     return G_c
-
-
 
 def Intercepted_Tang(S,I_nb,I_nd):
     ''' intercepted: Calculations for radiation intercepted by glass tube collector, 
