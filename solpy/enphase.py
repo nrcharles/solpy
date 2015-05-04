@@ -55,46 +55,77 @@ class ResultSet(object):
 
 class System(object):
     """system(system_id) if called directly"""
-    def __init__(self, *system_id, **sys_info):
+
+    def gen_url(self, command = "", start_date=None, end_date=None, unix_epoch = False, callback=None ):
+        """Generates a url for which to request data from Enphase"""
+        url = (self.url + command + self.api_suffix) % self.__dict__
+        if start_date:
+            if unix_epoch:
+                url += "&start_at=%s" % str(start_date)
+            else:
+                url += "&start_date=%s" % str(start_date)
+        if end_date:
+            if unix_epoch:
+                url += "&end_at=%s" % str(end_date)
+            else:
+                url += "&end_date=%s" % str(end_date)
+        if callback:
+            url += "&callback=%s" % str(callback)
+        print url
+        return url
+
+    def __init__(self, system_id, user_id, **sys_info):
         #deal with direct load
-        if len(system_id) > 0:
-            url = APIURL2 + "?key=%s&system_id=%s" % (APIKEY, system_id[0])
+
+        self.system_id = str(system_id)
+        self.user_id = str(user_id)
+        self.key = APIKEY
+
+        self.api_suffix = "?key=%(key)s&user_id=%(user_id)s"
+        self.url = APIURL2
+
+        if len(self.system_id) > 0 and len(self.user_id) > 0:
+            url = self.gen_url("/%(system_id)s/summary")
             tsys = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-            self.__dict__.update(tsys['systems'][0])
+            self.__dict__.update(tsys)
 
         self.__dict__.update(sys_info)
 
+    
     def summary(self, summary_date=None):
-        """summary"""
-        url = APIURL + "/%s/summary?key=%s" % (self.system_id, APIKEY)
+        """Returns summary information for the specified system."""
+        url = self.gen_url("/%(system_id)s/summary")
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def alerts(self, level=None):
-        """alerts"""
-        url = APIURL + "/%s/alerts?key=%s" % (self.system_id, APIKEY)
+        """alerts (depricated in API2)"""
+        url = self.gen_url("/%(system_id)s/alerts")
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
-    def energy_lifetime(self):
-        """energy produced"""
-        url = APIURL + "/%s/energy_lifetime?key=%s" % (self.system_id, APIKEY)
+    def lifetime_energy(self):
+        """Returns a time series of energy produced on the system over its lifetime. All measurements are in Watt hours."""
+        url = self.gen_url("/%(system_id)s/energy_lifetime")
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def monthly_production(self, start_date):
-        """production this month"""
-        url = APIURL + "/%s/monthly_production?key=%s&start=%s" % \
-                (self.system_id, APIKEY, start_date)
+        """Returns the energy production of the system for the month starting on the given date."""
+        url = self.gen_url("/%(system_id)s/monthly_production", start_date)
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def power_today(self):
         """power produced so far today"""
-        today = datetime.date.today()
+        today =     datetime.date.today()
         midnight = datetime.datetime(today.year, today.month, today.day)
         start_at = int(seconds(midnight))
         production = []
         timeseries = []
-        for i in self.stats(start_at)['intervals']:
-            production.append(i['powr'])
-            timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
+        try:
+            for i in self.stats(start_at)['intervals']:
+                production.append(i['powr'])
+                timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
+        except:
+            production.append(0)
+            timeseries.append(datetime.datetime.utcfromtimestamp(start_at))
         return ResultSet(np.array(timeseries), np.array(production))
 
     def power_2days(self):
@@ -118,7 +149,7 @@ class System(object):
 
     def power_week(self):
         #deprecated
-        url = APIURL + "/%s/power_week?key=%s" % (self.system_id, APIKEY)
+        url = self.gen_url("/%(system_id)s/power_week")
         a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
         production = np.array(a["production"])
         begin = _str_datetime(a["first_interval_end_date"])
@@ -130,11 +161,12 @@ class System(object):
 
     def power_week_i(self):
         #deprecated
-        url = APIURL + "/%s/power_week?key=%s" % (self.system_id, APIKEY)
+        url = self.gen_url("/%(system_id)s/power_week")
         a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
         begin = _str_datetime(a["first_interval_end_date"])
         interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
         timeseries = np.array([begin])
+
         url = APIURL + "/%s/power_today?key=%s" % (self.system_id, APIKEY)
         ai = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
         production_i = a["production"] + ai["production"]
@@ -144,20 +176,20 @@ class System(object):
         return ResultSet(timeseries, production)
 
     def rgm_stats(self, start_date=None, end_date=None):
-        url = APIURL + "/%s/rgm_stats?key=%s" % (self.system_id, APIKEY)
+        """Returns performance statistics as measured by the revenue-grade meters installed on the specified system."""
+        url = self.gen_url("/%(system_id)s/rgm_stats", start_date, end_date, True)
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def stats(self, start_at=None, end_at=None):
-        """start_at and end_at are unix epoch"""
-        url = APIURL2 + "/%s/stats?key=%s" % (self.system_id, APIKEY)
-        if start_at:
-            url += "&start_at=%s" % start_at
-        if end_at:
-            url += "end_ad=%s"
+        """Returns performance statistics for the specified system as reported by microinverters installed on the system.
+            start_at and end_at are unix epoch
+            May return HTTP Error 422 specifically if the array hasn't produced any power yet today"""
+        url = self.gen_url("/%(system_id)s/stats", start_at, end_at, True)
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def envoys(self):
-        url = APIURL + "/%s/envoys?key=%s" % (self.system_id, APIKEY)
+        """Returns a listing of all active Envoys currently deployed on the system."""
+        url = self.gen_url("/%(system_id)s/envoys")
         return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
 
     def performance_factor(self, tilt=0):
@@ -175,12 +207,11 @@ def _str_datetime(ts1):
     timezone = ts1[19:22]+ts1[23:25]
     return datetime.datetime.strptime(ts1[0:19], tsformat)
 
-def index():
-    APIURL = "https://api.enphaseenergy.com/api/systems/"
-    #url = "https://api.enphaseenergy.com/api/systems?key=%s" % APIKEY
-    url = APIURL + "?key=%s" % APIKEY
+def index(user_id):
+    APIURL = "https://api.enphaseenergy.com/api/v2/systems/"
+    url = (APIURL + "?key=%s&user_id=%s") % (APIKEY,user_id)
     a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-    return [System(**i) for i in a["systems"]]
+    return [System(user_id=user_id,**i) for i in a["systems"]]
 
 def power_today():
     ts = None
