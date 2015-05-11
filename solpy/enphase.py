@@ -21,13 +21,23 @@ import numpy as np
 import datetime
 import matplotlib
 import os
+import time
 
 matplotlib.use('Agg')
 
-APIURL = "https://api.enphaseenergy.com/api/systems"
-APIURL2 = "https://api.enphaseenergy.com/api/v2/systems"
+APIURL = "https://api.enphaseenergy.com/api/v2/systems"
 
 APIKEY = os.getenv('ENPHASE')
+MAX_WAIT = 60
+
+def validate_enphase_date(date):
+    from datetime import datetime
+
+    try:
+        datetime.strptime(date,'%Y-%m-%d')
+    except ValueError as e:
+        return False
+    return True
 
 def seconds(temp_dt):
     """datetime seconds since epoch"""
@@ -37,6 +47,27 @@ if not APIKEY:
     print "WARNING: Enphase key not set."
     print "Realtime weather data not availible."
 
+def run_query(url):
+    """Handles Errors for querying the ENPHASE api"""
+
+    while True:
+        try:
+            j = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+            break
+        except urllib2.HTTPError as e:
+            errordata =json.loads( e.read() )
+            print url
+            print e
+            print errordata
+            if errordata['reason'] == '409':
+                diff = datetime.datetime.fromtimestamp(errordata['period_end']) - datetime.datetime.now()
+                if diff.total_seconds() < MAX_WAIT:
+                    print 'Waiting %d seconds' % diff.total_seconds()
+                    time.sleep(diff.total_seconds())
+                else:
+                    raise urllib2.HTTPError(e.url,e.code,e.msg,e.hdrs,e.fp)
+    return j
+
 class ResultSet(object):
     """Result Set"""
     def __init__(self, ts, v):
@@ -44,6 +75,7 @@ class ResultSet(object):
         self.values = v
     def plot(self):
         """plot data"""
+        import matplotlib.pyplot
         fig = matplotlib.pyplot.figure()
         subplot = fig.add_subplot(111)
         subplot.plot(self.timeseries, self.values)
@@ -54,143 +86,172 @@ class ResultSet(object):
                 for obj in self.timeseries.tolist()], self.values.tolist())
 
 class System(object):
-    """system(system_id) if called directly"""
+    """Represents an interface to collect Enphase data about a system."""
 
     def gen_url(self, command = "", start_date=None, end_date=None, unix_epoch = False, callback=None ):
-        """Generates a url for which to request data from Enphase"""
+        """Generates a url for which to request data from Enphase.
+
+
+        Keyword arguments:
+        command -- The Enphase API command to call.
+        start_date -- Either a unix timestamp or a date for the beginning of the range.
+        end_date -- Either a unix timestamp or a date for the of the end range.
+        unix_epoch -- If True the *_date arguments are timestamps else dates.
+        callback -- The function to call upon returning data from the server.
+        if unix_epoch is false the dates must be in format '%Y-%m-%d'
+        """
+
         url = (self.url + command + self.api_suffix) % self.__dict__
         if start_date:
             if unix_epoch:
-                url += "&start_at=%s" % str(start_date)
+                url += "&start_at=%s" % int(start_date)
             else:
-                url += "&start_date=%s" % str(start_date)
+                if validate_enphase_date(start_date):
+                    url += "&start_date=%s" % str(start_date)
+                else:
+                    raise ValueError('start_date format invalid')
         if end_date:
             if unix_epoch:
-                url += "&end_at=%s" % str(end_date)
+                url += "&end_at=%s" % int(end_date)
             else:
-                url += "&end_date=%s" % str(end_date)
+                if validate_enphase_date(end_date):
+                    url += "&end_date=%s" % str(end_date)
+                else:
+                    raise ValueError('end_date format invalid')
         if callback:
             url += "&callback=%s" % str(callback)
-        print url
         return url
 
-    def __init__(self, system_id, user_id, **sys_info):
-        #deal with direct load
+        
+    def __eq__(self, other):
+        return self.system_id == other.system_id
 
+    def __init__(self, system_id, user_id, **sys_info):
+        """Creates an Enphase interface object
+
+        system_id -- The Enphase system number.
+        user_id -- An authorized user key value to access data for the system.
+        sys_info -- A dictionary of relevant information to the system.
+        """
+        #deal with direct load
         self.system_id = str(system_id)
         self.user_id = str(user_id)
         self.key = APIKEY
 
         self.api_suffix = "?key=%(key)s&user_id=%(user_id)s"
-        self.url = APIURL2
-
-        if len(self.system_id) > 0 and len(self.user_id) > 0:
-            url = self.gen_url("/%(system_id)s/summary")
-            tsys = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-            self.__dict__.update(tsys)
+        self.url = APIURL
 
         self.__dict__.update(sys_info)
-
     
     def summary(self, summary_date=None):
         """Returns summary information for the specified system."""
         url = self.gen_url("/%(system_id)s/summary")
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+
+        if summary_date:
+            if validate_enphase_date(summary_date):
+                url += '&summary_date=%s' % summary_date
+        return run_query(url)
 
     def alerts(self, level=None):
         """alerts (depricated in API2)"""
         url = self.gen_url("/%(system_id)s/alerts")
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+        return run_query(url)
 
-    def lifetime_energy(self):
-        """Returns a time series of energy produced on the system over its lifetime. All measurements are in Watt hours."""
-        url = self.gen_url("/%(system_id)s/energy_lifetime")
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+    def energy_lifetime(self, start_date=None, end_date=None ):
+        """Return the energy produced by the system over its lifetime."""
+        url = self.gen_url("/%(system_id)s/energy_lifetime",start_date, end_date)
+        return run_query(url)
 
     def monthly_production(self, start_date):
-        """Returns the energy production of the system for the month starting on the given date."""
+        """Return the energy produced for the month."""
+        from datetime import datetime
+
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        t = datetime(*datetime.now().timetuple()[0:3])
+
+        if (t-start).days < 30:
+            raise ValueError('start_date must be at least one month ago')
+
         url = self.gen_url("/%(system_id)s/monthly_production", start_date)
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-
-    def power_today(self):
-        """power produced so far today"""
-        today =     datetime.date.today()
-        midnight = datetime.datetime(today.year, today.month, today.day)
-        start_at = int(seconds(midnight))
-        production = []
-        timeseries = []
-        try:
-            for i in self.stats(start_at)['intervals']:
-                production.append(i['powr'])
-                timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
-        except:
-            production.append(0)
-            timeseries.append(datetime.datetime.utcfromtimestamp(start_at))
-        return ResultSet(np.array(timeseries), np.array(production))
-
-    def power_2days(self):
-        """this function returns last two days to get at last 24 hours"""
-        production = []
-        timeseries = []
-
-        #yesterday
-        today = datetime.date.today()
-        midnight = datetime.datetime(today.year, today.month, today.day)
-        start_at = int(seconds(midnight-datetime.timedelta(days=1)))
-        for i in self.stats(start_at)['intervals']:
-            production.append(i['powr'])
-            timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
-        #today
-        midnight = datetime.datetime(today.year, today.month, today.day)
-        for i in self.stats(start_at)['intervals']:
-            production.append(i['powr'])
-            timeseries.append(datetime.datetime.utcfromtimestamp(i['end_at']))
-        return ResultSet(np.array(timeseries), np.array(production))
-
-    def power_week(self):
-        #deprecated
-        url = self.gen_url("/%(system_id)s/power_week")
-        a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-        production = np.array(a["production"])
-        begin = _str_datetime(a["first_interval_end_date"])
-        interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
-        timeseries = np.array([begin])
-        for i in range(1, len(a["production"])):
-            timeseries = np.append(timeseries, begin + interval * i)
-        return ResultSet(timeseries, production)
-
-    def power_week_i(self):
-        #deprecated
-        url = self.gen_url("/%(system_id)s/power_week")
-        a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-        begin = _str_datetime(a["first_interval_end_date"])
-        interval = datetime.timedelta(seconds=a["interval_length"])#: 300,
-        timeseries = np.array([begin])
-
-        url = APIURL + "/%s/power_today?key=%s" % (self.system_id, APIKEY)
-        ai = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-        production_i = a["production"] + ai["production"]
-        production = np.array(production_i)
-        for i in range(1, len(production_i)):
-            timeseries = np.append(timeseries, begin + interval * i)
-        return ResultSet(timeseries, production)
-
-    def rgm_stats(self, start_date=None, end_date=None):
-        """Returns performance statistics as measured by the revenue-grade meters installed on the specified system."""
-        url = self.gen_url("/%(system_id)s/rgm_stats", start_date, end_date, True)
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+        return run_query(url)
 
     def stats(self, start_at=None, end_at=None):
-        """Returns performance statistics for the specified system as reported by microinverters installed on the system.
-            start_at and end_at are unix epoch
-            May return HTTP Error 422 specifically if the array hasn't produced any power yet today"""
+        """Return performance statistics for the specified system
+           as reported by microinverters installed on the system.
+
+            start_at -- Unix timestamp for the beginning range.
+            end_at -- Unix timestamp for the end range.
+           May return HTTP Error 422 specifically if the array hasn't
+           produced any power yet today
+            """
+        if end_at != None:
+            if end_at < start_at:
+                raise ValueError('end_at must be after start_at if specified')
+            if start_at == None:
+                raise TypeError('start_at must be specified if end_at is specified')
+            else:
+                if end_at - start_at > 60*60*24:
+                    raise ValueError('enphase will not return more then 24 hours of stats regardless of what the documentation says')
+
         url = self.gen_url("/%(system_id)s/stats", start_at, end_at, True)
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+        return run_query(url)
+
+    def rgm_stats(self, start_date=None, end_date=None):
+        """Return performance statistics as measured by the revenue-grade
+           meters installed on the specified system."""
+        url = self.gen_url("/%(system_id)s/rgm_stats", start_date, end_date, True)
+        return run_query(url)
+
+    def inventory(self):
+        """Return a listing of active devices on the system."""
+        url = self.gen_url("/%(system_id)s/inventory")
+        return run_query(url)
+
+    def get_date_range(self, start, end ):
+        """Return the stats for a range of days"""
+        
+        if type(start) != int:
+            raise TypeError('start must be int')
+        if type(end) != int:
+            raise TypeError('end must be int')
+        if start < 0 or end < 1:
+            raise ValueError('Negative offsets not allowed')
+
+        from datetime import datetime
+        from datetime import timedelta
+        production = []
+        timeseries = []
+        t = datetime(*datetime.now().timetuple()[0:3])-datetime(1970,1,1)
+        for start_at in [(t - timedelta(days=x)).total_seconds() for x in xrange(start,end)]:
+            for i in self.stats(start_at)['intervals']:
+                production.append(i['powr'])
+                timeseries.append(datetime.utcfromtimestamp(i['end_at']))
+        
+        return ResultSet(np.array(timeseries), np.array(production))
+        
+    def power_today(self):
+        """Return the power produced so far today."""
+        return self.get_date_range(0,1)
+
+    def power_2days(self):
+        """Return the last two days to get at last 24 hours"""
+        return self.get_date_range(0,2)
+
+    def power_week(self):
+        """Return the power generated for the previous six complete days"""
+        #deprecated
+        return self.get_date_range(1,7)
+
+    def power_week_i(self):
+        """Return the power generated for the previous six complete day
+           and any generated today"""
+        #deprecated
+        return self.get_date_range(0,7)
 
     def envoys(self):
         """Returns a listing of all active Envoys currently deployed on the system."""
         url = self.gen_url("/%(system_id)s/envoys")
-        return json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
+        return run_query(url)
 
     def performance_factor(self, tilt=0):
         a = self.summary()
@@ -207,35 +268,70 @@ def _str_datetime(ts1):
     timezone = ts1[19:22]+ts1[23:25]
     return datetime.datetime.strptime(ts1[0:19], tsformat)
 
-def index(user_id):
-    APIURL = "https://api.enphaseenergy.com/api/v2/systems/"
-    url = (APIURL + "?key=%s&user_id=%s") % (APIKEY,user_id)
-    a = json.loads(urllib2.urlopen(url, timeout=TCP_TIMEOUT).read())
-    return [System(user_id=user_id,**i) for i in a["systems"]]
+def index(user_id, **kwargs):
+    """Query Enphase regarding the systems accessable by this user_id.
 
-def power_today():
+        user_id -- The user_id to query
+        Optional arguments are the following
+        Search criteria may be any or all of the following:
+        system_id, system_name, status, reference, installer, connection_type
+        Additionally limit will limit the number of systems returned per batch
+        However multiple url requests will be made until all relevant systems
+        have been retreived from Enphase.
+        """
+    query = ""
+    solo = ['next','limit']
+    if kwargs is not None:
+        if len(kwargs) > 1 + len([x for x in solo if x in kwargs]):
+            queryStr = "&%s[]=%s"
+        else:
+            queryStr = "&%s=%s"
+        for item in kwargs.iteritems():
+            if item[0] in solo:
+                query += "&%s=%s" % item
+            else:
+                query += (queryStr % item)
+
+    url = (APIURL + "?key=%s&user_id=%s") % (APIKEY,user_id)
+    url += query
+
+    a = run_query(url)
+
+    systems = [System(user_id=user_id,**i) for i in a["systems"]]
+
+    if 'next' in a.keys():
+        kwargs['next'] = a['next']
+        systems.extend(index(user_id,**kwargs))
+
+    return systems
+
+def power_today(user_id):
+    """Return the power produced today by all accessable systems."""
     ts = None
     b = []
-    for i in index():
+    for i in index(user_id):
         a = i.power_today()
         ts = a.timeseries
         b.append(a.values)
     return ResultSet(ts, sum(b))
 
-def power_week():
+def power_week(user_id):
+    """Return the power produced in the last six days by all accessable systems."""
     ts = None
     b = []
-    for i in index():
+    for i in index(user_id):
         a = i.power_week()
         ts = a.timeseries
         b.append(a.values)
     return ResultSet(ts, sum(b))
 
-def power_week_i():
+def power_week_i(user_id):
+    """Return the power produced in the last six days inclusive of
+       today by all accessable systems."""
     #include today
     ts = None
     b = []
-    for i in index():
+    for i in index(user_id):
         a = i.power_week_i()
         ts = a.timeseries
         b.append(a.values)
@@ -300,8 +396,17 @@ class Engage():
             return (len(self.s1)+len(self.s2)) /1.732
 
 if __name__ == "__main__":
-    a = index()
-    #print [i.system_name for i in a]
-    print a[2].power_today().jsify()
-    print a[2].stats()
-    print a[2].power_2days().jsify()
+    import argparse
+
+    parser = argparse.ArgumentParser('Display system about Enphase Solar Systems')
+    parser.add_argument('user_id', type=str, help='The user id to query')
+
+    args = parser.parse_args()
+
+    a = index(args.user_id)
+
+    for i in a:
+        print i.system_name
+        print i.power_today().jsify()
+        print i.stats()
+        print i.power_2days().jsify()
