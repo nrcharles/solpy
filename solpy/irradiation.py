@@ -170,7 +170,7 @@ def irradiation(record, location, horizon=None, t=0.0, array_azimuth=180.0,
     incidence. Angle of incidence is calculated by:
 
     .. math::
-        \\cos \\theta_{I} = \\cos \\alpha \\cos (\\phi_{s} - \\phi_{s}) \\sin \\Sigma + \\sin \\alpha \\cos \\Sigma
+        \\cos \\theta_{I} = \\cos \\alpha \\cos (\\phi_{s} - \\phi_{c}) \\sin \\Sigma + \\sin \\alpha \\cos \\Sigma
 
     Where Sigma is the tilt of collector, phi_c is azimuth of collector.
 
