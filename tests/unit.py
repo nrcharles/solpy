@@ -1,13 +1,15 @@
+"""solpy unit tests."""
 import unittest
 import json
+import logging
 from solpy import pv
 from solpy import modules
 from solpy import design
 from solpy import inverters
 from solpy import enphase
+logging.basicConfig(level=logging.ERROR)
 
-
-#modules.py
+# modules.py
 class TestModules(unittest.TestCase):
     def test_module(self):
         model = modules.model_search('Powertec 250 PL')[0]
@@ -18,12 +20,14 @@ class TestModules(unittest.TestCase):
         self.assertAlmostEquals(p.v_min(40), 24.931724)
         self.assertAlmostEquals(p.output(900), 225.49752)
 
-#inverters.py
+# inverters.py
 class TestInverters(unittest.TestCase):
     def test_inverter(self):
         pass
-#pv.py
-#irradiation.py
+
+
+# pv.py
+# irradiation.py
 class TestModeling(unittest.TestCase):
     def test_annual_output1(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
@@ -41,7 +45,7 @@ class TestModeling(unittest.TestCase):
             ]}"""
         plant = pv.json_system(json.loads(p1))
         rs = plant.model()
-        self.assertAlmostEquals(rs.annual_output, 7665.82)
+        self.assertAlmostEquals(rs.annual_output, 7688.88)
 
     def test_annual_output2(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
@@ -73,7 +77,7 @@ class TestModeling(unittest.TestCase):
         plant2 = pv.json_system(js2)
         js3 = json.loads(json.dumps(plant2.dump()))
         rs2 = plant2.model()
-        self.assertDictEqual(js2, js3)
+        self.assertEqual(js2, js3)
         self.assertAlmostEquals(rs1.annual_output, rs2.annual_output)
 
     def test_hourlyNoShading(self):
@@ -95,7 +99,7 @@ class TestModeling(unittest.TestCase):
         js1 = json.loads(p1)
         plant1 = pv.json_system(js1)
         rs1 = plant1.model()
-        self.assertAlmostEquals(rs1.annual_output, 12883.7)
+        self.assertAlmostEquals(rs1.annual_output, 12939.9)
 
     def test_hourlyShading(self):
         p1 = """{"system_name":"Another Happy Customer",
@@ -117,7 +121,7 @@ class TestModeling(unittest.TestCase):
         js1 = json.loads(p1)
         plant1 = pv.json_system(js1)
         rs1 = plant1.model()
-        self.assertAlmostEquals(rs1.annual_output, 9043.73)
+        self.assertAlmostEquals(rs1.annual_output, 9098.56)
 
 #design.py
 #tools.py
@@ -186,6 +190,8 @@ class TestVirr(unittest.TestCase):
         self.assertAlmostEquals(virrRec['girr'], 437.0)
 
 class TestEnphase(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self):
         """The key should be changed for an application that is testing"""
         self.user_id = '4d7a45774e6a41320a'
@@ -261,18 +267,18 @@ class TestEnphase(unittest.TestCase):
 
     def test_stats(self):
         system67 = [system for system in self.systems if int(system.system_id) == 67][0]
-        stats = system67.stats(1430742599,1430742901)
-        e1 = """{"intervals": 
-                    [{  "powr": 15, 
-                        "enwh": 1, 
-                        "devices_reporting": 2, 
-                        "end_at": 1430742600}, 
-                     {  "powr": 15, 
-                        "enwh": 1, 
-                        "devices_reporting": 2, 
+        stats = system67.stats(1430742599, 1430742901)
+        e1 = """{"intervals":
+                    [{  "powr": 15,
+                        "enwh": 1,
+                        "devices_reporting": 2,
+                        "end_at": 1430742600},
+                     {  "powr": 15,
+                        "enwh": 1,
+                        "devices_reporting": 2,
                         "end_at": 1430742900
-                    }], 
-                 "total_devices": 35, 
+                    }],
+                 "total_devices": 35,
                  "system_id": 67}"""
 
         self.assertEqual(stats, json.loads(e1))
@@ -286,9 +292,9 @@ class TestEnphase(unittest.TestCase):
     def test_energy_lifetime(self):
         system67 = [system for system in self.systems if int(system.system_id) == 67][0]
         el = system67.energy_lifetime('2008-01-28', '2008-02-02' )
-        e1 = """{   "production": 
-                        [8388, 7537, 8843, 2039, 8235, 0], 
-                    "system_id": 67, 
+        e1 = """{   "production":
+                        [8388, 7537, 8843, 2039, 8235, 0],
+                    "system_id": 67,
                     "start_date": "2008-01-28"}"""
         self.assertEqual(el,json.loads(e1))
 
@@ -298,12 +304,12 @@ class TestEnphase(unittest.TestCase):
         for e in envoy['envoys']:
             e.pop('last_report_at')#last_report_at is always changing don't test that field
 
-        e1 = """{   "system_id": 67, 
-                    "envoys": 
-                        [{  "status": "normal", 
-                            "envoy_id": 434803, 
-                            "name": "Envoy 121112607295", 
-                            "part_number": "800-00069-r02", 
+        e1 = """{   "system_id": 67,
+                    "envoys":
+                        [{  "status": "normal",
+                            "envoy_id": 434803,
+                            "name": "Envoy 121112607295",
+                            "part_number": "800-00069-r02",
                             "serial_number": "121112607295"}]}"""
 
         self.assertEqual(envoy, json.loads(e1))
@@ -312,82 +318,82 @@ class TestEnphase(unittest.TestCase):
         system67 = [system for system in self.systems if int(system.system_id) == 67][0]
         summary  = system67.summary('2008-01-28')
         summary.pop('last_report_at')
-        
-        e1 = """{   "status": "normal", 
-                    "energy_lifetime": 14040, 
-                    "current_power": 0, 
-                    "modules": 0, 
-                    "operational_at": 1201362300, 
-                    "summary_date": "2008-01-28", 
-                    "source": "microinverters", 
-                    "energy_today": 8388, 
-                    "system_id": 67, 
+
+        e1 = """{   "status": "normal",
+                    "energy_lifetime": 14040,
+                    "current_power": 0,
+                    "modules": 0,
+                    "operational_at": 1201362300,
+                    "summary_date": "2008-01-28",
+                    "source": "microinverters",
+                    "energy_today": 8388,
+                    "system_id": 67,
                     "size_w": 0}"""
 
-        self.assertEqual(summary, json.loads(e1)) 
+        self.assertEqual(summary, json.loads(e1))
 
     def test_inventory(self):
         system67 = [system for system in self.systems if int(system.system_id) == 67][0]
         inventory = system67.inventory()
 
-        e1 = """{   "inverters": 
-                        [   {"model": "M190", "sn": "030909022461"}, 
-                            {"model": "M190", "sn": "030910024009"}, 
-                            {"model": "M190", "sn": "030909022244"}, 
-                            {"model": "M190", "sn": "030909022445"}, 
-                            {"model": "M190", "sn": "030909022442"}, 
-                            {"model": "M190", "sn": "030910023946"}, 
-                            {"model": "M190", "sn": "030909022271"}, 
-                            {"model": "M190", "sn": "030910023959"}, 
-                            {"model": "M190", "sn": "030909022183"}, 
-                            {"model": "M190", "sn": "030909022272"}, 
-                            {"model": "M190", "sn": "030910024007"}, 
-                            {"model": "M190", "sn": "030910024016"}, 
-                            {"model": "M190", "sn": "030910023983"}, 
-                            {"model": "M190", "sn": "030910023982"}, 
-                            {"model": "M190", "sn": "030909022453"}, 
-                            {"model": "M190", "sn": "030910023947"}, 
-                            {"model": "M190", "sn": "030910024001"}, 
-                            {"model": "M190", "sn": "030909022443"}, 
-                            {"model": "M190", "sn": "030910024029"}, 
-                            {"model": "M190", "sn": "030909022283"}, 
-                            {"model": "M190", "sn": "110923032336"}, 
-                            {"model": "M190", "sn": "110923032378"}, 
-                            {"model": "M190", "sn": "110923032337"}, 
-                            {"model": "M190", "sn": "110923032365"}, 
-                            {"model": "M190", "sn": "110923032368"}, 
-                            {"model": "M190", "sn": "110923032334"}, 
-                            {"model": "M190", "sn": "110923032346"}, 
-                            {"model": "M190", "sn": "110918030057"}, 
-                            {"model": "M190", "sn": "110918030192"}, 
-                            {"model": "M190", "sn": "110918030079"}, 
-                            {"model": "M190", "sn": "110918030185"}, 
-                            {"model": "D380", "sn": "110924032940-A"}, 
-                            {"model": "D380", "sn": "110924032940-B"}, 
-                            {"model": "D380", "sn": "110924032942-A"}, 
-                            {"model": "D380", "sn": "110924032942-B"}], 
-                    "system_id": 67, 
+        e1 = """{   "inverters":
+                        [   {"model": "M190", "sn": "030909022461"},
+                            {"model": "M190", "sn": "030910024009"},
+                            {"model": "M190", "sn": "030909022244"},
+                            {"model": "M190", "sn": "030909022445"},
+                            {"model": "M190", "sn": "030909022442"},
+                            {"model": "M190", "sn": "030910023946"},
+                            {"model": "M190", "sn": "030909022271"},
+                            {"model": "M190", "sn": "030910023959"},
+                            {"model": "M190", "sn": "030909022183"},
+                            {"model": "M190", "sn": "030909022272"},
+                            {"model": "M190", "sn": "030910024007"},
+                            {"model": "M190", "sn": "030910024016"},
+                            {"model": "M190", "sn": "030910023983"},
+                            {"model": "M190", "sn": "030910023982"},
+                            {"model": "M190", "sn": "030909022453"},
+                            {"model": "M190", "sn": "030910023947"},
+                            {"model": "M190", "sn": "030910024001"},
+                            {"model": "M190", "sn": "030909022443"},
+                            {"model": "M190", "sn": "030910024029"},
+                            {"model": "M190", "sn": "030909022283"},
+                            {"model": "M190", "sn": "110923032336"},
+                            {"model": "M190", "sn": "110923032378"},
+                            {"model": "M190", "sn": "110923032337"},
+                            {"model": "M190", "sn": "110923032365"},
+                            {"model": "M190", "sn": "110923032368"},
+                            {"model": "M190", "sn": "110923032334"},
+                            {"model": "M190", "sn": "110923032346"},
+                            {"model": "M190", "sn": "110918030057"},
+                            {"model": "M190", "sn": "110918030192"},
+                            {"model": "M190", "sn": "110918030079"},
+                            {"model": "M190", "sn": "110918030185"},
+                            {"model": "D380", "sn": "110924032940-A"},
+                            {"model": "D380", "sn": "110924032940-B"},
+                            {"model": "D380", "sn": "110924032942-A"},
+                            {"model": "D380", "sn": "110924032942-B"}],
+                    "system_id": 67,
                     "envoys": [{"sn": "121112607295"}]}"""
-        self.assertEquals(inventory, json.loads(e1))
+        self.assertEqual(inventory, json.loads(e1))
 
-#todo: modules that still need unit tests
-#ee.py
-#vd.py
-#geo.py
-#expedite.py
-#forecast.py
-#noaa.py
-#setup.py
-#thermal.py
-#collectors.py
-#pathfinder.py
-#tmy3.py
-#epw.py
-#epw_thermal.py
-#fisheye.py
-#nec.py
-#site_analysis.py
-#solar_fun.py
+# todo: modules that still need unit tests
+# ee.py
+# vd.py
+# geo.py
+# expedite.py
+# forecast.py
+# noaa.py
+# setup.py
+# thermal.py
+# collectors.py
+# pathfinder.py
+# tmy3.py
+# epw.py
+# epw_thermal.py
+# fisheye.py
+# nec.py
+# site_analysis.py
+# solar_fun.py
 
 if __name__ == '__main__':
     unittest.main()
