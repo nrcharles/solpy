@@ -76,6 +76,8 @@ def run_query(url):
                     time.sleep(diff.total_seconds())
                 else:
                     raise urllib2.HTTPError(e.url, e.code, e.msg, e.hdrs, e.fp)
+            if errordata['reason'] == '401':
+                raise urllib2.HTTPError(e.url, e.code, e.msg, e.hdrs, e.fp)
     return j
 
 
@@ -212,8 +214,8 @@ class System(object):
                     'start_at must be specified if end_at is specified')
             else:
                 if end_at - start_at > 60*60*24:
-                    raise ValueError('enphase will not return more then'
-                                     '24 hours of stats regardless of what the'
+                    raise ValueError('enphase will not return more then '
+                                     '24 hours of stats regardless of what the '
                                      'documentation says')
 
         url = self.gen_url("/%(system_id)s/stats", start_at, end_at, True)
