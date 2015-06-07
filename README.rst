@@ -64,9 +64,9 @@ If json in a file called i.e. template.json, can be modeled from cli.
 
     pvcli -f template.json
 
-Ipython
+iPython
 -------
-This is the sort of project that lends itself nicely to ipython.  Since discovering that project I've tried to make things flow naturally in that enviroment. I really like the inline graphics of the qtconsole.
+This is the sort of project that lends itself nicely to iPython.  Since discovering that project I've tried to make things flow naturally in that enviroment. I really like the inline graphics of the qtconsole.
 
 $ipython qtconsole --colors=Linux --pylab=inline
 
