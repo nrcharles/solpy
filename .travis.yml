@@ -17,8 +17,8 @@ before_install:
 
 install:
     - echo "install"
-    - pip install geopy
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytz ephem matplotlib pyephem
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytz ephem matplotlib
+    - pip install geopy pyephem
     - python setup.py install
 
 script:
