@@ -1,5 +1,7 @@
 solpy
 -------
+.. image:: https://api.travis-ci.org/nrcharles/solpy.svg?branch=master
+
 Documentation
 -------------
 
