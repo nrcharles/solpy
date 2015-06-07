@@ -45,7 +45,7 @@ class TestModeling(unittest.TestCase):
             ]}"""
         plant = pv.json_system(json.loads(p1))
         rs = plant.model()
-        self.assertAlmostEquals(rs.annual_output, 7688.88)
+        self.assertAlmostEquals(rs.annual_output, 7689.05)
 
     def test_annual_output2(self):
         p1 = """{"system_name":"HAPPY CUSTOMER",
@@ -188,6 +188,8 @@ class TestVirr(unittest.TestCase):
         weatherData['windSpeed'] = 0
         virrRec = plant.virr(2000, ts, weatherData)
         self.assertAlmostEquals(virrRec['girr'], 437.0)
+
+@unittest.skipIf(not hasattr(enphase,'apikey'), 'Enphase APIKEY not set')
 
 class TestEnphase(unittest.TestCase):
     maxDiff = None
