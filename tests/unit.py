@@ -189,7 +189,7 @@ class TestVirr(unittest.TestCase):
         virrRec = plant.virr(2000, ts, weatherData)
         self.assertAlmostEquals(virrRec['girr'], 437.0)
 
-@unittest.skipIf(not hasattr(enphase,'apikey'), 'Enphase APIKEY not set')
+@unittest.skipIf(not enphase.APIKEY, 'Enphase APIKEY not set')
 
 class TestEnphase(unittest.TestCase):
     maxDiff = None
