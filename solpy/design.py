@@ -251,56 +251,53 @@ def design(reqs, ranking=None):
 
     For example:
 
-    >>> reqs = {"system_name":"HAPPY CUSTOMER",
-        "address":"15013 Denver W Pkwy, Golden, CO",
-        "zipcode":"80401",
-        "phase":1,
-        "voltage":240,
-        "service":200,
-        "tilt":25,
-        "azimuth":180,
-        "notes":"reqs",
-        "inverter options":["SMA America: SB5000TL-US-22 (240V) 240V",
-            "SMA America: SB7000TL-US-12 (240V) 240V",
-            "SMA America: SB8000TL-US-12 (240V) 240V",
-            "SMA America: SB9000TL-US-12 (240V) 240V",
-            "SMA America: SB6000US-11 240V"],
-        "panel options":["Axitec : AC-250P-156-60S *"],
-        "space":[[10,5]],
-        "desired size":25000}
-    >>> design(reqs, ranking=[efficient])
-    [{'DCnominal': 23100,
-    'address': '15013 Denver W Pkwy, Golden, CO',
-    'algorithm': 'efficient',
-    'array': [{'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
-        'panel': 'Axitec : AC-250P-156-60S *',
-        'quantity': 1,
-        'shape': [{'parallel': 1, 'series': 12},
-            {'parallel': 1, 'series': 11}]},
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
-        'panel': 'Axitec : AC-250P-156-60S *',
-        'quantity': 1,
-        'shape': [{'parallel': 1, 'series': 12},
-            {'parallel': 1, 'series': 11}]},
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
-        'panel': 'Axitec : AC-250P-156-60S *',
-        'quantity': 1,
-        'shape': [{'parallel': 1, 'series': 12},
-            {'parallel': 1, 'series': 11}]},
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
-        'panel': 'Axitec : AC-250P-156-60S *',
-        'quantity': 1,
-        'shape': [{'parallel': 1, 'series': 12},
-            {'parallel': 1, 'series': 11}]}],
-    'azimuth': 180,
-    'notes': 'symetric design of most efficient combination',
-    'phase': 1,
-    'system_name': 'HAPPY CUSTOMER',
-    'tilt': 25,
-    'voltage': 240,
-    'yearone': 35746.2,
-    'zipcode': '80401'}]
+    >>> reqs={"system_name":"HAPPY CUSTOMER",
+    ... "address":"15013 Denver W Pkwy, Golden, CO",
+    ...  "zipcode":"80401",
+    ... "phase":1,
+    ... "voltage":240,
+    ... "service":200,
+    ... "tilt":25,
+    ... "azimuth":180,
+    ... "notes":"reqs",
+    ... "inverter options":["SMA America: SB5000TL-US-22 (240V) 240V",
+    ...     "SMA America: SB7000TL-US-12 (240V) 240V",
+    ...     "SMA America: SB8000TL-US-12 (240V) 240V",
+    ...     "SMA America: SB9000TL-US-12 (240V) 240V",
+    ...     "SMA America: SB6000US-11 240V"],
+    ... "panel options":["Axitec : AC-250P-156-60S *"],
+    ... "space": [[10,5]],
+    ... "desired size": 25000}
 
+    >>> design(reqs, ranking=[efficient])  # doctest: +NORMALIZE_WHITESPACE
+    [{'DCnominal': 23855, \
+    'voltage': 240, \
+    'address': '15013 Denver W Pkwy, Golden, CO', \
+    'phase': 1, \
+    'array': [{'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
+    'shape': [{'series': 10, 'parallel': 1}, \
+    {'series': 9, 'parallel': 1}], 'quantity': 1, \
+    'panel': 'Axitec : AC-250P-156-60S *'}, \
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
+    'shape': [{'series': 10, 'parallel': 1}, \
+    {'series': 9, 'parallel': 1}], 'quantity': 1, \
+    'panel': 'Axitec : AC-250P-156-60S *'}, \
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
+    'shape': [{'series': 10, 'parallel': 1}, \
+    {'series': 9, 'parallel': 1}], 'quantity': 1, \
+    'panel': 'Axitec : AC-250P-156-60S *'}, \
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
+    'shape': [{'series': 10, 'parallel': 1}, \
+    {'series': 9, 'parallel': 1}], 'quantity': 1, \
+    'panel': 'Axitec : AC-250P-156-60S *'}, \
+    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
+    'shape': [{'series': 10, 'parallel': 1}, \
+    {'series': 9, 'parallel': 1}], 'quantity': 1, \
+    'panel': 'Axitec : AC-250P-156-60S *'}], \
+    'system_name': 'HAPPY CUSTOMER', 'yearone': 38728.0, \
+    'algorithm': 'efficient', 'tilt': 25, \
+    'notes': 'symetric design of most efficient combination', \
+    'zipcode': '80401', 'azimuth': 180}]
 
     """
     if not ranking:
@@ -352,7 +349,7 @@ if __name__ == "__main__":
     import sys
 
     #sketchup may be a good way to input this data
-    REQS = """{"system_name":"HAPPY CUSTOMER",
+    TEST = """{"system_name":"HAPPY CUSTOMER",
         "address":"15013 Denver W Pkwy, Golden, CO",
         "zipcode":"80401",
         "phase":1,
@@ -423,9 +420,16 @@ if __name__ == "__main__":
 
     PARSER = argparse.ArgumentParser(description='Design a PV system')
     PARSER.add_argument('-f', '--file')
+    PARSER.add_argument('-t', '--test', action='store_true')
     ARGS = vars(PARSER.parse_args())
+    if not ARGS['test'] or ARGS['file']:
+        PARSER.print_help()
+        sys.exit(1)
+
     try:
         #start program
+        if ARGS['test']:
+            REQS = TEST
         if ARGS['file']:
             REQS = open(ARGS['file']).read()
 
