@@ -8,8 +8,10 @@ from solpy import modules
 from solpy import design
 from solpy import inverters
 from solpy import enphase
-logging.basicConfig(level=logging.ERROR)
 from solpy import ee
+from solpy import vd
+logging.basicConfig(level=logging.ERROR)
+
 
 
 # modules.py
@@ -386,8 +388,6 @@ class TestEnphase(unittest.TestCase):
         self.assertEqual(inventory, json.loads(e1))
 
 # todo: modules that still need unit tests
-# ee.py
-# vd.py
 # geo.py
 # expedite.py
 # forecast.py
@@ -406,6 +406,7 @@ class TestEnphase(unittest.TestCase):
 
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(ee))
+    tests.addTests(doctest.DocTestSuite(vd))
     tests.addTests(doctest.DocTestSuite(design))
     return tests
 
