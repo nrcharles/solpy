@@ -1,5 +1,6 @@
 """solpy unit tests."""
 import unittest
+import doctest
 import json
 import logging
 from solpy import pv
@@ -8,6 +9,8 @@ from solpy import design
 from solpy import inverters
 from solpy import enphase
 logging.basicConfig(level=logging.ERROR)
+from solpy import ee
+
 
 # modules.py
 class TestModules(unittest.TestCase):
@@ -24,6 +27,10 @@ class TestModules(unittest.TestCase):
 class TestInverters(unittest.TestCase):
     def test_inverter(self):
         pass
+
+class TestEE(unittest.TestCase):
+    def test_inverter(self):
+        doctest.DocTestSuite(ee)
 
 
 # pv.py
@@ -396,6 +403,11 @@ class TestEnphase(unittest.TestCase):
 # nec.py
 # site_analysis.py
 # solar_fun.py
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(ee))
+    tests.addTests(doctest.DocTestSuite(design))
+    return tests
 
 if __name__ == '__main__':
     unittest.main()
