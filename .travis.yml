@@ -23,7 +23,6 @@ install:
 
 script:
     - coverage run --source=solpy setup.py test
-    - python setup.py test
 
 after_success:
-    coveralls
+    - coveralls

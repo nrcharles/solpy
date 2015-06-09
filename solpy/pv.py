@@ -8,7 +8,7 @@ Photovoltaic System Performance Monitoring
 """
 
 from caelum import eere
-from solpy import tmy3
+from caelum import tmy3
 from solpy import geo
 from solpy import inverters
 from solpy import modules

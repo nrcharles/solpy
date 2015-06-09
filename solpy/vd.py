@@ -78,7 +78,7 @@ def vd(amperage, length, size=None, v=240, pf=-1, t_amb=30, percent=1,
                                                         t_amb=t_amb, c=c), 2)
             return conductor
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import argparse
     import sys
     PARSER = argparse.ArgumentParser(description='Voltage drop dalculator')

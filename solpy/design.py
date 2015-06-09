@@ -342,7 +342,7 @@ def celery_worker_status():
         stats = {error_key: str(err)}
     return stats
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.INFO)
     from solpy import expedite
     import argparse
