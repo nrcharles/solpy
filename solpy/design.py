@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 import copy
 import json
+import pprint
 
 from caelum import eere
 from solpy import pv
@@ -269,35 +270,43 @@ def design(reqs, ranking=None):
     ... "space": [[10,5]],
     ... "desired size": 25000}
 
-    >>> design(reqs, ranking=[efficient])  # doctest: +NORMALIZE_WHITESPACE
-    [{'DCnominal': 23855, \
-    'voltage': 240, \
-    'address': '15013 Denver W Pkwy, Golden, CO', \
-    'phase': 1, \
-    'array': [{'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
-    'shape': [{'series': 10, 'parallel': 1}, \
-    {'series': 9, 'parallel': 1}], 'quantity': 1, \
-    'panel': 'Axitec : AC-250P-156-60S *'}, \
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
-    'shape': [{'series': 10, 'parallel': 1}, \
-    {'series': 9, 'parallel': 1}], 'quantity': 1, \
-    'panel': 'Axitec : AC-250P-156-60S *'}, \
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
-    'shape': [{'series': 10, 'parallel': 1}, \
-    {'series': 9, 'parallel': 1}], 'quantity': 1, \
-    'panel': 'Axitec : AC-250P-156-60S *'}, \
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
-    'shape': [{'series': 10, 'parallel': 1}, \
-    {'series': 9, 'parallel': 1}], 'quantity': 1, \
-    'panel': 'Axitec : AC-250P-156-60S *'}, \
-    {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V', \
-    'shape': [{'series': 10, 'parallel': 1}, \
-    {'series': 9, 'parallel': 1}], 'quantity': 1, \
-    'panel': 'Axitec : AC-250P-156-60S *'}], \
-    'system_name': 'HAPPY CUSTOMER', 'yearone': 38728.0, \
-    'algorithm': 'efficient', 'tilt': 25, \
-    'notes': 'symetric design of most efficient combination', \
-    'zipcode': '80401', 'azimuth': 180}]
+    >>> pprint.pprint(design(reqs, ranking=[efficient])) 
+    [{'DCnominal': 23855,
+      'address': '15013 Denver W Pkwy, Golden, CO',
+      'algorithm': 'efficient',
+      'array': [{'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+                 'panel': 'Axitec : AC-250P-156-60S *',
+                 'quantity': 1,
+                 'shape': [{'parallel': 1, 'series': 10},
+                           {'parallel': 1, 'series': 9}]},
+                {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+                 'panel': 'Axitec : AC-250P-156-60S *',
+                 'quantity': 1,
+                 'shape': [{'parallel': 1, 'series': 10},
+                           {'parallel': 1, 'series': 9}]},
+                {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+                 'panel': 'Axitec : AC-250P-156-60S *',
+                 'quantity': 1,
+                 'shape': [{'parallel': 1, 'series': 10},
+                           {'parallel': 1, 'series': 9}]},
+                {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+                 'panel': 'Axitec : AC-250P-156-60S *',
+                 'quantity': 1,
+                 'shape': [{'parallel': 1, 'series': 10},
+                           {'parallel': 1, 'series': 9}]},
+                {'inverter': u'SMA America: SB5000TL-US-22 (240V) 240V',
+                 'panel': 'Axitec : AC-250P-156-60S *',
+                 'quantity': 1,
+                 'shape': [{'parallel': 1, 'series': 10},
+                           {'parallel': 1, 'series': 9}]}],
+      'azimuth': 180,
+      'notes': 'symetric design of most efficient combination',
+      'phase': 1,
+      'system_name': 'HAPPY CUSTOMER',
+      'tilt': 25,
+      'voltage': 240,
+      'yearone': 38727.15,
+      'zipcode': '80401'}]
 
     """
     if not ranking:
