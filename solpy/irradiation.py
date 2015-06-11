@@ -477,7 +477,7 @@ def bird_blave(timestamp, place, tilt=0, azimuth=180, cloudCover=0.0):
     record['ETR (W/m^2)'] = ETR
     return record
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     for i in range(-90, 180):
         print i, airmass(radians(i)), airMassRatio(radians(i))
 

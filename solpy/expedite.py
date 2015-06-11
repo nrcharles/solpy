@@ -226,7 +226,7 @@ def write_notes(system, filename='output', v_nominal=240.0):
     rc = call(cmd)
     return rc
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import argparse
     import json
     PARSER = argparse.ArgumentParser(description="Model a PV system. " \

@@ -50,7 +50,7 @@ class Hourly(object):
         return self.month[moffset][hoffset]
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import argparse
     import datetime
     PARSER = argparse.ArgumentParser(description='horizon')
