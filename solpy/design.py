@@ -269,8 +269,9 @@ def design(reqs, ranking=None):
     ... "panel options":["Axitec : AC-250P-156-60S *"],
     ... "space": [[10,5]],
     ... "desired size": 25000}
-
-    >>> pprint.pprint(design(reqs, ranking=[efficient])) 
+    >>> plant = design(reqs, ranking=[efficient])
+    >>> plant['yearone'] = round(plant['yearone'], -1)
+    >>> pprint.pprint(plant)
     [{'DCnominal': 23855,
       'address': '15013 Denver W Pkwy, Golden, CO',
       'algorithm': 'efficient',
@@ -305,7 +306,7 @@ def design(reqs, ranking=None):
       'system_name': 'HAPPY CUSTOMER',
       'tilt': 25,
       'voltage': 240,
-      'yearone': 38727.15,
+      'yearone': 38728.0,
       'zipcode': '80401'}]
 
     """
