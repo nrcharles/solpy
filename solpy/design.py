@@ -269,8 +269,8 @@ def design(reqs, ranking=None):
     ... "panel options":["Axitec : AC-250P-156-60S *"],
     ... "space": [[10,5]],
     ... "desired size": 25000}
+
     >>> plant = design(reqs, ranking=[efficient])
-    >>> plant['yearone'] = round(plant['yearone'], -1)
     >>> pprint.pprint(plant)
     [{'DCnominal': 23855,
       'address': '15013 Denver W Pkwy, Golden, CO',
